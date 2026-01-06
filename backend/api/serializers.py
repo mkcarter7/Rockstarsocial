@@ -6,9 +6,23 @@ from .models import (
 
 
 class PortfolioItemSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField(required=False, allow_null=True)
+    
     class Meta:
         model = PortfolioItem
         fields = '__all__'
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        # Add full URL to image if it exists
+        if representation.get('image'):
+            request = self.context.get('request')
+            if request:
+                representation['image'] = request.build_absolute_uri(representation['image'])
+            else:
+                # Fallback for when request context is not available
+                representation['image'] = f"http://localhost:8000/media/{representation['image']}"
+        return representation
 
 
 class TestimonialSerializer(serializers.ModelSerializer):

@@ -15,6 +15,11 @@ class PortfolioItemViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = PortfolioItem.objects.all()
     serializer_class = PortfolioItemSerializer
     
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+    
     @action(detail=False, methods=['get'])
     def featured(self, request):
         featured_items = self.queryset.filter(featured=True)

@@ -6,7 +6,7 @@ class PortfolioItem(models.Model):
     """Model for portfolio/showcase items"""
     title = models.CharField(max_length=200)
     description = models.TextField()
-    image = models.ImageField(upload_to='portfolio/')
+    image = models.ImageField(upload_to='portfolio/', blank=True, null=True)
     website_url = models.URLField(blank=True, null=True)
     category = models.CharField(max_length=100, blank=True)
     featured = models.BooleanField(default=False)

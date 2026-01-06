@@ -1,0 +1,136 @@
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+  margin-top: 40px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.pricing-card {
+  position: relative;
+  text-align: center;
+  padding: 40px 30px;
+  transition: transform 0.3s ease;
+}
+
+.pricing-card:hover {
+  transform: translateY(-10px);
+}
+
+.pricing-card.popular {
+  border: 2px solid #667eea;
+  transform: scale(1.05);
+}
+
+.pricing-card.popular:hover {
+  transform: scale(1.05) translateY(-10px);
+}
+
+.popular-badge {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 5px 20px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.pricing-card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  color: #2d3748;
+}
+
+.pricing-price {
+  margin-bottom: 20px;
+}
+
+.currency {
+  font-size: 1.5rem;
+  vertical-align: top;
+  color: #667eea;
+}
+
+.amount {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: #667eea;
+}
+
+.pricing-description {
+  color: #718096;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+.pricing-features {
+  list-style: none;
+  text-align: left;
+  margin-bottom: 30px;
+  min-height: 200px;
+}
+
+.pricing-features li {
+  padding: 12px 0;
+  color: #4a5568;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.check-icon {
+  color: #48bb78;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.pricing-btn {
+  width: 100%;
+  padding: 15px;
+  font-size: 1.1rem;
+}
+
+.pricing-cta {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.pricing-cta h2 {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+  color: #2d3748;
+}
+
+.pricing-cta p {
+  font-size: 1.2rem;
+  color: #718096;
+  margin-bottom: 30px;
+}
+
+@media (max-width: 768px) {
+  .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .pricing-card.popular {
+    transform: scale(1);
+  }
+  
+  .pricing-card.popular:hover {
+    transform: translateY(-10px);
+  }
+  
+  .pricing-cta h2 {
+    font-size: 2rem;
+  }
+  
+  .pricing-cta p {
+    font-size: 1rem;
+  }
+}

@@ -1,0 +1,29 @@
+[tool.basedpyright]
+# Python version for type checking
+pythonVersion = "3.8"
+
+# Root directory for the project
+root = "."
+
+# Include/exclude patterns
+include = ["**/*.py"]
+exclude = ["**/__pycache__", "**/.*", "**/venv", "**/env", "**/node_modules"]
+
+# Type checking mode - basic is more lenient, strict is more thorough
+typeCheckingMode = "basic"
+
+# Report missing imports
+reportMissingImports = true
+
+# Report missing type stubs
+reportMissingTypeStubs = false
+
+# Python execution environment
+# This will use the default Python interpreter in your PATH
+# If you have a virtual environment, make sure it's activated
+# or specify the venv path below
+venvPath = "."
+venv = "rockstarsocial"
+
+# Additional search paths if needed
+extraPaths = []

@@ -9,7 +9,7 @@
 .contact-info h2 {
   font-size: 2rem;
   margin-bottom: 30px;
-  color: #2d3748;
+  color: #000000;
 }
 
 .info-item {
@@ -18,7 +18,7 @@
 
 .info-item h3 {
   font-size: 1.2rem;
-  color: #667eea;
+  color: #fab3c2;
   margin-bottom: 10px;
 }
 
@@ -38,7 +38,7 @@
 .contact-form-container h2 {
   font-size: 2rem;
   margin-bottom: 30px;
-  color: #2d3748;
+  color: #000000;
 }
 
 .alert {
@@ -73,7 +73,7 @@
 
 .form-group label {
   font-weight: 600;
-  color: #2d3748;
+  color: #000000;
   font-size: 0.95rem;
 }
 
@@ -90,7 +90,7 @@
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #fab3c2;
 }
 
 .form-group textarea {

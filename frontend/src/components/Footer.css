@@ -1,5 +1,5 @@
 .footer {
-  background: #2d3748;
+  background: #000000;
   color: white;
   padding: 50px 0 20px;
   margin-top: auto;
@@ -15,10 +15,7 @@
 .footer-section h3 {
   font-size: 1.5rem;
   margin-bottom: 15px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #fab3c2;
 }
 
 .footer-section h4 {
@@ -47,14 +44,14 @@
 }
 
 .footer-section ul li a:hover {
-  color: #667eea;
+  color: #fab3c2;
 }
 
 .footer-bottom {
   text-align: center;
   padding-top: 20px;
-  border-top: 1px solid #4a5568;
-  color: #a0aec0;
+  border-top: 1px solid #333333;
+  color: #cccccc;
 }
 
 @media (max-width: 1024px) {

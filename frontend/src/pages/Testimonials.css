@@ -24,7 +24,7 @@
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #000000 0%, #fab3c2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -36,7 +36,7 @@
 .testimonial-info h3 {
   font-size: 1.2rem;
   margin-bottom: 5px;
-  color: #2d3748;
+  color: #000000;
 }
 
 .testimonial-title {
@@ -46,7 +46,7 @@
 }
 
 .testimonial-company {
-  color: #667eea;
+  color: #fab3c2;
   font-size: 0.9rem;
   font-weight: 500;
 }
@@ -75,7 +75,7 @@
   position: absolute;
   top: 20px;
   right: 20px;
-  background: #667eea;
+  background: #fab3c2;
   color: white;
   padding: 5px 15px;
   border-radius: 20px;

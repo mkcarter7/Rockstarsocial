@@ -10,7 +10,7 @@
 .about-text h2 {
   font-size: 2.5rem;
   margin-bottom: 20px;
-  color: #2d3748;
+  color: #000000;
 }
 
 .about-text p {
@@ -28,7 +28,7 @@
   font-size: 2.5rem;
   margin-bottom: 40px;
   text-align: center;
-  color: #2d3748;
+  color: #000000;
 }
 
 .features-grid {
@@ -51,7 +51,7 @@
 .feature-card h3 {
   font-size: 1.5rem;
   margin-bottom: 15px;
-  color: #667eea;
+  color: #fab3c2;
 }
 
 .feature-card p {
@@ -69,12 +69,12 @@
 .about-cta h2 {
   font-size: 2.5rem;
   margin-bottom: 15px;
-  color: #2d3748;
+  color: #000000;
 }
 
 .about-cta p {
   font-size: 1.2rem;
-  color: #718096;
+  color: #333333;
   margin-bottom: 30px;
 }
 

@@ -20,7 +20,7 @@
 }
 
 .pricing-card.popular {
-  border: 2px solid #667eea;
+  border: 2px solid #fab3c2;
   transform: scale(1.05);
 }
 
@@ -33,7 +33,7 @@
   top: -15px;
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #fab3c2;
   color: white;
   padding: 5px 20px;
   border-radius: 20px;
@@ -44,7 +44,7 @@
 .pricing-card h3 {
   font-size: 1.5rem;
   margin-bottom: 20px;
-  color: #2d3748;
+  color: #000000;
 }
 
 .pricing-price {
@@ -54,17 +54,17 @@
 .currency {
   font-size: 1.5rem;
   vertical-align: top;
-  color: #667eea;
+  color: #fab3c2;
 }
 
 .amount {
   font-size: 3.5rem;
   font-weight: 700;
-  color: #667eea;
+  color: #fab3c2;
 }
 
 .pricing-description {
-  color: #718096;
+  color: #333333;
   margin-bottom: 30px;
   line-height: 1.6;
 }
@@ -104,12 +104,12 @@
 .pricing-cta h2 {
   font-size: 2.5rem;
   margin-bottom: 15px;
-  color: #2d3748;
+  color: #000000;
 }
 
 .pricing-cta p {
   font-size: 1.2rem;
-  color: #718096;
+  color: #333333;
   margin-bottom: 30px;
 }
 

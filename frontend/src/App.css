@@ -32,23 +32,24 @@ main {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #fab3c2;
   color: white;
 }
 
 .btn-primary:hover {
+  background: #f89fb5;
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 5px 15px rgba(250, 179, 194, 0.4);
 }
 
 .btn-secondary {
   background: transparent;
-  color: #667eea;
-  border: 2px solid #667eea;
+  color: #fab3c2;
+  border: 2px solid #fab3c2;
 }
 
 .btn-secondary:hover {
-  background: #667eea;
+  background: #fab3c2;
   color: white;
 }
 
@@ -57,31 +58,35 @@ main {
   padding: 80px 0;
 }
 
+@media (max-width: 768px) {
+  .section {
+    padding: 50px 0;
+  }
+}
+
 .section-title {
   font-size: 2.5rem;
   font-weight: 700;
   text-align: center;
   margin-bottom: 20px;
-  color: #2d3748;
+  color: #000000;
+}
+
+@media (max-width: 768px) {
+  .section-title {
+    font-size: 2rem;
+  }
 }
 
 .section-subtitle {
   text-align: center;
-  color: #718096;
+  color: #333333;
   font-size: 1.1rem;
   max-width: 600px;
   margin: 0 auto 50px;
 }
 
 @media (max-width: 768px) {
-  .section {
-    padding: 50px 0;
-  }
-  
-  .section-title {
-    font-size: 2rem;
-  }
-  
   .section-subtitle {
     font-size: 1rem;
   }
@@ -121,7 +126,7 @@ main {
 
 /* Hero Section */
 .hero {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #000000 0%, #fab3c2 100%);
   color: white;
   padding: 120px 0;
   text-align: center;
@@ -167,12 +172,18 @@ main {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
 
+@media (max-width: 768px) {
+  .card {
+    padding: 20px;
+  }
+}
+
 /* Loading and Error States */
 .loading {
   text-align: center;
   padding: 50px;
   font-size: 1.2rem;
-  color: #718096;
+  color: #666666;
 }
 
 .error {

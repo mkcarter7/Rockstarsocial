@@ -14,7 +14,7 @@
 
 .filter-group label {
   font-weight: 600;
-  color: #2d3748;
+  color: #000000;
   font-size: 0.9rem;
 }
 
@@ -31,12 +31,12 @@
 }
 
 .filter-select:hover {
-  border-color: #667eea;
+  border-color: #fab3c2;
 }
 
 .filter-select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #fab3c2;
 }
 
 .themes-grid {
@@ -85,7 +85,7 @@
 
 .theme-header h3 {
   font-size: 1.3rem;
-  color: #2d3748;
+  color: #000000;
   flex: 1;
 }
 
@@ -105,7 +105,7 @@
   padding: 5px 12px;
   border-radius: 15px;
   font-size: 0.85rem;
-  color: #667eea;
+  color: #fab3c2;
   margin-bottom: 15px;
   width: fit-content;
 }
@@ -150,7 +150,7 @@
 .theme-price {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #667eea;
+  color: #fab3c2;
 }
 
 .theme-actions {

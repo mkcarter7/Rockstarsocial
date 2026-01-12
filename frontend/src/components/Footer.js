@@ -33,8 +33,8 @@ const Footer = () => {
           
           <div className="footer-section">
             <h4>Contact</h4>
-            <p>Email: info@rockstarsocial.com</p>
-            <p>Phone: (555) 123-4567</p>
+            <p>Email: 1rockstarsocial@gmail.com</p>
+            <p>Phone: 931-212-3154</p>
           </div>
         </div>
         

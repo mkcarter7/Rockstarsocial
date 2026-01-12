@@ -60,17 +60,11 @@ const Contact = () => {
               <h2>Contact Information</h2>
               <div className="info-item">
                 <h3>Email</h3>
-                <p>info@rockstarsocial.com</p>
+                <p>1rockstarsocial@gmail.com</p>
               </div>
               <div className="info-item">
                 <h3>Phone</h3>
-                <p>(555) 123-4567</p>
-              </div>
-              <div className="info-item">
-                <h3>Business Hours</h3>
-                <p>Monday - Friday: 9:00 AM - 6:00 PM</p>
-                <p>Saturday: 10:00 AM - 4:00 PM</p>
-                <p>Sunday: Closed</p>
+                <p>931-212-3154</p>
               </div>
             </div>
 

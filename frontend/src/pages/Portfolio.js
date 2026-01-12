@@ -13,13 +13,19 @@ const Portfolio = () => {
     const fetchPortfolio = async () => {
       try {
         const response = await getPortfolioItems();
-        setPortfolio(response.data);
+        
+        // Handle both paginated and non-paginated responses
+        const portfolioData = Array.isArray(response.data) 
+          ? response.data 
+          : (response.data?.results || []);
+        
+        setPortfolio(portfolioData);
+        
         // Extract unique categories
-        const uniqueCategories = [...new Set(response.data.map(item => item.category).filter(Boolean))];
+        const uniqueCategories = [...new Set(portfolioData.map(item => item.category).filter(Boolean))];
         setCategories(uniqueCategories);
       } catch (err) {
-        setError('Failed to load portfolio items');
-        console.error(err);
+        setError('Failed to load portfolio items. Make sure the Django server is running on http://localhost:8000');
       } finally {
         setLoading(false);
       }

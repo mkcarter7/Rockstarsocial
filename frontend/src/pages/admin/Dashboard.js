@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/api';
@@ -14,25 +14,7 @@ const Dashboard = () => {
   const [contactCount, setContactCount] = useState(0);
   const [unreadContactCount, setUnreadContactCount] = useState(0);
 
-  useEffect(() => {
-    // Set up axios interceptor to add Firebase token to requests
-    const interceptor = api.interceptors.request.use(async (config) => {
-      const token = await getIdToken();
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    });
-
-    // Load dashboard data
-    loadDashboardData();
-
-    return () => {
-      api.interceptors.request.eject(interceptor);
-    };
-  }, []);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       const token = await getIdToken();
       
@@ -54,7 +36,25 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getIdToken]);
+
+  useEffect(() => {
+    // Set up axios interceptor to add Firebase token to requests
+    const interceptor = api.interceptors.request.use(async (config) => {
+      const token = await getIdToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    });
+
+    // Load dashboard data
+    loadDashboardData();
+
+    return () => {
+      api.interceptors.request.eject(interceptor);
+    };
+  }, [getIdToken, loadDashboardData]);
 
   const handleLogout = async () => {
     try {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/api';
@@ -12,11 +12,7 @@ const ContactSubmissions = () => {
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [filter, setFilter] = useState('all'); // 'all', 'read', 'unread'
 
-  useEffect(() => {
-    loadSubmissions();
-  }, []);
-
-  const loadSubmissions = async () => {
+  const loadSubmissions = useCallback(async () => {
     try {
       const token = await getIdToken();
       const response = await api.get('/admin/contact-submissions/', {
@@ -28,7 +24,11 @@ const ContactSubmissions = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getIdToken]);
+
+  useEffect(() => {
+    loadSubmissions();
+  }, [loadSubmissions]);
 
   const handleMarkRead = async (id, isRead) => {
     try {

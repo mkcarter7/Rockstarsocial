@@ -147,9 +147,32 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # CORS settings
 # Get CORS origins from environment variable (comma-separated) or use defaults
 CORS_ORIGINS_STR = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000,https://1rockstarsocial.com,https://www.1rockstarsocial.com')
-CORS_ALLOWED_ORIGINS = [origin.strip() for origin in CORS_ORIGINS_STR.split(',')]
+# Filter out empty strings in case of trailing commas or extra spaces
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in CORS_ORIGINS_STR.split(',') if origin.strip()]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Additional CORS settings for better compatibility
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 # REST Framework settings
 REST_FRAMEWORK = {

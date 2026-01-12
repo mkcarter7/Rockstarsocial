@@ -14,6 +14,9 @@ import AdminLogin from './pages/admin/Login';
 import AdminDashboard from './pages/admin/Dashboard';
 import ContactSubmissions from './pages/admin/ContactSubmissions';
 import SiteSettings from './pages/admin/SiteSettings';
+import ManagePortfolio from './pages/admin/ManagePortfolio';
+import ManageTestimonials from './pages/admin/ManageTestimonials';
+import ManageThemes from './pages/admin/ManageThemes';
 import './App.css';
 
 function App() {
@@ -44,6 +47,30 @@ function App() {
             element={
               <ProtectedRoute>
                 <SiteSettings />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/portfolio" 
+            element={
+              <ProtectedRoute>
+                <ManagePortfolio />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/testimonials" 
+            element={
+              <ProtectedRoute>
+                <ManageTestimonials />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/themes" 
+            element={
+              <ProtectedRoute>
+                <ManageThemes />
               </ProtectedRoute>
             } 
           />

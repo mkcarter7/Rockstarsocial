@@ -181,6 +181,14 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
+# CSRF trusted origins (for admin panel and forms)
+# Include CORS origins plus the API domain itself (for admin panel access)
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS.copy()
+# Add the API domain to trusted origins if it's not already there
+api_domain = 'https://api.1rockstarsocial.com'
+if api_domain not in CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS.append(api_domain)
+
 # REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [

@@ -21,7 +21,14 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 # Get allowed hosts from environment variable (comma-separated) or use defaults
 ALLOWED_HOSTS_STR = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,1rockstarsocial.com,www.1rockstarsocial.com')
-ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_STR.split(',')]
+# Handle both comma-separated string and Python list string format
+if ALLOWED_HOSTS_STR.strip().startswith('['):
+    # It's a Python list string, parse it
+    import ast
+    ALLOWED_HOSTS = [host.strip().strip("'\"") for host in ast.literal_eval(ALLOWED_HOSTS_STR)]
+else:
+    # It's a comma-separated string
+    ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_STR.split(',')]
 
 
 # Application definition

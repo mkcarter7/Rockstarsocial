@@ -24,7 +24,11 @@ venv/
 env/
 ENV/
 .venv
-rockstarsocial/
+# Ignore venv files inside rockstarsocial (but keep the Django project files)
+backend/rockstarsocial/Include/
+backend/rockstarsocial/Lib/
+backend/rockstarsocial/Scripts/
+backend/rockstarsocial/pyvenv.cfg
 
 # Django
 *.log

@@ -147,8 +147,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # CORS settings
 # Get CORS origins from environment variable (comma-separated) or use defaults
 CORS_ORIGINS_STR = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000,https://1rockstarsocial.com,https://www.1rockstarsocial.com')
-# Filter out empty strings in case of trailing commas or extra spaces
-CORS_ALLOWED_ORIGINS = [origin.strip() for origin in CORS_ORIGINS_STR.split(',') if origin.strip()]
+# Filter out empty strings and add https:// scheme if missing
+CORS_ALLOWED_ORIGINS = []
+for origin in CORS_ORIGINS_STR.split(','):
+    origin = origin.strip()
+    if origin:
+        # Add https:// scheme if no scheme is present
+        if not origin.startswith(('http://', 'https://')):
+            origin = f'https://{origin}'
+        CORS_ALLOWED_ORIGINS.append(origin)
 
 CORS_ALLOW_CREDENTIALS = True
 

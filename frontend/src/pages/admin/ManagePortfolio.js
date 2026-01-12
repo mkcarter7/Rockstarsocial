@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../../api/api';
 import './ManagePortfolio.css';
 
@@ -162,6 +162,7 @@ const ManagePortfolio = () => {
           <h1>Manage Portfolio</h1>
         </div>
         <div className="portfolio-header-right">
+          <Link to="/" className="btn-home">Home</Link>
           <span>Welcome, {currentUser?.email}</span>
           <button onClick={handleLogout} className="btn-logout">Logout</button>
         </div>

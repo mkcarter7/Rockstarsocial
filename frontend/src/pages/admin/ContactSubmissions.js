@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../../api/api';
 import './ContactSubmissions.css';
 
@@ -107,6 +107,7 @@ const ContactSubmissions = () => {
           <h1>Contact Submissions</h1>
         </div>
         <div className="submissions-header-right">
+          <Link to="/" className="btn-home">Home</Link>
           <span>Welcome, {currentUser?.email}</span>
           <button onClick={handleLogout} className="btn-logout">Logout</button>
         </div>

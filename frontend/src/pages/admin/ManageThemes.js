@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../../api/api';
 import './ManageThemes.css';
 
@@ -200,6 +200,7 @@ const ManageThemes = () => {
           <h1>Manage Themes</h1>
         </div>
         <div className="themes-header-right">
+          <Link to="/" className="btn-home">Home</Link>
           <span>Welcome, {currentUser?.email}</span>
           <button onClick={handleLogout} className="btn-logout">Logout</button>
         </div>

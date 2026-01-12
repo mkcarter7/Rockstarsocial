@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../../api/api';
 import './SiteSettings.css';
 
@@ -95,6 +95,7 @@ const SiteSettings = () => {
           <h1>Site Settings</h1>
         </div>
         <div className="settings-header-right">
+          <Link to="/" className="btn-home">Home</Link>
           <span>Welcome, {currentUser?.email}</span>
           <button onClick={handleLogout} className="btn-logout">Logout</button>
         </div>
@@ -264,4 +265,3 @@ const SiteSettings = () => {
 };
 
 export default SiteSettings;
-

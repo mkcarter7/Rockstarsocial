@@ -9,6 +9,16 @@ const api = axios.create({
   },
 });
 
+// Add error interceptor to handle errors gracefully
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Silently handle errors - don't throw or log to console in a way that shows to users
+    // Components will handle errors appropriately
+    return Promise.reject(error);
+  }
+);
+
 // Portfolio
 export const getPortfolioItems = () => api.get('/portfolio/');
 export const getFeaturedPortfolio = () => api.get('/portfolio/featured/');

@@ -5,7 +5,6 @@ import './Portfolio.css';
 const Portfolio = () => {
   const [portfolio, setPortfolio] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
   const [categories, setCategories] = useState([]);
 
@@ -25,7 +24,9 @@ const Portfolio = () => {
         const uniqueCategories = [...new Set(portfolioData.map(item => item.category).filter(Boolean))];
         setCategories(uniqueCategories);
       } catch (err) {
-        setError('Failed to load portfolio items. Make sure the Django server is running on http://localhost:8000');
+        // Silently fail - don't show technical error messages to users
+        // Just set empty portfolio array to show "coming soon" message
+        setPortfolio([]);
       } finally {
         setLoading(false);
       }
@@ -70,8 +71,6 @@ const Portfolio = () => {
 
           {loading ? (
             <div className="loading">Loading portfolio...</div>
-          ) : error ? (
-            <div className="error">{error}</div>
           ) : filteredPortfolio.length > 0 ? (
             <div className="grid grid-3 portfolio-grid">
               {filteredPortfolio.map((item) => (
@@ -105,7 +104,7 @@ const Portfolio = () => {
               ))}
             </div>
           ) : (
-            <div className="loading">No portfolio items found</div>
+            <div className="loading">Portfolio items coming soon. Please check back later.</div>
           )}
         </div>
       </section>

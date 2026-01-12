@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import (
     PortfolioItem, Testimonial, PricingPlan,
-    ThemeCategory, Theme, ContactSubmission
+    ThemeCategory, Theme, ContactSubmission, SiteSettings
 )
 
 
@@ -56,3 +56,10 @@ class ContactSubmissionSerializer(serializers.ModelSerializer):
         model = ContactSubmission
         fields = '__all__'
         read_only_fields = ['created_at', 'read']
+
+
+class SiteSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SiteSettings
+        fields = '__all__'
+        read_only_fields = ['updated_at']

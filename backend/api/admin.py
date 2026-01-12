@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     PortfolioItem, Testimonial, PricingPlan, 
-    ThemeCategory, Theme, ContactSubmission
+    ThemeCategory, Theme, ContactSubmission, SiteSettings
 )
 
 
@@ -44,3 +44,14 @@ class ContactSubmissionAdmin(admin.ModelAdmin):
     list_filter = ['read', 'created_at']
     search_fields = ['name', 'email', 'subject', 'message']
     readonly_fields = ['created_at']
+
+
+@admin.register(SiteSettings)
+class SiteSettingsAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request):
+        # Only allow one settings object
+        return not SiteSettings.objects.exists()
+    
+    def has_delete_permission(self, request, obj=None):
+        # Prevent deletion
+        return False

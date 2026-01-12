@@ -109,3 +109,35 @@ class ContactSubmission(models.Model):
     
     def __str__(self):
         return f"{self.name} - {self.subject}"
+
+
+class SiteSettings(models.Model):
+    """Model for site-wide settings like colors"""
+    # Use singleton pattern - only one settings object
+    primary_color = models.CharField(max_length=7, default='#fab3c2', help_text='Primary brand color (hex)')
+    secondary_color = models.CharField(max_length=7, default='#f89fb5', help_text='Secondary color (hex)')
+    text_color = models.CharField(max_length=7, default='#000000', help_text='Main text color (hex)')
+    background_color = models.CharField(max_length=7, default='#ffffff', help_text='Background color (hex)')
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Site Settings'
+        verbose_name_plural = 'Site Settings'
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one settings object exists
+        self.pk = 1
+        super().save(*args, **kwargs)
+    
+    def delete(self, *args, **kwargs):
+        # Prevent deletion
+        pass
+    
+    @classmethod
+    def load(cls):
+        """Get or create the singleton settings object"""
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj
+    
+    def __str__(self):
+        return 'Site Settings'

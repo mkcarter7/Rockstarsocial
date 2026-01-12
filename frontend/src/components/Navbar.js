@@ -14,6 +14,7 @@ const Navbar = () => {
       <div className="container">
         <div className="navbar-content">
           <Link to="/" className="navbar-logo">
+            <img src="/RockStar Social Logo.png" alt="RockStar Social Logo" className="logo-image" />
             <span className="logo-text">RockStar Social</span>
           </Link>
           
@@ -35,6 +36,7 @@ const Navbar = () => {
             <li><Link to="/testimonials" onClick={() => setIsOpen(false)}>Testimonials</Link></li>
             <li><Link to="/about" onClick={() => setIsOpen(false)}>About</Link></li>
             <li><Link to="/contact" onClick={() => setIsOpen(false)}>Contact</Link></li>
+            <li><Link to="/admin/login" onClick={() => setIsOpen(false)} className="navbar-admin-link">Admin</Link></li>
           </ul>
         </div>
       </div>

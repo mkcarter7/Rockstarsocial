@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getFeaturedPortfolio, getFeaturedTestimonials, getFeaturedThemes } from '../api/api';
+import { getPortfolioItems, getFeaturedPortfolio, getFeaturedTestimonials, getFeaturedThemes } from '../api/api';
 import './Home.css';
 
 const Home = () => {
   const [portfolio, setPortfolio] = useState([]);
+  const [portfolioCarousel, setPortfolioCarousel] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
   const [themes, setThemes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,12 +13,16 @@ const Home = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [portfolioRes, testimonialsRes, themesRes] = await Promise.all([
+        const [portfolioRes, allPortfolioRes, testimonialsRes, themesRes] = await Promise.all([
           getFeaturedPortfolio(),
+          getPortfolioItems(),
           getFeaturedTestimonials(),
           getFeaturedThemes(),
         ]);
         setPortfolio(portfolioRes.data.slice(0, 3));
+        // Filter portfolio items that have images for carousel
+        const itemsWithImages = allPortfolioRes.data.filter(item => item.image);
+        setPortfolioCarousel(itemsWithImages);
         setTestimonials(testimonialsRes.data.slice(0, 3));
         setThemes(themesRes.data.slice(0, 3));
       } catch (error) {
@@ -35,8 +40,18 @@ const Home = () => {
         <div className="container">
           <h1>Transform Your Online Presence</h1>
           <p>Professional web design services and premium themes to elevate your business</p>
+          {portfolioCarousel.length > 0 && (
+            <div className="hero-carousel">
+              <div className="carousel-track">
+                {portfolioCarousel.slice(0, 6).map((item) => (
+                  <div key={item.id} className="carousel-item">
+                    <img src={item.image} alt={item.title} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="hero-buttons">
-            <Link to="/portfolio" className="btn btn-primary">View Our Work</Link>
             <Link to="/contact" className="btn btn-secondary">Get Started</Link>
           </div>
         </div>
@@ -53,7 +68,27 @@ const Home = () => {
               {portfolio.map((item) => (
                 <div key={item.id} className="card portfolio-card">
                   <div className="portfolio-image">
-                    {item.image ? (
+                    {item.website_url ? (
+                      <div className="website-preview">
+                        <iframe
+                          src={item.website_url}
+                          title={item.title}
+                          className="preview-iframe"
+                          sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                          loading="lazy"
+                        />
+                        <div className="preview-overlay">
+                          <a 
+                            href={item.website_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="preview-link"
+                          >
+                            View Full Site →
+                          </a>
+                        </div>
+                      </div>
+                    ) : item.image ? (
                       <img src={item.image} alt={item.title} />
                     ) : (
                       <div className="placeholder-image">No Image</div>

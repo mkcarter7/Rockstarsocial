@@ -1,3 +1,88 @@
+.hero-carousel {
+  margin: 60px 0 40px;
+  height: 280px;
+  position: relative;
+  overflow: visible;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.carousel-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.carousel-item {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background: white;
+}
+
+.carousel-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.carousel-item:hover {
+  transform: translateY(-15px) scale(1.08);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  z-index: 10 !important;
+}
+
+/* Position items in an arch - center item is highest, others form arch around it */
+.carousel-item:nth-child(1) {
+  left: calc(50% - 90px);
+  transform: translateY(0px);
+  z-index: 5;
+}
+
+.carousel-item:nth-child(2) {
+  left: calc(50% - 300px);
+  transform: translateY(50px) scale(0.85);
+  z-index: 4;
+}
+
+.carousel-item:nth-child(3) {
+  left: calc(50% + 120px);
+  transform: translateY(50px) scale(0.85);
+  z-index: 4;
+}
+
+.carousel-item:nth-child(4) {
+  left: calc(50% - 450px);
+  transform: translateY(100px) scale(0.75);
+  z-index: 2;
+}
+
+.carousel-item:nth-child(5) {
+  left: calc(50% + 270px);
+  transform: translateY(100px) scale(0.75);
+  z-index: 2;
+}
+
+.carousel-item:nth-child(6) {
+  left: calc(50% - 600px);
+  transform: translateY(150px) scale(0.65);
+  z-index: 1;
+}
+
+.carousel-item:nth-child(n+7) {
+  display: none;
+}
+
 .hero-buttons {
   display: flex;
   gap: 20px;
@@ -22,6 +107,7 @@
   border-radius: 8px;
   margin-bottom: 20px;
   background: #e2e8f0;
+  position: relative;
 }
 
 .portfolio-image img,
@@ -29,6 +115,59 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.website-preview {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.preview-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  transform: scale(0.5);
+  transform-origin: top left;
+  width: 200%;
+  height: 200%;
+  pointer-events: none;
+}
+
+.preview-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.3) 100%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 15px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.portfolio-card:hover .preview-overlay {
+  opacity: 1;
+}
+
+.preview-link {
+  background: rgba(255, 255, 255, 0.95);
+  color: #000;
+  padding: 8px 16px;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background 0.3s ease;
+}
+
+.preview-link:hover {
+  background: white;
 }
 
 .placeholder-image {
@@ -107,7 +246,46 @@
   text-align: center;
 }
 
+@media (max-width: 1024px) {
+  .carousel-item:nth-child(2),
+  .carousel-item:nth-child(4),
+  .carousel-item:nth-child(5),
+  .carousel-item:nth-child(6) {
+    display: none;
+  }
+
+  .carousel-item:nth-child(1) {
+    left: calc(50% - 90px);
+    transform: translateY(0px);
+  }
+
+  .carousel-item:nth-child(3) {
+    display: block;
+    left: calc(50% + 110px);
+    transform: translateY(30px) scale(0.85);
+  }
+}
+
 @media (max-width: 768px) {
+  .hero-carousel {
+    height: 180px;
+    margin: 40px 0 30px;
+  }
+
+  .carousel-item {
+    width: 120px;
+    height: 120px;
+  }
+
+  .carousel-item:nth-child(1) {
+    left: calc(50% - 60px);
+  }
+
+  .carousel-item:nth-child(3) {
+    left: calc(50% + 70px);
+    transform: translateY(20px) scale(0.8);
+  }
+
   .hero-buttons {
     flex-direction: column;
     align-items: center;

@@ -128,7 +128,7 @@ const Home = () => {
             <div className="about-text">
               <h2 className="section-title">Who We Are</h2>
               <p>
-                RockStar Social is a leading web design small business specializing in creating 
+                RockStar Social is a small business specializing in creating 
                 stunning, responsive websites and premium themes for businesses of all sizes. 
                 I combine creativity with technical 
                 expertise to deliver exceptional digital experiences.

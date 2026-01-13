@@ -274,9 +274,9 @@ const ManageThemes = () => {
                       <option value="birthday">Birthday</option>
                       <option value="wedding">Wedding</option>
                       <option value="event">Event</option>
-                      <option value="business">Business Website</option>
-                      <option value="boutique">Boutique Website</option>
-                      <option value="ecommerce">Ecommerce Website</option>
+                      <option value="business">Business</option>
+                      <option value="boutique">Boutique</option>
+                      <option value="ecommerce">Ecommerce</option>
                     </select>
                   </div>
 

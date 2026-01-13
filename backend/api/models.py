@@ -73,9 +73,9 @@ class Theme(models.Model):
         ('birthday', 'Birthday'),
         ('wedding', 'Wedding'),
         ('event', 'Event'),
-        ('business', 'Business Website'),
-        ('boutique', 'Boutique Website'),
-        ('ecommerce', 'Ecommerce Website'),
+        ('business', 'Business'),
+        ('boutique', 'Boutique'),
+        ('ecommerce', 'Ecommerce'),
     ]
     
     name = models.CharField(max_length=200)

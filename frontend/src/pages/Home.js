@@ -9,7 +9,6 @@ const Home = () => {
   const [testimonials, setTestimonials] = useState([]);
   const [themes, setThemes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [iframeBlocked, setIframeBlocked] = useState(new Set());
   const [carouselIndex, setCarouselIndex] = useState(0);
 
   useEffect(() => {
@@ -56,7 +55,7 @@ const Home = () => {
           {portfolioCarousel.length > 0 && (
             <div className="hero-carousel">
               <div className="carousel-track">
-                {Array.from({ length: 6 }, (_, position) => {
+                {Array.from({ length: 3 }, (_, position) => {
                   // Get the item for this position, wrapping around if needed
                   const totalItems = portfolioCarousel.length;
                   const itemIndex = (carouselIndex + position) % totalItems;
@@ -94,54 +93,7 @@ const Home = () => {
               {portfolio.map((item) => (
                 <div key={item.id} className="card portfolio-card">
                   <div className="portfolio-image">
-                    {item.website_url && !iframeBlocked.has(item.id) ? (
-                      <div className="website-preview">
-                        <iframe
-                          src={(() => {
-                            // Convert HTTP to HTTPS to avoid mixed content errors
-                            const url = item.website_url;
-                            if (url.startsWith('http://')) {
-                              return url.replace('http://', 'https://');
-                            }
-                            return url;
-                          })()}
-                          title={item.title}
-                          className="preview-iframe"
-                          sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-                          loading="lazy"
-                          onLoad={() => {
-                            // Iframe loaded - check if it's actually blocked after a delay
-                            setTimeout(() => {
-                              const iframe = document.querySelector(`iframe[title="${item.title}"]`);
-                              if (iframe) {
-                                try {
-                                  // Try to access iframe content - will throw if blocked
-                                  const hasContent = iframe.contentDocument || iframe.contentWindow;
-                                  if (!hasContent) {
-                                    // Iframe might be blocked, fall back to image
-                                    setIframeBlocked(prev => new Set(prev).add(item.id));
-                                  }
-                                } catch (e) {
-                                  // Cross-origin or CSP violation - iframe is blocked
-                                  // This is expected for many sites, so we'll show image instead
-                                  setIframeBlocked(prev => new Set(prev).add(item.id));
-                                }
-                              }
-                            }, 2000);
-                          }}
-                        />
-                        <div className="preview-overlay">
-                          <a 
-                            href={item.website_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="preview-link"
-                          >
-                            View Full Site →
-                          </a>
-                        </div>
-                      </div>
-                    ) : item.image ? (
+                    {item.image ? (
                       <img src={item.image} alt={item.title} />
                     ) : (
                       <div className="placeholder-image">No Image</div>

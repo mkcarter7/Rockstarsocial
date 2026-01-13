@@ -276,4 +276,41 @@
     width: 100%;
     max-width: 300px;
   }
+
+  /* Portfolio cards mobile improvements */
+  .portfolio-card {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .portfolio-image {
+    height: 180px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+  }
+
+  .portfolio-card h3 {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+  }
+
+  .portfolio-card p {
+    font-size: 0.95rem;
+    margin-bottom: 15px;
+    line-height: 1.5;
+  }
+
+  .portfolio-card .btn {
+    width: 100%;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+  }
+
+  /* Improve grid spacing on mobile */
+  .grid.grid-3 {
+    gap: 20px;
+  }
 }

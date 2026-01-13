@@ -1,31 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getPortfolioItems, getFeaturedPortfolio, getFeaturedTestimonials, getFeaturedThemes } from '../api/api';
+import { getPortfolioItems, getFeaturedPortfolio, getFeaturedTestimonials } from '../api/api';
 import './Home.css';
+import './About.css';
 
 const Home = () => {
   const [portfolio, setPortfolio] = useState([]);
   const [portfolioCarousel, setPortfolioCarousel] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
-  const [themes, setThemes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [carouselIndex, setCarouselIndex] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [portfolioRes, allPortfolioRes, testimonialsRes, themesRes] = await Promise.all([
+        const [portfolioRes, allPortfolioRes, testimonialsRes] = await Promise.all([
           getFeaturedPortfolio(),
           getPortfolioItems(),
           getFeaturedTestimonials(),
-          getFeaturedThemes(),
         ]);
         setPortfolio(portfolioRes.data.slice(0, 3));
         // Filter portfolio items that have images for carousel
         const itemsWithImages = allPortfolioRes.data.filter(item => item.image);
         setPortfolioCarousel(itemsWithImages);
         setTestimonials(testimonialsRes.data.slice(0, 3));
-        setThemes(themesRes.data.slice(0, 3));
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -126,36 +124,53 @@ const Home = () => {
 
       <section className="section section-alt">
         <div className="container">
-          <h2 className="section-title">Premium Themes</h2>
-          <p className="section-subtitle">Beautiful, responsive themes for your business</p>
-          {loading ? (
-            <div className="loading">Loading...</div>
-          ) : themes.length > 0 ? (
-            <div className="grid grid-3">
-              {themes.map((theme) => (
-                <div key={theme.id} className="card theme-card">
-                  <div className="theme-image">
-                    {theme.preview_image ? (
-                      <img src={theme.preview_image} alt={theme.name} />
-                    ) : (
-                      <div className="placeholder-image">No Image</div>
-                    )}
-                  </div>
-                  <h3>{theme.name}</h3>
-                  <p>{theme.description}</p>
-                  <div className="theme-meta">
-                    <span className="theme-type">{theme.theme_type_display || theme.theme_type}</span>
-                    <span className="theme-price">${theme.price}</span>
-                  </div>
-                  <Link to={`/themes`} className="btn btn-primary">View Details</Link>
-                </div>
-              ))}
+          <div className="about-content">
+            <div className="about-text">
+              <h2 className="section-title">Who We Are</h2>
+              <p>
+                RockStar Social is a leading web design agency specializing in creating 
+                stunning, responsive websites and premium themes for businesses of all sizes. 
+                I combine creativity with technical 
+                expertise to deliver exceptional digital experiences.
+              </p>
+              <p>
+                I work closely with clients to 
+                understand their unique needs and create custom solutions that drive results. 
+                Whether you need a complete website redesign, a custom Shopify theme, or a 
+                ready-made template, I've got you covered.
+              </p>
             </div>
-          ) : (
-            <div className="loading">No themes available</div>
-          )}
-          <div className="text-center" style={{ marginTop: '30px' }}>
-            <Link to="/themes" className="btn btn-secondary">Browse All Themes</Link>
+
+            <div className="about-features">
+              <h2>What We Offer</h2>
+              <div className="grid grid-2 features-grid">
+                <div className="feature-card">
+                  <h3>Custom Web Design</h3>
+                  <p>Bespoke websites tailored to your brand and business goals</p>
+                </div>
+                <div className="feature-card">
+                  <h3>Shopify Themes</h3>
+                  <p>Premium, customizable Shopify themes for your online store</p>
+                </div>
+                <div className="feature-card">
+                  <h3>Website Templates</h3>
+                  <p>Beautiful, responsive templates across various industries</p>
+                </div>
+                <div className="feature-card">
+                  <h3>Ongoing Support</h3>
+                  <p>Dedicated support to help you succeed online</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="about-cta">
+              <h2>Ready to Get Started?</h2>
+              <p>Let's work together to bring your vision to life</p>
+              <div className="cta-buttons">
+                <Link to="/contact" className="btn btn-primary">Contact Us</Link>
+                <Link to="/portfolio" className="btn btn-secondary">View Our Work</Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>

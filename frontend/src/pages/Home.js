@@ -9,6 +9,8 @@ const Home = () => {
   const [testimonials, setTestimonials] = useState([]);
   const [themes, setThemes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [iframeBlocked, setIframeBlocked] = useState(new Set());
+  const [carouselIndex, setCarouselIndex] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -34,6 +36,17 @@ const Home = () => {
     fetchData();
   }, []);
 
+  // Auto-rotate carousel
+  useEffect(() => {
+    if (portfolioCarousel.length === 0) return;
+    
+    const interval = setInterval(() => {
+      setCarouselIndex((prevIndex) => (prevIndex + 1) % portfolioCarousel.length);
+    }, 3000); // Rotate every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [portfolioCarousel.length]);
+
   return (
     <div className="home">
       <section className="hero">
@@ -43,11 +56,24 @@ const Home = () => {
           {portfolioCarousel.length > 0 && (
             <div className="hero-carousel">
               <div className="carousel-track">
-                {portfolioCarousel.slice(0, 6).map((item) => (
-                  <div key={item.id} className="carousel-item">
-                    <img src={item.image} alt={item.title} />
-                  </div>
-                ))}
+                {Array.from({ length: 6 }, (_, position) => {
+                  // Get the item for this position, wrapping around if needed
+                  const totalItems = portfolioCarousel.length;
+                  const itemIndex = (carouselIndex + position) % totalItems;
+                  const item = portfolioCarousel[itemIndex];
+                  
+                  if (!item) return null;
+                  
+                  return (
+                    <div 
+                      key={`${item.id}-${position}-${carouselIndex}`} 
+                      className="carousel-item"
+                      data-position={position}
+                    >
+                      <img src={item.image} alt={item.title} />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -68,14 +94,41 @@ const Home = () => {
               {portfolio.map((item) => (
                 <div key={item.id} className="card portfolio-card">
                   <div className="portfolio-image">
-                    {item.website_url ? (
+                    {item.website_url && !iframeBlocked.has(item.id) ? (
                       <div className="website-preview">
                         <iframe
-                          src={item.website_url}
+                          src={(() => {
+                            // Convert HTTP to HTTPS to avoid mixed content errors
+                            const url = item.website_url;
+                            if (url.startsWith('http://')) {
+                              return url.replace('http://', 'https://');
+                            }
+                            return url;
+                          })()}
                           title={item.title}
                           className="preview-iframe"
                           sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                           loading="lazy"
+                          onLoad={() => {
+                            // Iframe loaded - check if it's actually blocked after a delay
+                            setTimeout(() => {
+                              const iframe = document.querySelector(`iframe[title="${item.title}"]`);
+                              if (iframe) {
+                                try {
+                                  // Try to access iframe content - will throw if blocked
+                                  const hasContent = iframe.contentDocument || iframe.contentWindow;
+                                  if (!hasContent) {
+                                    // Iframe might be blocked, fall back to image
+                                    setIframeBlocked(prev => new Set(prev).add(item.id));
+                                  }
+                                } catch (e) {
+                                  // Cross-origin or CSP violation - iframe is blocked
+                                  // This is expected for many sites, so we'll show image instead
+                                  setIframeBlocked(prev => new Set(prev).add(item.id));
+                                }
+                              }
+                            }, 2000);
+                          }}
                         />
                         <div className="preview-overlay">
                           <a 

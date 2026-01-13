@@ -131,6 +131,13 @@ class AdminThemeViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+class AdminPricingPlanViewSet(viewsets.ModelViewSet):
+    """Admin viewset for managing pricing plans"""
+    queryset = PricingPlan.objects.all()
+    serializer_class = PricingPlanSerializer
+    permission_classes = [FirebasePermission]
+
+
 class AdminThemeCategoryViewSet(viewsets.ModelViewSet):
     """Admin viewset for managing theme categories"""
     queryset = ThemeCategory.objects.all()

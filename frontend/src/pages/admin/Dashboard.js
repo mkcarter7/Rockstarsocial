@@ -10,6 +10,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [portfolioCount, setPortfolioCount] = useState(0);
   const [testimonialCount, setTestimonialCount] = useState(0);
+  const [pricingCount, setPricingCount] = useState(0);
   const [themeCount, setThemeCount] = useState(0);
   const [contactCount, setContactCount] = useState(0);
   const [unreadContactCount, setUnreadContactCount] = useState(0);
@@ -19,15 +20,17 @@ const Dashboard = () => {
       const token = await getIdToken();
       
       // Fetch counts from admin API
-      const [portfolioRes, testimonialRes, themeRes, contactRes] = await Promise.all([
+      const [portfolioRes, testimonialRes, pricingRes, themeRes, contactRes] = await Promise.all([
         api.get('/admin/portfolio/', { headers: { Authorization: `Bearer ${token}` } }),
         api.get('/admin/testimonials/', { headers: { Authorization: `Bearer ${token}` } }),
+        api.get('/admin/pricing/', { headers: { Authorization: `Bearer ${token}` } }),
         api.get('/admin/themes/', { headers: { Authorization: `Bearer ${token}` } }),
         api.get('/admin/contact-submissions/', { headers: { Authorization: `Bearer ${token}` } })
       ]);
 
       setPortfolioCount(portfolioRes.data.length);
       setTestimonialCount(testimonialRes.data.length);
+      setPricingCount(pricingRes.data.length);
       setThemeCount(themeRes.data.length);
       setContactCount(contactRes.data.length);
       setUnreadContactCount(contactRes.data.filter(s => !s.read).length);
@@ -91,6 +94,10 @@ const Dashboard = () => {
             <p className="stat-number">{testimonialCount}</p>
           </div>
           <div className="stat-card">
+            <h3>Pricing Plans</h3>
+            <p className="stat-number">{pricingCount}</p>
+          </div>
+          <div className="stat-card">
             <h3>Themes</h3>
             <p className="stat-number">{themeCount}</p>
           </div>
@@ -117,6 +124,12 @@ const Dashboard = () => {
               onClick={() => navigate('/admin/testimonials')}
             >
               Manage Testimonials
+            </button>
+            <button 
+              className="btn-action"
+              onClick={() => navigate('/admin/pricing')}
+            >
+              Manage Pricing Plans
             </button>
             <button 
               className="btn-action"

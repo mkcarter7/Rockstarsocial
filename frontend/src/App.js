@@ -16,6 +16,7 @@ import ContactSubmissions from './pages/admin/ContactSubmissions';
 import SiteSettings from './pages/admin/SiteSettings';
 import ManagePortfolio from './pages/admin/ManagePortfolio';
 import ManageTestimonials from './pages/admin/ManageTestimonials';
+import ManagePricing from './pages/admin/ManagePricing';
 import ManageThemes from './pages/admin/ManageThemes';
 import './App.css';
 
@@ -67,12 +68,20 @@ function App() {
             } 
           />
           <Route 
+            path="/admin/pricing" 
+            element={
+              <ProtectedRoute>
+                <ManagePricing />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
             path="/admin/themes" 
             element={
               <ProtectedRoute>
                 <ManageThemes />
               </ProtectedRoute>
-            } 
+            }
           />
           
           {/* Public routes (with navbar/footer) */}

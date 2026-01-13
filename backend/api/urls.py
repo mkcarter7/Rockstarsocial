@@ -5,8 +5,8 @@ from .views import (
     ThemeCategoryViewSet, ThemeViewSet, ContactSubmissionViewSet
 )
 from .admin_views import (
-    AdminPortfolioViewSet, AdminTestimonialViewSet, AdminThemeViewSet,
-    AdminThemeCategoryViewSet, AdminContactSubmissionViewSet,
+    AdminPortfolioViewSet, AdminTestimonialViewSet, AdminPricingPlanViewSet,
+    AdminThemeViewSet, AdminThemeCategoryViewSet, AdminContactSubmissionViewSet,
     VerifyTokenView, SiteSettingsView
 )
 
@@ -22,6 +22,7 @@ router.register(r'contact', ContactSubmissionViewSet, basename='contact')
 admin_router = DefaultRouter()
 admin_router.register(r'admin/portfolio', AdminPortfolioViewSet, basename='admin-portfolio')
 admin_router.register(r'admin/testimonials', AdminTestimonialViewSet, basename='admin-testimonials')
+admin_router.register(r'admin/pricing', AdminPricingPlanViewSet, basename='admin-pricing')
 admin_router.register(r'admin/themes', AdminThemeViewSet, basename='admin-themes')
 admin_router.register(r'admin/theme-categories', AdminThemeCategoryViewSet, basename='admin-theme-categories')
 admin_router.register(r'admin/contact-submissions', AdminContactSubmissionViewSet, basename='admin-contact-submissions')

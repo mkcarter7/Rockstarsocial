@@ -20,14 +20,14 @@ const About = () => {
               <p>
                 RockStar Social is a leading web design agency specializing in creating 
                 stunning, responsive websites and premium themes for businesses of all sizes. 
-                With years of experience in the industry, we combine creativity with technical 
+                I combine creativity with technical 
                 expertise to deliver exceptional digital experiences.
               </p>
               <p>
-                Our team of talented designers and developers work closely with clients to 
+                I work closely with clients to 
                 understand their unique needs and create custom solutions that drive results. 
                 Whether you need a complete website redesign, a custom Shopify theme, or a 
-                ready-made template, we've got you covered.
+                ready-made template, I've got you covered.
               </p>
             </div>
 

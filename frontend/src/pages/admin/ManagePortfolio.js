@@ -82,9 +82,9 @@ const ManagePortfolio = () => {
       const formDataToSend = new FormData();
       formDataToSend.append('title', formData.title);
       formDataToSend.append('description', formData.description);
-      formDataToSend.append('website_url', formData.website_url);
-      formDataToSend.append('category', formData.category);
-      formDataToSend.append('featured', formData.featured);
+      formDataToSend.append('website_url', formData.website_url || '');
+      formDataToSend.append('category', formData.category || '');
+      formDataToSend.append('featured', formData.featured ? 'true' : 'false');
       if (formData.image) {
         formDataToSend.append('image', formData.image);
       }
@@ -110,7 +110,12 @@ const ManagePortfolio = () => {
       loadPortfolioItems();
     } catch (err) {
       console.error('Error saving portfolio item:', err);
-      alert('Error saving portfolio item. Please try again.');
+      // Show more detailed error message
+      const errorMessage = err.response?.data 
+        ? JSON.stringify(err.response.data, null, 2)
+        : err.message || 'Unknown error occurred';
+      console.error('Error details:', errorMessage);
+      alert(`Error saving portfolio item: ${errorMessage}`);
     }
   };
 

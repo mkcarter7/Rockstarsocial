@@ -55,6 +55,18 @@ class AdminPortfolioViewSet(viewsets.ModelViewSet):
         if 'image' not in data or data.get('image') is None or data.get('image') == '':
             data.pop('image', None)
         
+        # Convert string booleans to actual booleans (FormData sends strings)
+        if 'featured' in data:
+            featured_value = data.get('featured')
+            if isinstance(featured_value, str):
+                data['featured'] = featured_value.lower() in ('true', '1', 'yes', 'on')
+            elif featured_value is None or featured_value == '':
+                data.pop('featured', None)
+        
+        # Convert empty strings to None for optional fields that allow null
+        if 'website_url' in data and data['website_url'] == '':
+            data['website_url'] = None
+        
         serializer = self.get_serializer(instance, data=data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)

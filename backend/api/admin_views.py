@@ -152,6 +152,62 @@ class AdminTestimonialViewSet(viewsets.ModelViewSet):
     serializer_class = TestimonialSerializer
     permission_classes = [FirebasePermission]
     
+    def create(self, request, *args, **kwargs):
+        """Override create to handle file uploads with proper error handling"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        try:
+            from django.conf import settings
+            logger.info(f"Creating testimonial - USE_S3: {getattr(settings, 'USE_S3', False)}")
+            
+            # Create a mutable copy of request.data if it's a QueryDict
+            if hasattr(request.data, 'copy'):
+                data = request.data.copy()
+            else:
+                data = dict(request.data)
+            
+            # Convert string booleans to actual booleans (FormData sends strings)
+            if 'featured' in data:
+                featured_value = data.get('featured')
+                if isinstance(featured_value, str):
+                    data['featured'] = featured_value.lower() in ('true', '1', 'yes', 'on')
+            
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            
+            logger.info(f"Testimonial validated, saving... Client image present: {bool(request.data.get('client_image'))}")
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            
+            instance = serializer.instance
+            if instance and instance.client_image:
+                logger.info(f"Testimonial created successfully. Client image: {instance.client_image.name}")
+            
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            
+        except Exception as e:
+            import traceback
+            logger.error(f"Error creating testimonial: {str(e)}\n{traceback.format_exc()}")
+            
+            error_message = str(e)
+            if BotoClientError and isinstance(e, BotoClientError):
+                return Response(
+                    {
+                        'error': 'Failed to upload image to S3 storage.',
+                        'details': f'S3 error: {error_message}'
+                    },
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
+            return Response(
+                {
+                    'error': 'Failed to create testimonial.',
+                    'details': error_message
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
     def update(self, request, *args, **kwargs):
         """Override update to handle partial updates with file uploads"""
         partial = True  # Always use partial update for file uploads
@@ -167,6 +223,14 @@ class AdminTestimonialViewSet(viewsets.ModelViewSet):
         # This preserves the existing image
         if 'client_image' not in data or data.get('client_image') is None or data.get('client_image') == '':
             data.pop('client_image', None)
+        
+        # Convert string booleans to actual booleans (FormData sends strings)
+        if 'featured' in data:
+            featured_value = data.get('featured')
+            if isinstance(featured_value, str):
+                data['featured'] = featured_value.lower() in ('true', '1', 'yes', 'on')
+            elif featured_value is None or featured_value == '':
+                data.pop('featured', None)
         
         serializer = self.get_serializer(instance, data=data, partial=partial)
         serializer.is_valid(raise_exception=True)

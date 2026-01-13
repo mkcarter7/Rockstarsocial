@@ -97,13 +97,15 @@ const ManageTestimonials = () => {
         await api.put(`/admin/testimonials/${currentItem.id}/`, formDataToSend, {
           headers: {
             Authorization: `Bearer ${token}`
-          }
+          },
+          transformRequest: [(data) => data]
         });
       } else {
         await api.post('/admin/testimonials/', formDataToSend, {
           headers: {
             Authorization: `Bearer ${token}`
-          }
+          },
+          transformRequest: [(data) => data]
         });
       }
       

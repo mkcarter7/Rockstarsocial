@@ -249,22 +249,28 @@
 
 @media (max-width: 768px) {
   .hero-carousel {
-    height: 180px;
+    height: 150px;
     margin: 40px 0 30px;
+    overflow: hidden; /* Hide items outside the container */
+    padding: 20px 10px;
+  }
+
+  .carousel-track {
+    gap: 10px;
+    justify-content: center;
+    overflow: visible; /* Allow items to be visible but contained by parent */
+    width: 100%;
+    max-width: 100%;
   }
 
   .carousel-item {
-    width: 120px;
-    height: 120px;
-  }
-
-  .carousel-item:nth-child(1) {
-    left: calc(50% - 60px);
-  }
-
-  .carousel-item:nth-child(3) {
-    left: calc(50% + 70px);
-    transform: translateY(20px) scale(0.8);
+    width: 100px;
+    height: 100px;
+    position: relative; /* Remove absolute positioning */
+    left: auto !important; /* Override any left positioning */
+    transform: none !important; /* Remove transforms that position items off-screen */
+    flex-shrink: 0;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   }
 
   .hero-buttons {

@@ -126,36 +126,6 @@ const Home = () => {
 
       <section className="section section-alt">
         <div className="container">
-          <h2 className="section-title">What Our Clients Say</h2>
-          <p className="section-subtitle">Don't just take our word for it</p>
-          {loading ? (
-            <div className="loading">Loading...</div>
-          ) : testimonials.length > 0 ? (
-            <div className="grid grid-3">
-              {testimonials.map((testimonial) => (
-                <div key={testimonial.id} className="card testimonial-card">
-                  <div className="testimonial-rating">
-                    {'★'.repeat(testimonial.rating)}
-                  </div>
-                  <p className="testimonial-text">"{testimonial.testimonial_text}"</p>
-                  <div className="testimonial-author">
-                    <strong>{testimonial.client_name}</strong>
-                    {testimonial.company && <span>, {testimonial.company}</span>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="loading">No testimonials available</div>
-          )}
-          <div className="text-center" style={{ marginTop: '30px' }}>
-            <Link to="/testimonials" className="btn btn-secondary">Read All Testimonials</Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="container">
           <h2 className="section-title">Premium Themes</h2>
           <p className="section-subtitle">Beautiful, responsive themes for your business</p>
           {loading ? (
@@ -186,6 +156,36 @@ const Home = () => {
           )}
           <div className="text-center" style={{ marginTop: '30px' }}>
             <Link to="/themes" className="btn btn-secondary">Browse All Themes</Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="container">
+          <h2 className="section-title">What Our Clients Say</h2>
+          <p className="section-subtitle">Don't just take our word for it</p>
+          {loading ? (
+            <div className="loading">Loading...</div>
+          ) : testimonials.length > 0 ? (
+            <div className="grid grid-3">
+              {testimonials.map((testimonial) => (
+                <div key={testimonial.id} className="card testimonial-card">
+                  <div className="testimonial-rating">
+                    {'★'.repeat(testimonial.rating)}
+                  </div>
+                  <p className="testimonial-text">"{testimonial.testimonial_text}"</p>
+                  <div className="testimonial-author">
+                    <strong>{testimonial.client_name}</strong>
+                    {testimonial.company && <span>, {testimonial.company}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="loading">No testimonials available</div>
+          )}
+          <div className="text-center" style={{ marginTop: '30px' }}>
+            <Link to="/testimonials" className="btn btn-secondary">Read All Testimonials</Link>
           </div>
         </div>
       </section>

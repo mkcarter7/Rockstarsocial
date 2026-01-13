@@ -6,6 +6,13 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import BasePermission
+from django.core.exceptions import ValidationError
+
+# Try to import boto3 exceptions for better error handling
+try:
+    from botocore.exceptions import ClientError as BotoClientError
+except ImportError:
+    BotoClientError = None
 from .models import (
     PortfolioItem, Testimonial, PricingPlan,
     ThemeCategory, Theme, ContactSubmission, SiteSettings
@@ -41,40 +48,102 @@ class AdminPortfolioViewSet(viewsets.ModelViewSet):
     
     def update(self, request, *args, **kwargs):
         """Override update to handle partial updates with file uploads"""
-        partial = True  # Always use partial update for file uploads
-        instance = self.get_object()
-        
-        # Create a mutable copy of request.data if it's a QueryDict
-        if hasattr(request.data, 'copy'):
-            data = request.data.copy()
-        else:
-            data = dict(request.data)
-        
-        # If no image is provided in the request, don't include it in the update
-        # This preserves the existing image
-        if 'image' not in data or data.get('image') is None or data.get('image') == '':
-            data.pop('image', None)
-        
-        # Convert string booleans to actual booleans (FormData sends strings)
-        if 'featured' in data:
-            featured_value = data.get('featured')
-            if isinstance(featured_value, str):
-                data['featured'] = featured_value.lower() in ('true', '1', 'yes', 'on')
-            elif featured_value is None or featured_value == '':
-                data.pop('featured', None)
-        
-        # Convert empty strings to None for optional fields that allow null
-        if 'website_url' in data and data['website_url'] == '':
-            data['website_url'] = None
-        
-        serializer = self.get_serializer(instance, data=data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        
-        if getattr(instance, '_prefetched_objects_cache', None):
-            instance._prefetched_objects_cache = {}
-        
-        return Response(serializer.data)
+        try:
+            partial = True  # Always use partial update for file uploads
+            instance = self.get_object()
+            
+            # Create a mutable copy of request.data if it's a QueryDict
+            if hasattr(request.data, 'copy'):
+                data = request.data.copy()
+            else:
+                data = dict(request.data)
+            
+            # If no image is provided in the request, don't include it in the update
+            # This preserves the existing image
+            if 'image' not in data or data.get('image') is None or data.get('image') == '':
+                data.pop('image', None)
+            
+            # Convert string booleans to actual booleans (FormData sends strings)
+            if 'featured' in data:
+                featured_value = data.get('featured')
+                if isinstance(featured_value, str):
+                    data['featured'] = featured_value.lower() in ('true', '1', 'yes', 'on')
+                elif featured_value is None or featured_value == '':
+                    data.pop('featured', None)
+            
+            # Convert empty strings to None for optional fields that allow null
+            if 'website_url' in data and data['website_url'] == '':
+                data['website_url'] = None
+            
+            serializer = self.get_serializer(instance, data=data, partial=partial)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            
+            if getattr(instance, '_prefetched_objects_cache', None):
+                instance._prefetched_objects_cache = {}
+            
+            return Response(serializer.data)
+            
+        except Exception as e:
+            # Log the error for debugging
+            import logging
+            import traceback
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error updating portfolio item: {str(e)}\n{traceback.format_exc()}")
+            
+            # Check for specific S3/boto3 errors
+            error_type = type(e).__name__
+            error_message = str(e)
+            
+            # Handle boto3 ClientError (from botocore.exceptions)
+            if BotoClientError and isinstance(e, BotoClientError):
+                return Response(
+                    {
+                        'error': 'Failed to upload image to S3 storage.',
+                        'details': f'S3 error: {error_message}. Please check S3 bucket configuration, permissions, and credentials.'
+                    },
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
+            # Handle Django ClientError or any error with "ClientError" in the message
+            if 'ClientError' in error_type or 'ClientError' in error_message:
+                return Response(
+                    {
+                        'error': 'Storage error occurred.',
+                        'details': f'{error_message}. Please check S3 configuration if USE_S3 is enabled.'
+                    },
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
+            # Handle other AWS/S3 related errors
+            if any(keyword in error_message.lower() for keyword in ['aws', 's3', 'boto', 'bucket', 'access denied', 'nosuchbucket', 'invalidaccesskeyid']):
+                return Response(
+                    {
+                        'error': 'S3 storage error.',
+                        'details': 'Please verify your S3 configuration and credentials in Railway environment variables.'
+                    },
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
+            # Handle Django validation errors
+            from django.core.exceptions import ValidationError
+            if isinstance(e, ValidationError):
+                return Response(
+                    {
+                        'error': 'Validation error.',
+                        'details': str(e)
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Generic error - return JSON instead of letting Django return HTML
+            return Response(
+                {
+                    'error': 'Failed to save portfolio item.',
+                    'details': error_message
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class AdminTestimonialViewSet(viewsets.ModelViewSet):

@@ -147,22 +147,35 @@ if USE_S3:
     AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
     AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'us-east-1')
-    AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-    AWS_S3_OBJECT_PARAMETERS = {
-        'CacheControl': 'max-age=86400',
-    }
-    AWS_DEFAULT_ACL = 'public-read'
-    AWS_S3_FILE_OVERWRITE = False
-    AWS_QUERYSTRING_AUTH = False
     
-    # S3 static files settings (if you want to use S3 for static files too)
-    # STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    
-    # S3 media files settings
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
-else:
-    # Local file storage (for development)
+    # Validate that all required S3 settings are present
+    if not all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME]):
+        # If S3 is enabled but credentials are missing, fall back to local storage
+        USE_S3 = False
+        print("Warning: USE_S3 is True but AWS credentials are missing. Falling back to local storage.")
+    else:
+        AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+        AWS_S3_OBJECT_PARAMETERS = {
+            'CacheControl': 'max-age=86400',
+        }
+        # Note: AWS has deprecated ACLs in some regions. If you get ACL errors, 
+        # remove AWS_DEFAULT_ACL and use bucket policies instead
+        AWS_DEFAULT_ACL = None  # Changed from 'public-read' - use bucket policy for public access
+        AWS_S3_FILE_OVERWRITE = False
+        AWS_QUERYSTRING_AUTH = False
+        AWS_S3_VERIFY = True
+        AWS_S3_USE_SSL = True
+        AWS_S3_USE_SIGNATURES_V4 = True
+        
+        # S3 static files settings (if you want to use S3 for static files too)
+        # STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+        
+        # S3 media files settings
+        DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+        MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
+
+if not USE_S3:
+    # Local file storage (for development or when S3 is not configured)
     MEDIA_URL = 'media/'
     MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -224,6 +237,7 @@ REST_FRAMEWORK = {
     # Disable pagination by default (can be enabled per viewset if needed)
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     # 'PAGE_SIZE': 10
+    'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
 }
 
 # Logging configuration for production error tracking

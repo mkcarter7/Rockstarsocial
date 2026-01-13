@@ -15,7 +15,7 @@ const ManageThemes = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    theme_type: 'shopify',
+    theme_type: 'birthday',
     category: '',
     price: '',
     demo_url: '',
@@ -65,7 +65,7 @@ const ManageThemes = () => {
     setFormData({
       name: item.name || '',
       description: item.description || '',
-      theme_type: item.theme_type || 'shopify',
+      theme_type: item.theme_type || 'birthday',
       category: item.category || '',
       price: item.price || '',
       demo_url: item.demo_url || '',
@@ -83,7 +83,7 @@ const ManageThemes = () => {
     setFormData({
       name: '',
       description: '',
-      theme_type: 'shopify',
+      theme_type: 'birthday',
       category: '',
       price: '',
       demo_url: '',
@@ -215,7 +215,7 @@ const ManageThemes = () => {
               setFormData({
                 name: '',
                 description: '',
-                theme_type: 'shopify',
+                theme_type: 'birthday',
                 category: '',
                 price: '',
                 demo_url: '',
@@ -271,8 +271,12 @@ const ManageThemes = () => {
                       onChange={handleInputChange}
                       required
                     >
-                      <option value="shopify">Shopify Theme</option>
-                      <option value="website">Website Theme</option>
+                      <option value="birthday">Birthday</option>
+                      <option value="wedding">Wedding</option>
+                      <option value="event">Event</option>
+                      <option value="business">Business Website</option>
+                      <option value="boutique">Boutique Website</option>
+                      <option value="ecommerce">Ecommerce Website</option>
                     </select>
                   </div>
 
@@ -408,7 +412,7 @@ const ManageThemes = () => {
                     <div className="theme-card-header">
                       <div>
                         <h3>{item.name}</h3>
-                        <p className="theme-type">{item.theme_type === 'shopify' ? 'Shopify Theme' : 'Website Theme'}</p>
+                        <p className="theme-type">{item.theme_type_display || item.theme_type}</p>
                         {item.category_name && (
                           <p className="theme-category">{item.category_name}</p>
                         )}

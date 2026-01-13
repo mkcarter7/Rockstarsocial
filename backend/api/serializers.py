@@ -70,6 +70,7 @@ class ThemeCategorySerializer(serializers.ModelSerializer):
 
 class ThemeSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
+    theme_type_display = serializers.CharField(source='get_theme_type_display', read_only=True)
     
     class Meta:
         model = Theme

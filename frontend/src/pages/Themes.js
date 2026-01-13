@@ -63,8 +63,12 @@ const Themes = () => {
                 className="filter-select"
               >
                 <option value="all">All Types</option>
-                <option value="shopify">Shopify Themes</option>
-                <option value="website">Website Themes</option>
+                <option value="birthday">Birthday</option>
+                <option value="wedding">Wedding</option>
+                <option value="event">Event</option>
+                <option value="business">Business Website</option>
+                <option value="boutique">Boutique Website</option>
+                <option value="ecommerce">Ecommerce Website</option>
               </select>
             </div>
             
@@ -106,7 +110,7 @@ const Themes = () => {
                   <div className="theme-item-content">
                     <div className="theme-header">
                       <h3>{theme.name}</h3>
-                      <span className="theme-type-badge">{theme.theme_type}</span>
+                      <span className="theme-type-badge">{theme.theme_type_display || theme.theme_type}</span>
                     </div>
                     {theme.category_name && (
                       <span className="theme-category">{theme.category_name}</span>

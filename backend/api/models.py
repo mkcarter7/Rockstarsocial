@@ -70,8 +70,12 @@ class ThemeCategory(models.Model):
 class Theme(models.Model):
     """Model for themes (Shopify and website themes)"""
     THEME_TYPES = [
-        ('shopify', 'Shopify Theme'),
-        ('website', 'Website Theme'),
+        ('birthday', 'Birthday'),
+        ('wedding', 'Wedding'),
+        ('event', 'Event'),
+        ('business', 'Business Website'),
+        ('boutique', 'Boutique Website'),
+        ('ecommerce', 'Ecommerce Website'),
     ]
     
     name = models.CharField(max_length=200)

@@ -144,7 +144,7 @@ const Home = () => {
                   <h3>{theme.name}</h3>
                   <p>{theme.description}</p>
                   <div className="theme-meta">
-                    <span className="theme-type">{theme.theme_type}</span>
+                    <span className="theme-type">{theme.theme_type_display || theme.theme_type}</span>
                     <span className="theme-price">${theme.price}</span>
                   </div>
                   <Link to={`/themes`} className="btn btn-primary">View Details</Link>

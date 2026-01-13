@@ -68,6 +68,12 @@ const Home = () => {
                       key={`${item.id}-${position}-${carouselIndex}`} 
                       className="carousel-item"
                       data-position={position}
+                      onClick={() => {
+                        if (item.website_url) {
+                          window.open(item.website_url, '_blank', 'noopener,noreferrer');
+                        }
+                      }}
+                      style={{ cursor: item.website_url ? 'pointer' : 'default' }}
                     >
                       <img src={item.image} alt={item.title} />
                     </div>

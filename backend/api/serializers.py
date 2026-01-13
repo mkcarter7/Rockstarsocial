@@ -1,8 +1,31 @@
 from rest_framework import serializers
+from django.conf import settings
 from .models import (
     PortfolioItem, Testimonial, PricingPlan,
     ThemeCategory, Theme, ContactSubmission, SiteSettings
 )
+
+
+def get_full_image_url(image_field_value, request=None):
+    """Helper function to get full URL for image fields (handles S3 and local storage)"""
+    if not image_field_value:
+        return image_field_value
+    
+    # If image already has http/https (S3 URL), use it as-is
+    if isinstance(image_field_value, str) and image_field_value.startswith(('http://', 'https://')):
+        return image_field_value
+    
+    # Otherwise, build absolute URI
+    if request:
+        return request.build_absolute_uri(image_field_value)
+    else:
+        # Fallback for when request context is not available
+        if hasattr(settings, 'MEDIA_URL') and settings.MEDIA_URL.startswith('http'):
+            # S3 is configured
+            return f"{settings.MEDIA_URL.rstrip('/')}/{image_field_value.lstrip('/')}"
+        else:
+            # Local storage fallback
+            return f"http://localhost:8000/media/{image_field_value}"
 
 
 class PortfolioItemSerializer(serializers.ModelSerializer):
@@ -14,14 +37,9 @@ class PortfolioItemSerializer(serializers.ModelSerializer):
     
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        # Add full URL to image if it exists
+        request = self.context.get('request')
         if representation.get('image'):
-            request = self.context.get('request')
-            if request:
-                representation['image'] = request.build_absolute_uri(representation['image'])
-            else:
-                # Fallback for when request context is not available
-                representation['image'] = f"http://localhost:8000/media/{representation['image']}"
+            representation['image'] = get_full_image_url(representation['image'], request)
         return representation
 
 
@@ -29,6 +47,13 @@ class TestimonialSerializer(serializers.ModelSerializer):
     class Meta:
         model = Testimonial
         fields = '__all__'
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+        if representation.get('client_image'):
+            representation['client_image'] = get_full_image_url(representation['client_image'], request)
+        return representation
 
 
 class PricingPlanSerializer(serializers.ModelSerializer):
@@ -49,6 +74,15 @@ class ThemeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Theme
         fields = '__all__'
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+        if representation.get('preview_image'):
+            representation['preview_image'] = get_full_image_url(representation['preview_image'], request)
+        if representation.get('download_file'):
+            representation['download_file'] = get_full_image_url(representation['download_file'], request)
+        return representation
 
 
 class ContactSubmissionSerializer(serializers.ModelSerializer):

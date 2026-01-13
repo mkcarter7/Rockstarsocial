@@ -157,8 +157,8 @@ const Home = () => {
                   <p>Beautiful, responsive templates across various industries</p>
                 </div>
                 <div className="feature-card">
-                  <h3>Ongoing Support</h3>
-                  <p>Dedicated support to help you succeed online</p>
+                  <h3>Support</h3>
+                  <p>hourly Technical Support and dedicated ongoing support to help you succeed online</p>
                 </div>
               </div>
             </div>

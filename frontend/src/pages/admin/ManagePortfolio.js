@@ -89,17 +89,20 @@ const ManagePortfolio = () => {
         formDataToSend.append('image', formData.image);
       }
 
+      // Prepare headers - don't set Content-Type for FormData (browser will set it with boundary)
+      const headers = {
+        Authorization: `Bearer ${token}`
+      };
+      
       if (isEditing && currentItem) {
         await api.put(`/admin/portfolio/${currentItem.id}/`, formDataToSend, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: headers,
+          transformRequest: [(data) => data]  // Don't transform FormData
         });
       } else {
         await api.post('/admin/portfolio/', formDataToSend, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: headers,
+          transformRequest: [(data) => data]  // Don't transform FormData
         });
       }
       

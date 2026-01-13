@@ -38,6 +38,31 @@ class AdminPortfolioViewSet(viewsets.ModelViewSet):
         context = super().get_serializer_context()
         context['request'] = self.request
         return context
+    
+    def update(self, request, *args, **kwargs):
+        """Override update to handle partial updates with file uploads"""
+        partial = True  # Always use partial update for file uploads
+        instance = self.get_object()
+        
+        # Create a mutable copy of request.data if it's a QueryDict
+        if hasattr(request.data, 'copy'):
+            data = request.data.copy()
+        else:
+            data = dict(request.data)
+        
+        # If no image is provided in the request, don't include it in the update
+        # This preserves the existing image
+        if 'image' not in data or data.get('image') is None or data.get('image') == '':
+            data.pop('image', None)
+        
+        serializer = self.get_serializer(instance, data=data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        if getattr(instance, '_prefetched_objects_cache', None):
+            instance._prefetched_objects_cache = {}
+        
+        return Response(serializer.data)
 
 
 class AdminTestimonialViewSet(viewsets.ModelViewSet):
@@ -45,6 +70,31 @@ class AdminTestimonialViewSet(viewsets.ModelViewSet):
     queryset = Testimonial.objects.all()
     serializer_class = TestimonialSerializer
     permission_classes = [FirebasePermission]
+    
+    def update(self, request, *args, **kwargs):
+        """Override update to handle partial updates with file uploads"""
+        partial = True  # Always use partial update for file uploads
+        instance = self.get_object()
+        
+        # Create a mutable copy of request.data if it's a QueryDict
+        if hasattr(request.data, 'copy'):
+            data = request.data.copy()
+        else:
+            data = dict(request.data)
+        
+        # If no client_image is provided in the request, don't include it in the update
+        # This preserves the existing image
+        if 'client_image' not in data or data.get('client_image') is None or data.get('client_image') == '':
+            data.pop('client_image', None)
+        
+        serializer = self.get_serializer(instance, data=data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        if getattr(instance, '_prefetched_objects_cache', None):
+            instance._prefetched_objects_cache = {}
+        
+        return Response(serializer.data)
 
 
 class AdminThemeViewSet(viewsets.ModelViewSet):
@@ -52,6 +102,33 @@ class AdminThemeViewSet(viewsets.ModelViewSet):
     queryset = Theme.objects.all()
     serializer_class = ThemeSerializer
     permission_classes = [FirebasePermission]
+    
+    def update(self, request, *args, **kwargs):
+        """Override update to handle partial updates with file uploads"""
+        partial = True  # Always use partial update for file uploads
+        instance = self.get_object()
+        
+        # Create a mutable copy of request.data if it's a QueryDict
+        if hasattr(request.data, 'copy'):
+            data = request.data.copy()
+        else:
+            data = dict(request.data)
+        
+        # If no preview_image or download_file is provided, don't include them in the update
+        # This preserves the existing files
+        if 'preview_image' not in data or data.get('preview_image') is None or data.get('preview_image') == '':
+            data.pop('preview_image', None)
+        if 'download_file' not in data or data.get('download_file') is None or data.get('download_file') == '':
+            data.pop('download_file', None)
+        
+        serializer = self.get_serializer(instance, data=data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        if getattr(instance, '_prefetched_objects_cache', None):
+            instance._prefetched_objects_cache = {}
+        
+        return Response(serializer.data)
 
 
 class AdminThemeCategoryViewSet(viewsets.ModelViewSet):

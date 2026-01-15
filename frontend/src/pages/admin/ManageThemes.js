@@ -107,7 +107,7 @@ const ManageThemes = () => {
       }
       formDataToSend.append('price', formData.price);
       formDataToSend.append('demo_url', formData.demo_url);
-      formDataToSend.append('featured', formData.featured);
+      formDataToSend.append('featured', formData.featured ? 'true' : 'false');
       
       // Convert features string to JSON array
       const featuresArray = formData.features
@@ -127,13 +127,15 @@ const ManageThemes = () => {
         await api.put(`/admin/themes/${currentItem.id}/`, formDataToSend, {
           headers: {
             Authorization: `Bearer ${token}`
-          }
+          },
+          transformRequest: [(data) => data]
         });
       } else {
         await api.post('/admin/themes/', formDataToSend, {
           headers: {
             Authorization: `Bearer ${token}`
-          }
+          },
+          transformRequest: [(data) => data]
         });
       }
       
@@ -141,7 +143,28 @@ const ManageThemes = () => {
       loadThemes();
     } catch (err) {
       console.error('Error saving theme:', err);
-      alert('Error saving theme. Please try again.');
+      let errorMessage = 'Error saving theme. Please try again.';
+      
+      if (err.response && err.response.data) {
+        if (err.response.data.error) {
+          errorMessage = err.response.data.error;
+          if (err.response.data.details) {
+            errorMessage += `\n\n${err.response.data.details}`;
+          }
+        } else if (err.response.data.detail) {
+          errorMessage = err.response.data.detail;
+        } else if (typeof err.response.data === 'object') {
+          // Handle field-specific validation errors
+          const fieldErrors = Object.entries(err.response.data)
+            .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+            .join('\n');
+          if (fieldErrors) {
+            errorMessage = `Validation errors:\n${fieldErrors}`;
+          }
+        }
+      }
+      
+      alert(errorMessage);
     }
   };
 

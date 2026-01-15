@@ -248,32 +248,183 @@ class AdminThemeViewSet(viewsets.ModelViewSet):
     serializer_class = ThemeSerializer
     permission_classes = [FirebasePermission]
     
+    def create(self, request, *args, **kwargs):
+        """Override create to handle file uploads with proper error handling"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        try:
+            from django.conf import settings
+            logger.info(f"Creating theme - USE_S3: {getattr(settings, 'USE_S3', False)}")
+            
+            # Create a mutable copy of request.data if it's a QueryDict
+            if hasattr(request.data, 'copy'):
+                data = request.data.copy()
+            else:
+                data = dict(request.data)
+            
+            # Convert string booleans to actual booleans (FormData sends strings)
+            if 'featured' in data:
+                featured_value = data.get('featured')
+                if isinstance(featured_value, str):
+                    data['featured'] = featured_value.lower() in ('true', '1', 'yes', 'on')
+            
+            # Handle features JSON string
+            if 'features' in data and isinstance(data.get('features'), str):
+                try:
+                    import json
+                    features_json = json.loads(data['features'])
+                    if isinstance(features_json, list):
+                        data['features'] = features_json
+                except (json.JSONDecodeError, ValueError):
+                    # If JSON parsing fails, treat as empty list
+                    data['features'] = []
+            
+            # Convert empty strings to None for optional fields
+            if 'demo_url' in data and data['demo_url'] == '':
+                data['demo_url'] = None
+            if 'category' in data and data['category'] == '':
+                data.pop('category', None)
+            
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            
+            logger.info(f"Theme validated, saving... Preview image present: {bool(request.data.get('preview_image'))}")
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            
+            instance = serializer.instance
+            if instance and instance.preview_image:
+                logger.info(f"Theme created successfully. Preview image: {instance.preview_image.name}")
+            
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            
+        except Exception as e:
+            import traceback
+            logger.error(f"Error creating theme: {str(e)}\n{traceback.format_exc()}")
+            
+            error_message = str(e)
+            if BotoClientError and isinstance(e, BotoClientError):
+                return Response(
+                    {
+                        'error': 'Failed to upload file to S3 storage.',
+                        'details': f'S3 error: {error_message}'
+                    },
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
+            # Handle Django validation errors
+            from django.core.exceptions import ValidationError
+            if isinstance(e, ValidationError):
+                return Response(
+                    {
+                        'error': 'Validation error.',
+                        'details': str(e)
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            return Response(
+                {
+                    'error': 'Failed to create theme.',
+                    'details': error_message
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
     def update(self, request, *args, **kwargs):
         """Override update to handle partial updates with file uploads"""
-        partial = True  # Always use partial update for file uploads
-        instance = self.get_object()
-        
-        # Create a mutable copy of request.data if it's a QueryDict
-        if hasattr(request.data, 'copy'):
-            data = request.data.copy()
-        else:
-            data = dict(request.data)
-        
-        # If no preview_image or download_file is provided, don't include them in the update
-        # This preserves the existing files
-        if 'preview_image' not in data or data.get('preview_image') is None or data.get('preview_image') == '':
-            data.pop('preview_image', None)
-        if 'download_file' not in data or data.get('download_file') is None or data.get('download_file') == '':
-            data.pop('download_file', None)
-        
-        serializer = self.get_serializer(instance, data=data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        
-        if getattr(instance, '_prefetched_objects_cache', None):
-            instance._prefetched_objects_cache = {}
-        
-        return Response(serializer.data)
+        try:
+            partial = True  # Always use partial update for file uploads
+            instance = self.get_object()
+            
+            # Create a mutable copy of request.data if it's a QueryDict
+            if hasattr(request.data, 'copy'):
+                data = request.data.copy()
+            else:
+                data = dict(request.data)
+            
+            # If no preview_image or download_file is provided, don't include them in the update
+            # This preserves the existing files
+            if 'preview_image' not in data or data.get('preview_image') is None or data.get('preview_image') == '':
+                data.pop('preview_image', None)
+            if 'download_file' not in data or data.get('download_file') is None or data.get('download_file') == '':
+                data.pop('download_file', None)
+            
+            # Convert string booleans to actual booleans (FormData sends strings)
+            if 'featured' in data:
+                featured_value = data.get('featured')
+                if isinstance(featured_value, str):
+                    data['featured'] = featured_value.lower() in ('true', '1', 'yes', 'on')
+                elif featured_value is None or featured_value == '':
+                    data.pop('featured', None)
+            
+            # Handle features JSON string
+            if 'features' in data and isinstance(data.get('features'), str):
+                try:
+                    import json
+                    features_json = json.loads(data['features'])
+                    if isinstance(features_json, list):
+                        data['features'] = features_json
+                except (json.JSONDecodeError, ValueError):
+                    # If JSON parsing fails, treat as empty list
+                    data['features'] = []
+            
+            # Convert empty strings to None for optional fields
+            if 'demo_url' in data and data['demo_url'] == '':
+                data['demo_url'] = None
+            if 'category' in data and data['category'] == '':
+                data.pop('category', None)
+            
+            serializer = self.get_serializer(instance, data=data, partial=partial)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            
+            if getattr(instance, '_prefetched_objects_cache', None):
+                instance._prefetched_objects_cache = {}
+            
+            return Response(serializer.data)
+            
+        except Exception as e:
+            # Log the error for debugging
+            import logging
+            import traceback
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error updating theme: {str(e)}\n{traceback.format_exc()}")
+            
+            # Check for specific S3/boto3 errors
+            error_type = type(e).__name__
+            error_message = str(e)
+            
+            # Handle boto3 ClientError (from botocore.exceptions)
+            if BotoClientError and isinstance(e, BotoClientError):
+                return Response(
+                    {
+                        'error': 'Failed to upload file to S3 storage.',
+                        'details': f'S3 error: {error_message}. Please check S3 bucket configuration, permissions, and credentials.'
+                    },
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
+            # Handle Django validation errors
+            from django.core.exceptions import ValidationError
+            if isinstance(e, ValidationError):
+                return Response(
+                    {
+                        'error': 'Validation error.',
+                        'details': str(e)
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Generic error - return JSON instead of letting Django return HTML
+            return Response(
+                {
+                    'error': 'Failed to save theme.',
+                    'details': error_message
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class AdminPricingPlanViewSet(viewsets.ModelViewSet):

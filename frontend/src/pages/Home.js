@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getPortfolioItems, getFeaturedPortfolio, getFeaturedTestimonials } from '../api/api';
+import { getPortfolioItems, getFeaturedPortfolio, getFeaturedTestimonials, getFeaturedThemes } from '../api/api';
 import './Home.css';
 import './About.css';
 
 const Home = () => {
   const [portfolio, setPortfolio] = useState([]);
-  const [portfolioCarousel, setPortfolioCarousel] = useState([]);
+  const [carouselItems, setCarouselItems] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [carouselIndex, setCarouselIndex] = useState(0);
@@ -14,15 +14,38 @@ const Home = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [portfolioRes, allPortfolioRes, testimonialsRes] = await Promise.all([
+        const [portfolioRes, allPortfolioRes, testimonialsRes, themesRes] = await Promise.all([
           getFeaturedPortfolio(),
           getPortfolioItems(),
           getFeaturedTestimonials(),
+          getFeaturedThemes(),
         ]);
         setPortfolio(portfolioRes.data.slice(0, 3));
-        // Filter portfolio items that have images for carousel
-        const itemsWithImages = allPortfolioRes.data.filter(item => item.image);
-        setPortfolioCarousel(itemsWithImages);
+        
+        // Combine portfolio items and themes for carousel
+        const portfolioItems = allPortfolioRes.data
+          .filter(item => item.image)
+          .map(item => ({
+            id: `portfolio-${item.id}`,
+            image: item.image,
+            url: item.website_url,
+            title: item.title,
+            type: 'portfolio'
+          }));
+        
+        const themeItems = themesRes.data
+          .filter(theme => theme.preview_image)
+          .map(theme => ({
+            id: `theme-${theme.id}`,
+            image: theme.preview_image,
+            url: theme.demo_url,
+            title: theme.name,
+            type: 'theme'
+          }));
+        
+        // Combine and shuffle for variety
+        const combinedItems = [...portfolioItems, ...themeItems];
+        setCarouselItems(combinedItems);
         setTestimonials(testimonialsRes.data.slice(0, 3));
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -35,14 +58,14 @@ const Home = () => {
 
   // Auto-rotate carousel
   useEffect(() => {
-    if (portfolioCarousel.length === 0) return;
+    if (carouselItems.length === 0) return;
     
     const interval = setInterval(() => {
-      setCarouselIndex((prevIndex) => (prevIndex + 1) % portfolioCarousel.length);
+      setCarouselIndex((prevIndex) => (prevIndex + 1) % carouselItems.length);
     }, 3000); // Rotate every 3 seconds
 
     return () => clearInterval(interval);
-  }, [portfolioCarousel.length]);
+  }, [carouselItems.length]);
 
   return (
     <div className="home">
@@ -50,14 +73,14 @@ const Home = () => {
         <div className="container">
           <h1>Transform Your Online Presence</h1>
           <p>Professional web design services and premium themes to elevate your business</p>
-          {portfolioCarousel.length > 0 && (
+          {carouselItems.length > 0 && (
             <div className="hero-carousel">
               <div className="carousel-track">
                 {Array.from({ length: 3 }, (_, position) => {
                   // Get the item for this position, wrapping around if needed
-                  const totalItems = portfolioCarousel.length;
+                  const totalItems = carouselItems.length;
                   const itemIndex = (carouselIndex + position) % totalItems;
-                  const item = portfolioCarousel[itemIndex];
+                  const item = carouselItems[itemIndex];
                   
                   if (!item) return null;
                   
@@ -67,11 +90,11 @@ const Home = () => {
                       className="carousel-item"
                       data-position={position}
                       onClick={() => {
-                        if (item.website_url) {
-                          window.open(item.website_url, '_blank', 'noopener,noreferrer');
+                        if (item.url) {
+                          window.open(item.url, '_blank', 'noopener,noreferrer');
                         }
                       }}
-                      style={{ cursor: item.website_url ? 'pointer' : 'default' }}
+                      style={{ cursor: item.url ? 'pointer' : 'default' }}
                     >
                       <img src={item.image} alt={item.title} />
                     </div>

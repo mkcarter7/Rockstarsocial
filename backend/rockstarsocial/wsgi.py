@@ -15,3 +15,4 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'rockstarsocial.settings')
 
 application = get_wsgi_application()
 
+

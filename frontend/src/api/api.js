@@ -38,4 +38,8 @@ export const getThemeCategories = () => api.get('/theme-categories/');
 // Contact
 export const submitContact = (data) => api.post('/contact/', data);
 
+// Stripe
+export const createCheckoutSession = (data) => api.post('/stripe/create-checkout-session/', data);
+export const checkPurchaseStatus = (sessionId) => api.get(`/stripe/check-purchase-status/?session_id=${sessionId}`);
+
 export default api;

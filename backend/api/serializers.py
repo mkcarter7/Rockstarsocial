@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.conf import settings
 from .models import (
     PortfolioItem, Testimonial, PricingPlan,
-    ThemeCategory, Theme, ContactSubmission, SiteSettings
+    ThemeCategory, Theme, ThemePurchase, ContactSubmission, SiteSettings
 )
 
 

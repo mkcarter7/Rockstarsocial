@@ -10,6 +10,8 @@ import Pricing from './pages/Pricing';
 import Themes from './pages/Themes';
 import Contact from './pages/Contact';
 import About from './pages/About';
+import PurchaseSuccess from './pages/PurchaseSuccess';
+import PurchaseCancel from './pages/PurchaseCancel';
 import AdminLogin from './pages/admin/Login';
 import AdminDashboard from './pages/admin/Dashboard';
 import ContactSubmissions from './pages/admin/ContactSubmissions';
@@ -144,6 +146,24 @@ function App() {
               <Navbar />
               <main>
                 <About />
+              </main>
+              <Footer />
+            </>
+          } />
+          <Route path="/purchase/success" element={
+            <>
+              <Navbar />
+              <main>
+                <PurchaseSuccess />
+              </main>
+              <Footer />
+            </>
+          } />
+          <Route path="/purchase/cancel" element={
+            <>
+              <Navbar />
+              <main>
+                <PurchaseCancel />
               </main>
               <Footer />
             </>

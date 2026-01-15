@@ -98,6 +98,35 @@ class Theme(models.Model):
         return f"{self.name} ({self.get_theme_type_display()})"
 
 
+class ThemePurchase(models.Model):
+    """Model to track theme purchases"""
+    theme = models.ForeignKey(Theme, on_delete=models.CASCADE, related_name='purchases')
+    customer_email = models.EmailField()
+    customer_name = models.CharField(max_length=200, blank=True)
+    stripe_session_id = models.CharField(max_length=255, unique=True, blank=True, null=True)
+    stripe_payment_intent_id = models.CharField(max_length=255, blank=True, null=True)
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pending', 'Pending'),
+            ('completed', 'Completed'),
+            ('failed', 'Failed'),
+            ('refunded', 'Refunded'),
+        ],
+        default='pending'
+    )
+    download_sent = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.customer_email} - {self.theme.name} ({self.status})"
+
+
 class ContactSubmission(models.Model):
     """Model for contact form submissions"""
     name = models.CharField(max_length=200)

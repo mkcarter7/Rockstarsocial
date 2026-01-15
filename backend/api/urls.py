@@ -9,6 +9,7 @@ from .admin_views import (
     AdminThemeViewSet, AdminThemeCategoryViewSet, AdminContactSubmissionViewSet,
     VerifyTokenView, SiteSettingsView
 )
+from .stripe_views import create_checkout_session, stripe_webhook, check_purchase_status
 
 router = DefaultRouter()
 router.register(r'portfolio', PortfolioItemViewSet, basename='portfolio')
@@ -34,4 +35,8 @@ urlpatterns = [
     path('admin/site-settings/', SiteSettingsView.as_view(), name='site-settings'),
     # Public endpoint to get site settings (for frontend)
     path('site-settings/', SiteSettingsView.as_view(), name='public-site-settings'),
+    # Stripe endpoints
+    path('stripe/create-checkout-session/', create_checkout_session, name='create-checkout-session'),
+    path('stripe/webhook/', stripe_webhook, name='stripe-webhook'),
+    path('stripe/check-purchase-status/', check_purchase_status, name='check-purchase-status'),
 ]

@@ -38,9 +38,35 @@ const Themes = () => {
     return typeMatch && categoryMatch;
   });
 
-  const handlePurchase = (theme) => {
-    // In a real app, this would integrate with a payment system
-    alert(`Purchase functionality for "${theme.name}" would be implemented here. This would typically integrate with a payment gateway like Stripe or PayPal.`);
+  const handlePurchase = async (theme) => {
+    // Get customer email
+    const customerEmail = prompt('Please enter your email address for the purchase:');
+    if (!customerEmail) {
+      return; // User cancelled
+    }
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(customerEmail)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+    
+    try {
+      const { createCheckoutSession } = await import('../api/api');
+      const response = await createCheckoutSession({
+        theme_id: theme.id,
+        customer_email: customerEmail,
+      });
+      
+      // Redirect to Stripe Checkout
+      if (response.data.checkout_url) {
+        window.location.href = response.data.checkout_url;
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      alert('Failed to start checkout. Please try again.');
+    }
   };
 
   return (

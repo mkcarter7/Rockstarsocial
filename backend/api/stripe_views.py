@@ -26,11 +26,16 @@ from .models import Theme, ThemePurchase
 logger = logging.getLogger(__name__)
 
 # Initialize Stripe
-stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
+if stripe is None:
+    logger.error("Stripe package is not available. Please install stripe package.")
+    stripe.api_key = None
+else:
+    stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
+
 STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
 
 # Verify Stripe is configured
-if not stripe.api_key:
+if stripe is None or not stripe.api_key:
     logger.warning("STRIPE_SECRET_KEY is not set. Stripe functionality will not work.")
 
 

@@ -20,15 +20,11 @@ logger = logging.getLogger(__name__)
 # Initialize Stripe
 STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
 
-if stripe is None:
-    logger.error("Stripe package is not available. Please install stripe package.")
-    STRIPE_AVAILABLE = False
-else:
-    stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
-    STRIPE_AVAILABLE = True
+# Set Stripe API key
+stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
 
 # Verify Stripe is configured
-if not STRIPE_AVAILABLE or (stripe and not stripe.api_key):
+if not stripe.api_key:
     logger.warning("STRIPE_SECRET_KEY is not set. Stripe functionality will not work.")
 
 
@@ -45,6 +41,21 @@ def create_checkout_session(request):
         logger.error("STRIPE_SECRET_KEY is not set or empty")
         return Response(
             {'error': 'Stripe is not configured. STRIPE_SECRET_KEY is missing.'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
+    # Verify stripe.checkout is available
+    if not hasattr(stripe, 'checkout') or stripe.checkout is None:
+        logger.error("stripe.checkout is not available. Stripe package may not be properly installed.")
+        return Response(
+            {'error': 'Stripe checkout is not available. Please ensure the stripe package is properly installed.'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
+    if not hasattr(stripe.checkout, 'Session'):
+        logger.error("stripe.checkout.Session is not available.")
+        return Response(
+            {'error': 'Stripe checkout Session is not available.'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
     
@@ -106,6 +117,7 @@ def create_checkout_session(request):
             line_item['price_data']['product_data']['images'] = [image_url]
         
         # Create Stripe Checkout Session
+        logger.info(f"Creating Stripe checkout session with stripe.checkout type: {type(stripe.checkout)}")
         session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=[line_item],

@@ -99,6 +99,14 @@ def create_checkout_session(request):
         if image_url:
             line_item['price_data']['product_data']['images'] = [image_url]
         
+        # Debug: Check stripe module structure
+        logger.info(f"stripe module type: {type(stripe)}")
+        logger.info(f"hasattr(stripe, 'checkout'): {hasattr(stripe, 'checkout')}")
+        if hasattr(stripe, 'checkout'):
+            logger.info(f"stripe.checkout type: {type(stripe.checkout)}")
+        
+        # Try to create session
+        logger.info("Attempting to create Stripe checkout session...")
         session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=[line_item],

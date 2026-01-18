@@ -2,6 +2,33 @@
 Stripe payment views for theme purchases
 """
 import stripe
+# Force import checkout module to ensure it's loaded
+# Try multiple ways to access the checkout module
+stripe_checkout = None
+try:
+    # Method 1: Try direct import
+    import stripe.checkout as stripe_checkout
+except (ImportError, AttributeError):
+    pass
+
+if stripe_checkout is None:
+    try:
+        # Method 2: Try accessing via getattr
+        stripe_checkout = getattr(stripe, 'checkout', None)
+    except:
+        pass
+
+if stripe_checkout is None:
+    try:
+        # Method 3: Try importing the Session class directly
+        from stripe.checkout import Session as CheckoutSession
+        # Create a mock module-like object
+        class CheckoutModule:
+            Session = CheckoutSession
+        stripe_checkout = CheckoutModule()
+    except (ImportError, AttributeError):
+        pass
+
 import json
 import logging
 import os
@@ -29,6 +56,12 @@ stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
 if not stripe.api_key:
     logger.warning("STRIPE_SECRET_KEY is not set. Stripe functionality will not work.")
 
+# Verify checkout module is available
+if stripe_checkout is None:
+    logger.error("Failed to import stripe.checkout module")
+elif not hasattr(stripe_checkout, 'Session'):
+    logger.error("stripe.checkout.Session is not available")
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -46,36 +79,25 @@ def create_checkout_session(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
     
-    # Verify stripe.checkout is available - add detailed diagnostics
-    try:
-        checkout_module = getattr(stripe, 'checkout', None)
-        logger.info(f"stripe.checkout type: {type(checkout_module)}, value: {checkout_module}")
-        
-        if checkout_module is None:
-            logger.error("stripe.checkout is None. Stripe package may not be properly installed or initialized.")
-            # Try to reload stripe or check for import issues
-            import importlib
-            try:
-                importlib.reload(stripe)
-                checkout_module = getattr(stripe, 'checkout', None)
-                logger.info(f"After reload, stripe.checkout type: {type(checkout_module)}, value: {checkout_module}")
-            except Exception as reload_error:
-                logger.error(f"Error reloading stripe module: {str(reload_error)}")
-            
-            if checkout_module is None:
-                return Response(
-                    {'error': 'Stripe checkout is not available. Please ensure the stripe package is properly installed.'},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
-    except AttributeError as e:
-        logger.error(f"AttributeError accessing stripe.checkout: {str(e)}")
+    # Verify stripe.checkout is available - use explicitly imported module if stripe.checkout is None
+    checkout_module = getattr(stripe, 'checkout', None)
+    logger.info(f"stripe.checkout type: {type(checkout_module)}, value: {checkout_module}")
+    logger.info(f"stripe_checkout (explicitly imported) type: {type(stripe_checkout)}, value: {stripe_checkout}")
+    
+    # Use explicitly imported checkout module if stripe.checkout is None
+    if checkout_module is None:
+        logger.warning("stripe.checkout is None, using explicitly imported stripe_checkout module")
+        checkout_module = stripe_checkout
+    
+    if checkout_module is None:
+        logger.error("Both stripe.checkout and explicitly imported stripe_checkout are None.")
         return Response(
             {'error': 'Stripe checkout is not available. Please ensure the stripe package is properly installed.'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
     
-    if not hasattr(stripe.checkout, 'Session'):
-        logger.error("stripe.checkout.Session is not available.")
+    if not hasattr(checkout_module, 'Session'):
+        logger.error(f"checkout_module.Session is not available. Module: {checkout_module}")
         return Response(
             {'error': 'Stripe checkout Session is not available.'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -161,14 +183,11 @@ def create_checkout_session(request):
         if image_url:
             line_item['price_data']['product_data']['images'] = [image_url]
         
-        # Create Stripe Checkout Session - wrap in try/except to catch NoneType errors
+        # Create Stripe Checkout Session - use checkout_module which may be explicitly imported
         logger.info(f"Creating Stripe checkout session for theme {theme.id}")
         try:
-            # Double-check stripe.checkout.Session is accessible before calling
-            if not stripe.checkout or not hasattr(stripe.checkout, 'Session'):
-                raise AttributeError("stripe.checkout.Session is not available")
-            
-            session = stripe.checkout.Session.create(
+            # Use checkout_module which is either stripe.checkout or explicitly imported stripe_checkout
+            session = checkout_module.Session.create(
                 payment_method_types=['card'],
                 line_items=[line_item],
                 mode='payment',
@@ -182,7 +201,7 @@ def create_checkout_session(request):
                 },
             )
         except AttributeError as e:
-            logger.error(f"AttributeError creating Stripe session - stripe.checkout may be None: {str(e)}")
+            logger.error(f"AttributeError creating Stripe session: {str(e)}")
             return Response(
                 {'error': 'Stripe checkout service is not available. Please contact support.'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -205,7 +224,7 @@ def create_checkout_session(request):
             logger.error(f"Failed to create purchase record: {str(db_error)}")
             # Try to expire the Stripe session since we couldn't record it
             try:
-                stripe.checkout.Session.expire(session.id)
+                checkout_module.Session.expire(session.id)
             except:
                 pass
             raise

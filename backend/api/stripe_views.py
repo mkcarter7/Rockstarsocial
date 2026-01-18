@@ -1,16 +1,7 @@
 """
 Stripe payment views for theme purchases
 """
-try:
-    import stripe
-    # Verify Stripe package is properly installed
-    # Note: stripe.checkout might be None initially, so we check differently
-    if not hasattr(stripe, '__version__'):
-        raise ImportError("Stripe package is not properly installed. Missing __version__ attribute.")
-except ImportError as e:
-    stripe = None
-    import logging
-    logging.getLogger(__name__).error(f"Failed to import Stripe: {e}")
+import stripe
 import json
 import logging
 import os

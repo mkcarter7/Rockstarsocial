@@ -106,11 +106,12 @@ def create_checkout_session(request):
             line_item['price_data']['product_data']['images'] = [image_url]
         
         # Create Stripe Checkout Session
-        # Try accessing Session directly via resource API pattern
+        # Workaround: stripe.checkout may be None due to package issue
+        # Try importing Session directly
         try:
-            # Method 1: Try direct resource access
-            logger.info("Attempting to create session via stripe API")
-            session = stripe.checkout.Session.create(
+            from stripe.checkout.session import Session as CheckoutSession
+            logger.info("Using direct Session import")
+            session = CheckoutSession.create(
             payment_method_types=['card'],
             line_items=[line_item],
             mode='payment',

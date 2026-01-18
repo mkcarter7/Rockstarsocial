@@ -106,26 +106,41 @@ def create_checkout_session(request):
             line_item['price_data']['product_data']['images'] = [image_url]
         
         # Try to access checkout - it might need to be imported directly
+        checkout_module = None
         try:
             # Try direct access first
             if hasattr(stripe, 'checkout') and stripe.checkout is not None:
                 checkout_module = stripe.checkout
+                logger.info("Using stripe.checkout (direct access)")
             else:
                 # Try importing checkout directly
+                logger.info("Attempting: from stripe import checkout")
                 from stripe import checkout as checkout_module
+                logger.info(f"Imported checkout module: {type(checkout_module)}")
         except (AttributeError, ImportError) as e:
             logger.error(f"Cannot access stripe.checkout: {e}")
-            logger.error(f"Stripe version: {stripe.__version__ if hasattr(stripe, '__version__') else 'unknown'}")
             # Try alternative: access via getattr or direct module import
             try:
+                logger.info("Attempting: import stripe.checkout")
                 import stripe.checkout as checkout_module
-            except ImportError:
+                logger.info(f"Imported checkout module (alt method): {type(checkout_module)}")
+            except ImportError as e2:
+                logger.error(f"All import methods failed. Error 1: {e}, Error 2: {e2}")
                 return Response(
                     {'error': 'Stripe checkout module is not available. Please verify Stripe package installation.'},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
         
+        # Verify checkout_module is not None
+        if checkout_module is None:
+            logger.error("checkout_module is still None after all import attempts")
+            return Response(
+                {'error': 'Stripe checkout module is None. Package may be corrupted.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
         # Create Stripe Checkout Session
+        logger.info("Creating checkout session...")
         session = checkout_module.Session.create(
             payment_method_types=['card'],
             line_items=[line_item],

@@ -21,11 +21,21 @@ logger = logging.getLogger(__name__)
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
 STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
 
+# Verify Stripe is configured
+if not stripe.api_key:
+    logger.warning("STRIPE_SECRET_KEY is not set. Stripe functionality will not work.")
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def create_checkout_session(request):
     """Create a Stripe Checkout session for a theme purchase"""
+    if not stripe.api_key:
+        return Response(
+            {'error': 'Stripe is not configured. STRIPE_SECRET_KEY is missing.'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
     try:
         theme_id = request.data.get('theme_id')
         customer_email = request.data.get('customer_email')
@@ -205,4 +215,3 @@ def check_purchase_status(request):
             {'error': 'Purchase not found'},
             status=status.HTTP_404_NOT_FOUND
         )
-

@@ -105,23 +105,24 @@ def create_checkout_session(request):
         if image_url:
             line_item['price_data']['product_data']['images'] = [image_url]
         
-        # Debug: Check stripe module structure
-        logger.info(f"stripe module type: {type(stripe)}")
-        logger.info(f"stripe version: {getattr(stripe, '__version__', 'unknown')}")
-        logger.info(f"hasattr(stripe, 'checkout'): {hasattr(stripe, 'checkout')}")
-        if hasattr(stripe, 'checkout'):
-            logger.info(f"stripe.checkout type: {type(stripe.checkout)}")
-        
-        # Check if checkout is None and try to access it differently
-        if stripe.checkout is None:
+        # Verify Stripe checkout is available
+        # Note: stripe.checkout might be None if package isn't properly installed
+        if not hasattr(stripe, 'checkout') or stripe.checkout is None:
             logger.error("stripe.checkout is None - Stripe package may not be installed correctly")
+            logger.error(f"Stripe module location: {stripe.__file__ if hasattr(stripe, '__file__') else 'unknown'}")
+            try:
+                import pkg_resources
+                stripe_version = pkg_resources.get_distribution('stripe').version
+                logger.error(f"Installed Stripe version: {stripe_version}")
+            except Exception as e:
+                logger.error(f"Could not get Stripe version: {e}")
+            
             return Response(
-                {'error': 'Stripe package error. Please check backend logs.'},
+                {'error': 'Stripe package error. stripe.checkout is None. Please check Railway build logs to verify Stripe is installing.'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         
-        # Try to create session
-        logger.info("Attempting to create Stripe checkout session...")
+        # Create Stripe Checkout Session
         session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=[line_item],

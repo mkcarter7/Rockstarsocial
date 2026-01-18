@@ -105,25 +105,28 @@ def create_checkout_session(request):
         if image_url:
             line_item['price_data']['product_data']['images'] = [image_url]
         
-        # Verify Stripe checkout is available
-        # Note: stripe.checkout might be None if package isn't properly installed
-        if not hasattr(stripe, 'checkout') or stripe.checkout is None:
-            logger.error("stripe.checkout is None - Stripe package may not be installed correctly")
-            logger.error(f"Stripe module location: {stripe.__file__ if hasattr(stripe, '__file__') else 'unknown'}")
+        # Try to access checkout - it might need to be imported directly
+        try:
+            # Try direct access first
+            if hasattr(stripe, 'checkout') and stripe.checkout is not None:
+                checkout_module = stripe.checkout
+            else:
+                # Try importing checkout directly
+                from stripe import checkout as checkout_module
+        except (AttributeError, ImportError) as e:
+            logger.error(f"Cannot access stripe.checkout: {e}")
+            logger.error(f"Stripe version: {stripe.__version__ if hasattr(stripe, '__version__') else 'unknown'}")
+            # Try alternative: access via getattr or direct module import
             try:
-                import pkg_resources
-                stripe_version = pkg_resources.get_distribution('stripe').version
-                logger.error(f"Installed Stripe version: {stripe_version}")
-            except Exception as e:
-                logger.error(f"Could not get Stripe version: {e}")
-            
-            return Response(
-                {'error': 'Stripe package error. stripe.checkout is None. Please check Railway build logs to verify Stripe is installing.'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+                import stripe.checkout as checkout_module
+            except ImportError:
+                return Response(
+                    {'error': 'Stripe checkout module is not available. Please verify Stripe package installation.'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
         
         # Create Stripe Checkout Session
-        session = stripe.checkout.Session.create(
+        session = checkout_module.Session.create(
             payment_method_types=['card'],
             line_items=[line_item],
             mode='payment',

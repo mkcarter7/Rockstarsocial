@@ -30,9 +30,23 @@ if not stripe.api_key:
 @permission_classes([AllowAny])
 def create_checkout_session(request):
     """Create a Stripe Checkout session for a theme purchase"""
+    # Log Stripe configuration status
+    api_key_set = bool(stripe.api_key)
+    api_key_preview = f"{stripe.api_key[:10]}..." if stripe.api_key else "None"
+    logger.info(f"Stripe API key status: Set={api_key_set}, Preview={api_key_preview}")
+    
     if not stripe.api_key:
+        logger.error("STRIPE_SECRET_KEY is not set or empty")
         return Response(
             {'error': 'Stripe is not configured. STRIPE_SECRET_KEY is missing.'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
+    # Check if stripe.checkout is available
+    if not hasattr(stripe, 'checkout') or stripe.checkout is None:
+        logger.error(f"stripe.checkout is not available. Stripe API key: {api_key_preview}")
+        return Response(
+            {'error': 'Stripe is not properly initialized. Check STRIPE_SECRET_KEY format.'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
     

@@ -5,10 +5,12 @@ import stripe
 import json
 import logging
 import os
+from decimal import Decimal
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+from django.db import transaction
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -44,9 +46,29 @@ def create_checkout_session(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
     
-    # Verify stripe.checkout is available
-    if not hasattr(stripe, 'checkout') or stripe.checkout is None:
-        logger.error("stripe.checkout is not available. Stripe package may not be properly installed.")
+    # Verify stripe.checkout is available - add detailed diagnostics
+    try:
+        checkout_module = getattr(stripe, 'checkout', None)
+        logger.info(f"stripe.checkout type: {type(checkout_module)}, value: {checkout_module}")
+        
+        if checkout_module is None:
+            logger.error("stripe.checkout is None. Stripe package may not be properly installed or initialized.")
+            # Try to reload stripe or check for import issues
+            import importlib
+            try:
+                importlib.reload(stripe)
+                checkout_module = getattr(stripe, 'checkout', None)
+                logger.info(f"After reload, stripe.checkout type: {type(checkout_module)}, value: {checkout_module}")
+            except Exception as reload_error:
+                logger.error(f"Error reloading stripe module: {str(reload_error)}")
+            
+            if checkout_module is None:
+                return Response(
+                    {'error': 'Stripe checkout is not available. Please ensure the stripe package is properly installed.'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+    except AttributeError as e:
+        logger.error(f"AttributeError accessing stripe.checkout: {str(e)}")
         return Response(
             {'error': 'Stripe checkout is not available. Please ensure the stripe package is properly installed.'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -79,8 +101,26 @@ def create_checkout_session(request):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        # Convert price to cents for Stripe
-        amount_cents = int(float(theme.price) * 100)
+        # Check for duplicate purchases - prevent same customer from buying same theme multiple times
+        existing_purchase = ThemePurchase.objects.filter(
+            theme=theme,
+            customer_email=customer_email,
+            status='completed'
+        ).first()
+        
+        if existing_purchase:
+            return Response(
+                {
+                    'error': 'You have already purchased this theme',
+                    'existing_purchase': True,
+                    'download_file': existing_purchase.theme.download_file.url if existing_purchase.theme.download_file else None
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Convert price to cents for Stripe using Decimal for precision
+        price_decimal = Decimal(str(theme.price))
+        amount_cents = int(price_decimal * 100)
         
         # Get the frontend URL for success/cancel redirects
         frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
@@ -100,13 +140,18 @@ def create_checkout_session(request):
                     else:
                         image_url = f"http://localhost:8000{theme.preview_image.url}"
         
+        # Safely truncate description at word boundary
+        description = theme.description
+        if len(description) > 500:
+            description = description[:497].rsplit(' ', 1)[0] + '...'
+        
         # Create Stripe Checkout Session
         line_item = {
             'price_data': {
                 'currency': 'usd',
                 'product_data': {
                     'name': theme.name,
-                    'description': theme.description[:500],  # Limit description length
+                    'description': description,
                 },
                 'unit_amount': amount_cents,
             },
@@ -116,31 +161,54 @@ def create_checkout_session(request):
         if image_url:
             line_item['price_data']['product_data']['images'] = [image_url]
         
-        # Create Stripe Checkout Session
-        logger.info(f"Creating Stripe checkout session with stripe.checkout type: {type(stripe.checkout)}")
-        session = stripe.checkout.Session.create(
-            payment_method_types=['card'],
-            line_items=[line_item],
-            mode='payment',
-            customer_email=customer_email,
-            success_url=f'{frontend_url}/purchase/success?session_id={{CHECKOUT_SESSION_ID}}',
-            cancel_url=f'{frontend_url}/purchase/cancel',
-            metadata={
-                'theme_id': str(theme.id),
-                'customer_email': customer_email,
-                'customer_name': customer_name,
-            },
-        )
+        # Create Stripe Checkout Session - wrap in try/except to catch NoneType errors
+        logger.info(f"Creating Stripe checkout session for theme {theme.id}")
+        try:
+            # Double-check stripe.checkout.Session is accessible before calling
+            if not stripe.checkout or not hasattr(stripe.checkout, 'Session'):
+                raise AttributeError("stripe.checkout.Session is not available")
+            
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[line_item],
+                mode='payment',
+                customer_email=customer_email,
+                success_url=f'{frontend_url}/purchase/success?session_id={{CHECKOUT_SESSION_ID}}',
+                cancel_url=f'{frontend_url}/purchase/cancel',
+                metadata={
+                    'theme_id': str(theme.id),
+                    'customer_email': customer_email,
+                    'customer_name': customer_name,
+                },
+            )
+        except AttributeError as e:
+            logger.error(f"AttributeError creating Stripe session - stripe.checkout may be None: {str(e)}")
+            return Response(
+                {'error': 'Stripe checkout service is not available. Please contact support.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         
-        # Create a pending purchase record
-        purchase = ThemePurchase.objects.create(
-            theme=theme,
-            customer_email=customer_email,
-            customer_name=customer_name,
-            stripe_session_id=session.id,
-            amount_paid=theme.price,
-            status='pending'
-        )
+        # Only create purchase record after successful Stripe session creation
+        # Use transaction to ensure atomicity
+        try:
+            with transaction.atomic():
+                purchase = ThemePurchase.objects.create(
+                    theme=theme,
+                    customer_email=customer_email,
+                    customer_name=customer_name,
+                    stripe_session_id=session.id,
+                    amount_paid=theme.price,
+                    status='pending'
+                )
+                logger.info(f"Created pending purchase {purchase.id} for session {session.id}")
+        except Exception as db_error:
+            logger.error(f"Failed to create purchase record: {str(db_error)}")
+            # Try to expire the Stripe session since we couldn't record it
+            try:
+                stripe.checkout.Session.expire(session.id)
+            except:
+                pass
+            raise
         
         return Response({
             'session_id': session.id,
@@ -154,7 +222,7 @@ def create_checkout_session(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
     except Exception as e:
-        logger.error(f"Error creating checkout session: {str(e)}")
+        logger.error(f"Error creating checkout session: {str(e)}", exc_info=True)
         return Response(
             {'error': 'Failed to create checkout session'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -168,49 +236,85 @@ def stripe_webhook(request):
     payload = request.body
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
     
+    if not STRIPE_WEBHOOK_SECRET:
+        logger.error("STRIPE_WEBHOOK_SECRET is not configured")
+        return HttpResponse(status=500)
+    
     try:
         event = stripe.Webhook.construct_event(
             payload, sig_header, STRIPE_WEBHOOK_SECRET
         )
-    except ValueError:
+    except ValueError as e:
         # Invalid payload
-        logger.error("Invalid payload in Stripe webhook")
+        logger.error(f"Invalid payload in Stripe webhook: {str(e)}")
         return HttpResponse(status=400)
-    except stripe.error.SignatureVerificationError:
+    except stripe.error.SignatureVerificationError as e:
         # Invalid signature
-        logger.error("Invalid signature in Stripe webhook")
+        logger.error(f"Invalid signature in Stripe webhook: {str(e)}")
         return HttpResponse(status=400)
     
     # Handle the event
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
         
+        # Validate required fields
+        if 'id' not in session:
+            logger.error("Session ID missing from webhook event")
+            return HttpResponse(status=400)
+        
         # Update the purchase status
         try:
-            purchase = ThemePurchase.objects.get(stripe_session_id=session['id'])
-            purchase.status = 'completed'
-            purchase.stripe_payment_intent_id = session.get('payment_intent')
-            purchase.save()
-            
-            logger.info(f"Purchase completed for theme {purchase.theme.id} by {purchase.customer_email}")
+            with transaction.atomic():
+                purchase = ThemePurchase.objects.select_for_update().get(
+                    stripe_session_id=session['id']
+                )
+                
+                # Prevent duplicate processing
+                if purchase.status == 'completed':
+                    logger.warning(f"Purchase {purchase.id} already completed, skipping")
+                    return HttpResponse(status=200)
+                
+                purchase.status = 'completed'
+                purchase.stripe_payment_intent_id = session.get('payment_intent')
+                purchase.save()
+                
+                logger.info(f"Purchase completed for theme {purchase.theme.id} by {purchase.customer_email}")
             
             # TODO: Send download link email to customer
             # You can implement email sending here using Django's email functionality
             
         except ThemePurchase.DoesNotExist:
             logger.error(f"Purchase not found for session {session['id']}")
+            # Return 404 so Stripe will retry
+            return HttpResponse(status=404)
+        except Exception as e:
+            logger.error(f"Error processing webhook: {str(e)}", exc_info=True)
+            # Return 500 so Stripe will retry
+            return HttpResponse(status=500)
     
     elif event['type'] == 'payment_intent.payment_failed':
         payment_intent = event['data']['object']
         
+        if 'id' not in payment_intent:
+            logger.error("Payment intent ID missing from webhook event")
+            return HttpResponse(status=400)
+        
         # Find purchase by payment intent ID
         try:
-            purchase = ThemePurchase.objects.get(stripe_payment_intent_id=payment_intent['id'])
-            purchase.status = 'failed'
-            purchase.save()
-            logger.info(f"Payment failed for purchase {purchase.id}")
+            with transaction.atomic():
+                purchase = ThemePurchase.objects.select_for_update().get(
+                    stripe_payment_intent_id=payment_intent['id']
+                )
+                purchase.status = 'failed'
+                purchase.save()
+                logger.info(f"Payment failed for purchase {purchase.id}")
         except ThemePurchase.DoesNotExist:
             logger.error(f"Purchase not found for payment intent {payment_intent['id']}")
+            # This might be okay - payment could fail before we associate it
+            return HttpResponse(status=200)
+        except Exception as e:
+            logger.error(f"Error processing payment failure: {str(e)}", exc_info=True)
+            return HttpResponse(status=500)
     
     return HttpResponse(status=200)
 
@@ -229,14 +333,29 @@ def check_purchase_status(request):
     
     try:
         purchase = ThemePurchase.objects.get(stripe_session_id=session_id)
-        return Response({
+        
+        response_data = {
             'status': purchase.status,
             'theme_id': purchase.theme.id,
             'theme_name': purchase.theme.name,
-            'download_file': purchase.theme.download_file.url if purchase.theme.download_file else None,
-        })
+        }
+        
+        # Only provide download link if purchase is completed
+        if purchase.status == 'completed' and purchase.theme.download_file:
+            response_data['download_file'] = purchase.theme.download_file.url
+        else:
+            response_data['download_file'] = None
+        
+        return Response(response_data)
+        
     except ThemePurchase.DoesNotExist:
         return Response(
             {'error': 'Purchase not found'},
             status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        logger.error(f"Error checking purchase status: {str(e)}", exc_info=True)
+        return Response(
+            {'error': 'Failed to check purchase status'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

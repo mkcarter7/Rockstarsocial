@@ -101,9 +101,18 @@ def create_checkout_session(request):
         
         # Debug: Check stripe module structure
         logger.info(f"stripe module type: {type(stripe)}")
+        logger.info(f"stripe version: {getattr(stripe, '__version__', 'unknown')}")
         logger.info(f"hasattr(stripe, 'checkout'): {hasattr(stripe, 'checkout')}")
         if hasattr(stripe, 'checkout'):
             logger.info(f"stripe.checkout type: {type(stripe.checkout)}")
+        
+        # Check if checkout is None and try to access it differently
+        if stripe.checkout is None:
+            logger.error("stripe.checkout is None - Stripe package may not be installed correctly")
+            return Response(
+                {'error': 'Stripe package error. Please check backend logs.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         
         # Try to create session
         logger.info("Attempting to create Stripe checkout session...")

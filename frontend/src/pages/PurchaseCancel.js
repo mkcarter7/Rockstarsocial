@@ -20,4 +20,3 @@ const PurchaseCancel = () => {
 };
 
 export default PurchaseCancel;
-

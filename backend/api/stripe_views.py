@@ -42,14 +42,6 @@ def create_checkout_session(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
     
-    # Check if stripe.checkout is available
-    if not hasattr(stripe, 'checkout') or stripe.checkout is None:
-        logger.error(f"stripe.checkout is not available. Stripe API key: {api_key_preview}")
-        return Response(
-            {'error': 'Stripe is not properly initialized. Check STRIPE_SECRET_KEY format.'},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-    
     try:
         theme_id = request.data.get('theme_id')
         customer_email = request.data.get('customer_email')

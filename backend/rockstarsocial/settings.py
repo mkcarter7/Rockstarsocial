@@ -5,9 +5,13 @@ Django settings for rockstarsocial project.
 from pathlib import Path
 import os
 import dj_database_url
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from .env file (for local development)
+load_dotenv(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
@@ -20,7 +24,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key-change-in-pro
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 # Get allowed hosts from environment variable (comma-separated) or use defaults
-ALLOWED_HOSTS_STR = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,1rockstarsocial.com,www.1rockstarsocial.com,api.1rockstarsocial.com')
+ALLOWED_HOSTS_STR = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,1rockstarsocial.com,www.1rockstarsocial.com,api.1rockstarsocial.com,backend-production-4038.up.railway.app')
 # Handle both comma-separated string and Python list string format
 if ALLOWED_HOSTS_STR.strip().startswith('['):
     # It's a Python list string, parse it

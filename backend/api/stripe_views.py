@@ -49,6 +49,11 @@ logger = logging.getLogger(__name__)
 # Initialize Stripe
 STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
 
+# Diagnostic logging at module load
+logger.info(f"Stripe module loaded: {stripe}, file: {getattr(stripe, '__file__', 'unknown')}")
+logger.info(f"stripe.checkout at module load: {getattr(stripe, 'checkout', 'NOT_FOUND')}")
+logger.info(f"stripe_checkout (explicitly imported): {stripe_checkout}")
+
 # Set Stripe API key
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
 
@@ -56,9 +61,13 @@ stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
 if not stripe.api_key:
     logger.warning("STRIPE_SECRET_KEY is not set. Stripe functionality will not work.")
 
-# Verify checkout module is available
+# Verify checkout module is available - check again after setting API key
 if stripe_checkout is None:
-    logger.error("Failed to import stripe.checkout module")
+    stripe_checkout = getattr(stripe, 'checkout', None)
+    logger.warning(f"After setting API key, stripe_checkout: {stripe_checkout}")
+
+if stripe_checkout is None:
+    logger.error("Failed to import stripe.checkout module - this will cause errors!")
 elif not hasattr(stripe_checkout, 'Session'):
     logger.error("stripe.checkout.Session is not available")
 

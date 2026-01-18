@@ -4,8 +4,9 @@ Stripe payment views for theme purchases
 try:
     import stripe
     # Verify Stripe package is properly installed
-    if not hasattr(stripe, 'checkout') or stripe.checkout is None:
-        raise ImportError("Stripe package is not properly installed. stripe.checkout is None.")
+    # Note: stripe.checkout might be None initially, so we check differently
+    if not hasattr(stripe, '__version__'):
+        raise ImportError("Stripe package is not properly installed. Missing __version__ attribute.")
 except ImportError as e:
     stripe = None
     import logging
@@ -26,16 +27,17 @@ from .models import Theme, ThemePurchase
 logger = logging.getLogger(__name__)
 
 # Initialize Stripe
-if stripe is None:
-    logger.error("Stripe package is not available. Please install stripe package.")
-    stripe.api_key = None
-else:
-    stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
-
 STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
 
+if stripe is None:
+    logger.error("Stripe package is not available. Please install stripe package.")
+    STRIPE_AVAILABLE = False
+else:
+    stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
+    STRIPE_AVAILABLE = True
+
 # Verify Stripe is configured
-if stripe is None or not stripe.api_key:
+if not STRIPE_AVAILABLE or (stripe and not stripe.api_key):
     logger.warning("STRIPE_SECRET_KEY is not set. Stripe functionality will not work.")
 
 

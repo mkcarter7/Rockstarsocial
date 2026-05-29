@@ -1,12 +1,15 @@
+'use client';
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import api from '../../api/api';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const { currentUser, logout, getIdToken } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [portfolioCount, setPortfolioCount] = useState(0);
   const [testimonialCount, setTestimonialCount] = useState(0);
@@ -62,7 +65,7 @@ const Dashboard = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/admin/login');
+      router.push('/admin/login');
     } catch (err) {
       console.error('Error logging out:', err);
     }
@@ -77,7 +80,7 @@ const Dashboard = () => {
       <header className="dashboard-header">
         <h1>Admin Dashboard</h1>
         <div className="dashboard-user">
-          <Link to="/" className="btn-home">Home</Link>
+          <Link href="/" className="btn-home">Home</Link>
           <span>Welcome, {currentUser?.email}</span>
           <button onClick={handleLogout} className="btn-logout">Logout</button>
         </div>
@@ -115,31 +118,31 @@ const Dashboard = () => {
           <div className="action-buttons">
             <button 
               className="btn-action"
-              onClick={() => navigate('/admin/portfolio')}
+              onClick={() => router.push('/admin/portfolio')}
             >
               Manage Portfolio
             </button>
             <button 
               className="btn-action"
-              onClick={() => navigate('/admin/testimonials')}
+              onClick={() => router.push('/admin/testimonials')}
             >
               Manage Testimonials
             </button>
             <button 
               className="btn-action"
-              onClick={() => navigate('/admin/pricing')}
+              onClick={() => router.push('/admin/pricing')}
             >
               Manage Pricing Plans
             </button>
             <button 
               className="btn-action"
-              onClick={() => navigate('/admin/themes')}
+              onClick={() => router.push('/admin/themes')}
             >
               Manage Themes
             </button>
             <button 
               className="btn-action"
-              onClick={() => navigate('/admin/contact-submissions')}
+              onClick={() => router.push('/admin/contact-submissions')}
             >
               View Contact Submissions
               {unreadContactCount > 0 && (
@@ -148,7 +151,7 @@ const Dashboard = () => {
             </button>
             <button 
               className="btn-action"
-              onClick={() => navigate('/admin/site-settings')}
+              onClick={() => router.push('/admin/site-settings')}
             >
               Site Settings
             </button>

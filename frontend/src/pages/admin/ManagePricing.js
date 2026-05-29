@@ -1,12 +1,14 @@
+'use client';
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import api from '../../api/api';
 import './ManagePricing.css';
 
 const ManagePricing = () => {
   const { currentUser, logout, getIdToken } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [pricingPlans, setPricingPlans] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
@@ -132,7 +134,7 @@ const ManagePricing = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/admin/login');
+      router.push('/admin/login');
     } catch (err) {
       console.error('Error logging out:', err);
     }
@@ -157,7 +159,7 @@ const ManagePricing = () => {
         <div className="pricing-header-left">
           <button 
             className="btn-back"
-            onClick={() => navigate('/admin/dashboard')}
+            onClick={() => router.push('/admin/dashboard')}
           >
             ← Back to Dashboard
           </button>

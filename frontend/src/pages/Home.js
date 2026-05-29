@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { getPortfolioItems, getFeaturedPortfolio, getFeaturedTestimonials, getFeaturedThemes } from '../api/api';
 import './Home.css';
 import './About.css';
@@ -104,7 +106,7 @@ const Home = () => {
             </div>
           )}
           <div className="hero-buttons">
-            <Link to="/contact" className="btn btn-secondary">Get Started</Link>
+            <Link href="/contact" className="btn btn-secondary">Get Started</Link>
           </div>
         </div>
       </section>
@@ -140,7 +142,7 @@ const Home = () => {
             <div className="loading">No portfolio items available</div>
           )}
           <div className="text-center" style={{ marginTop: '30px' }}>
-            <Link to="/portfolio" className="btn btn-secondary">View All Projects</Link>
+            <Link href="/portfolio" className="btn btn-secondary">View All Projects</Link>
           </div>
         </div>
       </section>
@@ -190,8 +192,8 @@ const Home = () => {
               <h2>Ready to Get Started?</h2>
               <p>Let's work together to bring your vision to life</p>
               <div className="cta-buttons">
-                <Link to="/contact" className="btn btn-primary">Contact Us</Link>
-                <Link to="/portfolio" className="btn btn-secondary">View Our Work</Link>
+                <Link href="/contact" className="btn btn-primary">Contact Us</Link>
+                <Link href="/portfolio" className="btn btn-secondary">View Our Work</Link>
               </div>
             </div>
           </div>
@@ -223,7 +225,7 @@ const Home = () => {
             <div className="loading">No testimonials available</div>
           )}
           <div className="text-center" style={{ marginTop: '30px' }}>
-            <Link to="/testimonials" className="btn btn-secondary">Read All Testimonials</Link>
+            <Link href="/testimonials" className="btn btn-secondary">Read All Testimonials</Link>
           </div>
         </div>
       </section>

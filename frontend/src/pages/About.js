@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import './About.css';
 
 const About = () => {
@@ -57,8 +57,8 @@ const About = () => {
               <h2>Ready to Get Started?</h2>
               <p>Let's work together to bring your vision to life</p>
               <div className="cta-buttons">
-                <Link to="/contact" className="btn btn-primary">Contact Us</Link>
-                <Link to="/portfolio" className="btn btn-secondary">View Our Work</Link>
+                <Link href="/contact" className="btn btn-primary">Contact Us</Link>
+                <Link href="/portfolio" className="btn btn-secondary">View Our Work</Link>
               </div>
             </div>
           </div>

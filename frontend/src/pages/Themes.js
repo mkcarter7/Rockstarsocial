@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { getThemes, getThemeCategories } from '../api/api';
 import './Themes.css';

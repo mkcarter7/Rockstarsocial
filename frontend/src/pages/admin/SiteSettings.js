@@ -1,12 +1,15 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import api from '../../api/api';
 import './SiteSettings.css';
 
 const SiteSettings = () => {
   const { currentUser, logout, getIdToken } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState({
@@ -72,7 +75,7 @@ const SiteSettings = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/admin/login');
+      router.push('/admin/login');
     } catch (err) {
       console.error('Error logging out:', err);
     }
@@ -88,14 +91,14 @@ const SiteSettings = () => {
         <div className="settings-header-left">
           <button 
             className="btn-back"
-            onClick={() => navigate('/admin/dashboard')}
+            onClick={() => router.push('/admin/dashboard')}
           >
             ← Back to Dashboard
           </button>
           <h1>Site Settings</h1>
         </div>
         <div className="settings-header-right">
-          <Link to="/" className="btn-home">Home</Link>
+          <Link href="/" className="btn-home">Home</Link>
           <span>Welcome, {currentUser?.email}</span>
           <button onClick={handleLogout} className="btn-logout">Logout</button>
         </div>

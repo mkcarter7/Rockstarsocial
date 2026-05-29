@@ -1,6 +1,8 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { getPricingPlans } from '../api/api';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import './Pricing.css';
 
 const Pricing = () => {
@@ -62,7 +64,7 @@ const Pricing = () => {
                       </li>
                     ))}
                   </ul>
-                  <Link to="/contact" className="btn btn-primary pricing-btn">
+                  <Link href="/contact" className="btn btn-primary pricing-btn">
                     Get Started
                   </Link>
                 </div>
@@ -79,7 +81,7 @@ const Pricing = () => {
           <div className="pricing-cta">
             <h2>Need a Custom Solution?</h2>
             <p>We can create a tailored package that fits your specific requirements</p>
-            <Link to="/contact" className="btn btn-primary">Contact Us</Link>
+            <Link href="/contact" className="btn btn-primary">Contact Us</Link>
           </div>
         </div>
       </section>

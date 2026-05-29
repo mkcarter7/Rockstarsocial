@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
 import './Login.css';
 
@@ -7,7 +9,7 @@ const AdminLogin = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { loginWithGoogle } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleGoogleLogin = async () => {
     setError('');
@@ -15,7 +17,7 @@ const AdminLogin = () => {
 
     try {
       await loginWithGoogle();
-      navigate('/admin/dashboard');
+      router.push('/admin/dashboard');
     } catch (err) {
       setError(err.message || 'Failed to log in with Google');
     } finally {

@@ -1,12 +1,15 @@
+'use client';
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import api from '../../api/api';
 import './ManageThemes.css';
 
 const ManageThemes = () => {
   const { currentUser, logout, getIdToken } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [themes, setThemes] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -187,7 +190,7 @@ const ManageThemes = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/admin/login');
+      router.push('/admin/login');
     } catch (err) {
       console.error('Error logging out:', err);
     }
@@ -216,14 +219,14 @@ const ManageThemes = () => {
         <div className="themes-header-left">
           <button 
             className="btn-back"
-            onClick={() => navigate('/admin/dashboard')}
+            onClick={() => router.push('/admin/dashboard')}
           >
             ← Back to Dashboard
           </button>
           <h1>Manage Themes</h1>
         </div>
         <div className="themes-header-right">
-          <Link to="/" className="btn-home">Home</Link>
+          <Link href="/" className="btn-home">Home</Link>
           <span>Welcome, {currentUser?.email}</span>
           <button onClick={handleLogout} className="btn-logout">Logout</button>
         </div>

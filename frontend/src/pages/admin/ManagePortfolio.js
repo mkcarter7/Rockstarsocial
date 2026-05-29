@@ -1,12 +1,15 @@
+'use client';
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import api from '../../api/api';
 import './ManagePortfolio.css';
 
 const ManagePortfolio = () => {
   const { currentUser, logout, getIdToken } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [portfolioItems, setPortfolioItems] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
@@ -138,7 +141,7 @@ const ManagePortfolio = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/admin/login');
+      router.push('/admin/login');
     } catch (err) {
       console.error('Error logging out:', err);
     }
@@ -163,14 +166,14 @@ const ManagePortfolio = () => {
         <div className="portfolio-header-left">
           <button 
             className="btn-back"
-            onClick={() => navigate('/admin/dashboard')}
+            onClick={() => router.push('/admin/dashboard')}
           >
             ← Back to Dashboard
           </button>
           <h1>Manage Portfolio</h1>
         </div>
         <div className="portfolio-header-right">
-          <Link to="/" className="btn-home">Home</Link>
+          <Link href="/" className="btn-home">Home</Link>
           <span>Welcome, {currentUser?.email}</span>
           <button onClick={handleLogout} className="btn-logout">Logout</button>
         </div>

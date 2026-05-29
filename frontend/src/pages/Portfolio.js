@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { getPortfolioItems } from '../api/api';
 import './Portfolio.css';

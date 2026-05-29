@@ -1,5 +1,8 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { checkPurchaseStatus } from '../api/api';
 import './PurchaseSuccess.css';
 
@@ -49,7 +52,7 @@ const PurchaseSuccess = () => {
           <div className="error-message">
             <h1>Error</h1>
             <p>{error}</p>
-            <Link to="/themes" className="btn btn-primary">Back to Themes</Link>
+            <Link href="/themes" className="btn btn-primary">Back to Themes</Link>
           </div>
         </div>
       </div>
@@ -87,8 +90,8 @@ const PurchaseSuccess = () => {
             )}
             
             <div className="action-buttons">
-              <Link to="/themes" className="btn btn-secondary">Browse More Themes</Link>
-              <Link to="/" className="btn btn-secondary">Back to Home</Link>
+              <Link href="/themes" className="btn btn-secondary">Browse More Themes</Link>
+              <Link href="/" className="btn btn-secondary">Back to Home</Link>
             </div>
           </div>
         </div>
@@ -102,7 +105,7 @@ const PurchaseSuccess = () => {
         <div className="pending-message">
           <h1>Processing Payment</h1>
           <p>Your payment is being processed. Please wait...</p>
-          <Link to="/themes" className="btn btn-secondary">Back to Themes</Link>
+          <Link href="/themes" className="btn btn-secondary">Back to Themes</Link>
         </div>
       </div>
     </div>

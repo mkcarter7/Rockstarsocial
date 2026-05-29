@@ -42,7 +42,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Theme, ThemePurchase
+from .models import Theme, ThemePurchase, BirthdayParty
 
 logger = logging.getLogger(__name__)
 
@@ -284,42 +284,55 @@ def stripe_webhook(request):
     # Handle the event
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
-        
-        # Validate required fields
+
         if 'id' not in session:
             logger.error("Session ID missing from webhook event")
             return HttpResponse(status=400)
-        
-        # Update the purchase status
-        try:
-            with transaction.atomic():
-                purchase = ThemePurchase.objects.select_for_update().get(
-                    stripe_session_id=session['id']
-                )
-                
-                # Prevent duplicate processing
-                if purchase.status == 'completed':
-                    logger.warning(f"Purchase {purchase.id} already completed, skipping")
-                    return HttpResponse(status=200)
-                
-                purchase.status = 'completed'
-                purchase.stripe_payment_intent_id = session.get('payment_intent')
-                purchase.save()
-                
-                logger.info(f"Purchase completed for theme {purchase.theme.id} by {purchase.customer_email}")
-            
-            # TODO: Send download link email to customer
-            # You can implement email sending here using Django's email functionality
-            
-        except ThemePurchase.DoesNotExist:
-            logger.error(f"Purchase not found for session {session['id']}")
-            # Return 404 so Stripe will retry
-            return HttpResponse(status=404)
-        except Exception as e:
-            logger.error(f"Error processing webhook: {str(e)}", exc_info=True)
-            # Return 500 so Stripe will retry
-            return HttpResponse(status=500)
-    
+
+        metadata = session.get('metadata', {})
+        purchase_type = metadata.get('type', 'theme')
+
+        if purchase_type == 'birthday':
+            # Activate the BirthdayParty
+            try:
+                with transaction.atomic():
+                    party = BirthdayParty.objects.select_for_update().get(
+                        stripe_session_id=session['id']
+                    )
+                    if not party.is_active:
+                        party.is_active = True
+                        party.save()
+                        logger.info(f"Birthday party activated: {party.slug}")
+            except BirthdayParty.DoesNotExist:
+                logger.error(f"BirthdayParty not found for session {session['id']}")
+                return HttpResponse(status=404)
+            except Exception as e:
+                logger.error(f"Error activating birthday party: {str(e)}", exc_info=True)
+                return HttpResponse(status=500)
+        else:
+            # Theme purchase
+            try:
+                with transaction.atomic():
+                    purchase = ThemePurchase.objects.select_for_update().get(
+                        stripe_session_id=session['id']
+                    )
+
+                    if purchase.status == 'completed':
+                        logger.warning(f"Purchase {purchase.id} already completed, skipping")
+                        return HttpResponse(status=200)
+
+                    purchase.status = 'completed'
+                    purchase.stripe_payment_intent_id = session.get('payment_intent')
+                    purchase.save()
+                    logger.info(f"Theme purchase completed: {purchase.theme.id} by {purchase.customer_email}")
+
+            except ThemePurchase.DoesNotExist:
+                logger.error(f"ThemePurchase not found for session {session['id']}")
+                return HttpResponse(status=404)
+            except Exception as e:
+                logger.error(f"Error processing theme webhook: {str(e)}", exc_info=True)
+                return HttpResponse(status=500)
+
     elif event['type'] == 'payment_intent.payment_failed':
         payment_intent = event['data']['object']
         
@@ -387,3 +400,86 @@ def check_purchase_status(request):
             {'error': 'Failed to check purchase status'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def create_birthday_checkout(request):
+    """Create a Stripe Checkout session for a birthday app purchase."""
+    if not stripe.api_key:
+        return Response({'error': 'Stripe is not configured'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    checkout_module = getattr(stripe, 'checkout', None) or stripe_checkout
+    if not checkout_module:
+        return Response({'error': 'Stripe checkout not available'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    slug = request.data.get('slug', '').strip().lower()
+    birthday_person_name = request.data.get('birthday_person_name', '').strip()
+    party_date = request.data.get('party_date', '')
+    host_email = request.data.get('host_email', '').strip()
+    host_name = request.data.get('host_name', '').strip()
+
+    if not all([slug, birthday_person_name, party_date, host_email]):
+        return Response(
+            {'error': 'slug, birthday_person_name, party_date, and host_email are required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if BirthdayParty.objects.filter(slug=slug).exists():
+        return Response({'error': 'That URL is already taken. Please choose a different one.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    price_cents = int(os.environ.get('BIRTHDAY_APP_PRICE', '2900'))
+    frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+
+    try:
+        session = checkout_module.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {
+                        'name': f"Birthday Party Page — {birthday_person_name}",
+                        'description': f"Your custom birthday party page at 1rockstarsocial.com/birthday/{slug}",
+                    },
+                    'unit_amount': price_cents,
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            customer_email=host_email,
+            success_url=f'{frontend_url}/birthday/setup?session_id={{CHECKOUT_SESSION_ID}}',
+            cancel_url=f'{frontend_url}/birthday/purchase',
+            metadata={
+                'type': 'birthday',
+                'slug': slug,
+                'birthday_person_name': birthday_person_name,
+                'party_date': party_date,
+                'host_email': host_email,
+                'host_name': host_name,
+            },
+        )
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe error creating birthday checkout: {str(e)}")
+        return Response({'error': f'Payment error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    # Reserve the slug by creating an inactive party
+    try:
+        from datetime import datetime
+        BirthdayParty.objects.create(
+            slug=slug,
+            birthday_person_name=birthday_person_name,
+            party_date=datetime.strptime(party_date, '%Y-%m-%d').date(),
+            host_email=host_email,
+            host_name=host_name,
+            stripe_session_id=session.id,
+            is_active=False,
+        )
+    except Exception as e:
+        logger.error(f"Failed to create pending birthday party: {str(e)}")
+        try:
+            checkout_module.Session.expire(session.id)
+        except Exception:
+            pass
+        return Response({'error': 'Failed to reserve party slot'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return Response({'checkout_url': session.url, 'session_id': session.id})

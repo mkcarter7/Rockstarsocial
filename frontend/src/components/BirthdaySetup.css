@@ -1,0 +1,43 @@
+.birthday-setup-loading,
+.birthday-setup-error {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.birthday-setup-form {
+  max-width: 600px;
+  margin: 0 auto;
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+}
+
+.setup-preview {
+  background: #fff8ff;
+  border: 2px solid #ff6b9d;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.setup-preview h3 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.party-url-preview {
+  display: inline-block;
+  font-size: 1rem;
+  color: #ff6b9d;
+  font-weight: 600;
+  word-break: break-all;
+  margin-bottom: 10px;
+}
+
+.setup-note {
+  font-size: 0.85rem;
+  color: #888;
+  margin: 0;
+}

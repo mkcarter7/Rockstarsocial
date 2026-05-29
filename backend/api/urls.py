@@ -9,7 +9,13 @@ from .admin_views import (
     AdminThemeViewSet, AdminThemeCategoryViewSet, AdminContactSubmissionViewSet,
     VerifyTokenView, SiteSettingsView
 )
-from .stripe_views import create_checkout_session, stripe_webhook, check_purchase_status
+from .stripe_views import create_checkout_session, stripe_webhook, check_purchase_status, create_birthday_checkout
+from .birthday_views import (
+    check_slug, party_detail, party_setup,
+    party_photos, delete_photo, party_guestbook,
+    party_rsvp, party_trivia, submit_trivia,
+    trivia_leaderboard, admin_birthday_parties,
+)
 
 router = DefaultRouter()
 router.register(r'portfolio', PortfolioItemViewSet, basename='portfolio')
@@ -37,6 +43,19 @@ urlpatterns = [
     path('site-settings/', SiteSettingsView.as_view(), name='public-site-settings'),
     # Stripe endpoints
     path('stripe/create-checkout-session/', create_checkout_session, name='create-checkout-session'),
+    path('stripe/create-birthday-checkout/', create_birthday_checkout, name='create-birthday-checkout'),
     path('stripe/webhook/', stripe_webhook, name='stripe-webhook'),
     path('stripe/check-purchase-status/', check_purchase_status, name='check-purchase-status'),
+    # Birthday app endpoints
+    path('birthday/check-slug/', check_slug, name='birthday-check-slug'),
+    path('birthday/setup/', party_setup, name='birthday-setup'),
+    path('birthday/<slug:slug>/', party_detail, name='birthday-detail'),
+    path('birthday/<slug:slug>/photos/', party_photos, name='birthday-photos'),
+    path('birthday/<slug:slug>/photos/<int:photo_id>/', delete_photo, name='birthday-delete-photo'),
+    path('birthday/<slug:slug>/guestbook/', party_guestbook, name='birthday-guestbook'),
+    path('birthday/<slug:slug>/rsvp/', party_rsvp, name='birthday-rsvp'),
+    path('birthday/<slug:slug>/trivia/', party_trivia, name='birthday-trivia'),
+    path('birthday/<slug:slug>/trivia/submit/', submit_trivia, name='birthday-trivia-submit'),
+    path('birthday/<slug:slug>/trivia/leaderboard/', trivia_leaderboard, name='birthday-leaderboard'),
+    path('admin/birthday-parties/', admin_birthday_parties, name='admin-birthday-parties'),
 ]

@@ -41,5 +41,23 @@ export const submitContact = (data) => api.post('/contact/', data);
 // Stripe
 export const createCheckoutSession = (data) => api.post('/stripe/create-checkout-session/', data);
 export const checkPurchaseStatus = (sessionId) => api.get(`/stripe/check-purchase-status/?session_id=${sessionId}`);
+export const createBirthdayCheckout = (data) => api.post('/stripe/create-birthday-checkout/', data);
+
+// Birthday app
+export const checkBirthdaySlug = (slug) => api.get(`/birthday/check-slug/?slug=${slug}`);
+export const getBirthdayParty = (slug) => api.get(`/birthday/${slug}/`);
+export const getBirthdaySetup = (sessionId) => api.get(`/birthday/setup/?session_id=${sessionId}`);
+export const saveBirthdaySetup = (data) => api.post('/birthday/setup/', data);
+export const getBirthdayPhotos = (slug) => api.get(`/birthday/${slug}/photos/`);
+export const uploadBirthdayPhoto = (slug, formData) => api.post(`/birthday/${slug}/photos/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const deleteBirthdayPhoto = (slug, photoId, sessionId) => api.delete(`/birthday/${slug}/photos/${photoId}/?session_id=${sessionId}`);
+export const getBirthdayGuestbook = (slug) => api.get(`/birthday/${slug}/guestbook/`);
+export const addGuestbookEntry = (slug, data) => api.post(`/birthday/${slug}/guestbook/`, data);
+export const getBirthdayRSVP = (slug) => api.get(`/birthday/${slug}/rsvp/`);
+export const submitBirthdayRSVP = (slug, data) => api.post(`/birthday/${slug}/rsvp/`, data);
+export const getBirthdayTrivia = (slug) => api.get(`/birthday/${slug}/trivia/`);
+export const addTriviaQuestion = (slug, data) => api.post(`/birthday/${slug}/trivia/`, data);
+export const submitTriviaAnswers = (slug, data) => api.post(`/birthday/${slug}/trivia/submit/`, data);
+export const getTriviaLeaderboard = (slug) => api.get(`/birthday/${slug}/trivia/leaderboard/`);
 
 export default api;

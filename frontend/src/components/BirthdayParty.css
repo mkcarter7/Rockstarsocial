@@ -1,0 +1,121 @@
+.party-loading, .party-not-found {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.party-hero {
+  position: relative;
+  color: white;
+  padding: 80px 0;
+  text-align: center;
+  overflow: hidden;
+}
+
+.party-banner {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.2;
+}
+
+.party-hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.party-hero h1 {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.party-welcome {
+  font-size: 1.2rem;
+  max-width: 600px;
+  margin: 0 auto 30px;
+  opacity: 0.95;
+}
+
+.countdown {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.countdown-unit {
+  background: rgba(255,255,255,0.2);
+  border: 2px solid;
+  border-radius: 12px;
+  padding: 15px 20px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.countdown-number {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+}
+
+.countdown-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.8);
+}
+
+.countdown-past {
+  font-size: 1.5rem;
+  margin-top: 20px;
+}
+
+.party-nav-section {
+  padding: 40px 0;
+  background: #fafafa;
+}
+
+.party-nav-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 20px;
+}
+
+.party-nav-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  border: 2px solid;
+  border-radius: 12px;
+  padding: 25px 15px;
+  text-decoration: none;
+  color: #333;
+  font-weight: 600;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.party-nav-tile:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.tile-icon {
+  font-size: 2rem;
+}
+
+.party-footer {
+  text-align: center;
+  padding: 30px;
+  color: #999;
+  font-size: 0.85rem;
+}
+
+.party-footer a {
+  text-decoration: none;
+  font-weight: 600;
+}

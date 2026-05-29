@@ -144,6 +144,116 @@ class ContactSubmission(models.Model):
         return f"{self.name} - {self.subject}"
 
 
+class BirthdayParty(models.Model):
+    slug = models.SlugField(unique=True, max_length=100)
+    birthday_person_name = models.CharField(max_length=200)
+    party_date = models.DateField()
+    welcome_message = models.TextField(blank=True)
+    host_email = models.EmailField()
+    host_name = models.CharField(max_length=200, blank=True)
+    theme_color = models.CharField(max_length=7, default='#ff6b9d')
+    banner_image = models.ImageField(upload_to='birthday/banners/', blank=True, null=True)
+    is_active = models.BooleanField(default=False)
+    stripe_session_id = models.CharField(max_length=255, unique=True, blank=True, null=True)
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    @property
+    def expires_at(self):
+        from datetime import timedelta
+        return self.party_date + timedelta(days=60)
+
+    @property
+    def is_expired(self):
+        from datetime import date
+        return date.today() > self.expires_at
+
+    def __str__(self):
+        return f"{self.birthday_person_name}'s Party ({self.slug})"
+
+
+class PartyPhoto(models.Model):
+    party = models.ForeignKey(BirthdayParty, on_delete=models.CASCADE, related_name='photos')
+    image = models.ImageField(upload_to='birthday/photos/')
+    caption = models.CharField(max_length=200, blank=True)
+    uploaded_by_name = models.CharField(max_length=100, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-uploaded_at']
+
+    def __str__(self):
+        return f"Photo for {self.party.slug}"
+
+
+class GuestBookEntry(models.Model):
+    party = models.ForeignKey(BirthdayParty, on_delete=models.CASCADE, related_name='guestbook_entries')
+    author_name = models.CharField(max_length=100)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.author_name} on {self.party.slug}"
+
+
+class PartyRSVP(models.Model):
+    STATUS_CHOICES = [
+        ('yes', 'Yes'),
+        ('no', 'No'),
+        ('maybe', 'Maybe'),
+    ]
+    party = models.ForeignKey(BirthdayParty, on_delete=models.CASCADE, related_name='rsvps')
+    name = models.CharField(max_length=100)
+    email = models.EmailField(blank=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
+    guest_count = models.IntegerField(default=1)
+    message = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} - {self.status} ({self.party.slug})"
+
+
+class TriviaQuestion(models.Model):
+    ANSWER_CHOICES = [('a', 'A'), ('b', 'B'), ('c', 'C'), ('d', 'D')]
+    party = models.ForeignKey(BirthdayParty, on_delete=models.CASCADE, related_name='trivia_questions')
+    question = models.CharField(max_length=300)
+    option_a = models.CharField(max_length=200)
+    option_b = models.CharField(max_length=200)
+    option_c = models.CharField(max_length=200)
+    option_d = models.CharField(max_length=200)
+    correct_answer = models.CharField(max_length=1, choices=ANSWER_CHOICES)
+    points = models.IntegerField(default=10)
+
+    class Meta:
+        ordering = ['id']
+
+    def __str__(self):
+        return f"Q: {self.question[:50]} ({self.party.slug})"
+
+
+class TriviaScore(models.Model):
+    party = models.ForeignKey(BirthdayParty, on_delete=models.CASCADE, related_name='trivia_scores')
+    player_name = models.CharField(max_length=100)
+    score = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-score', '-created_at']
+
+    def __str__(self):
+        return f"{self.player_name} - {self.score} pts ({self.party.slug})"
+
+
 class SiteSettings(models.Model):
     """Model for site-wide settings like colors"""
     # Use singleton pattern - only one settings object

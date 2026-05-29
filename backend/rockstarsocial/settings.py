@@ -172,6 +172,8 @@ if USE_S3:
         AWS_QUERYSTRING_AUTH = False
         AWS_S3_VERIFY = True
         AWS_S3_SIGNATURE_VERSION = 's3v4'
+        AWS_S3_CONNECT_TIMEOUT = 10
+        AWS_S3_READ_TIMEOUT = 30
 
         DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
         MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'

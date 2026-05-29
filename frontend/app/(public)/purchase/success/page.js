@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import PurchaseSuccess from '@/pages/PurchaseSuccess';
+import PurchaseSuccess from '@/views/PurchaseSuccess';
 
 export default function PurchaseSuccessPage() {
   return (

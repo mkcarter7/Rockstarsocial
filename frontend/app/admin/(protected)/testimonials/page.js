@@ -1,2 +1,2 @@
-import ManageTestimonials from '@/pages/admin/ManageTestimonials';
+import ManageTestimonials from '@/views/admin/ManageTestimonials';
 export default ManageTestimonials;

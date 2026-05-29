@@ -1,2 +1,2 @@
-import Pricing from '@/pages/Pricing';
+import Pricing from '@/views/Pricing';
 export default Pricing;

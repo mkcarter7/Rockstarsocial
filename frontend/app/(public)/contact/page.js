@@ -1,2 +1,2 @@
-import Contact from '@/pages/Contact';
+import Contact from '@/views/Contact';
 export default Contact;

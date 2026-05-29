@@ -1,2 +1,2 @@
-import ContactSubmissions from '@/pages/admin/ContactSubmissions';
+import ContactSubmissions from '@/views/admin/ContactSubmissions';
 export default ContactSubmissions;

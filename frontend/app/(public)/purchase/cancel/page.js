@@ -1,2 +1,2 @@
-import PurchaseCancel from '@/pages/PurchaseCancel';
+import PurchaseCancel from '@/views/PurchaseCancel';
 export default PurchaseCancel;

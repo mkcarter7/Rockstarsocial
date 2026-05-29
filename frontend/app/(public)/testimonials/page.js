@@ -1,2 +1,2 @@
-import Testimonials from '@/pages/Testimonials';
+import Testimonials from '@/views/Testimonials';
 export default Testimonials;

@@ -1,2 +1,2 @@
-import Portfolio from '@/pages/Portfolio';
+import Portfolio from '@/views/Portfolio';
 export default Portfolio;

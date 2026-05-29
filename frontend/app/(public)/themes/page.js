@@ -1,2 +1,2 @@
-import Themes from '@/pages/Themes';
+import Themes from '@/views/Themes';
 export default Themes;

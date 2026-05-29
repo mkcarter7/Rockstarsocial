@@ -1,2 +1,2 @@
-import Dashboard from '@/pages/admin/Dashboard';
+import Dashboard from '@/views/admin/Dashboard';
 export default Dashboard;

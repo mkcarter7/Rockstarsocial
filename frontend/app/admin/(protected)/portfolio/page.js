@@ -1,2 +1,2 @@
-import ManagePortfolio from '@/pages/admin/ManagePortfolio';
+import ManagePortfolio from '@/views/admin/ManagePortfolio';
 export default ManagePortfolio;

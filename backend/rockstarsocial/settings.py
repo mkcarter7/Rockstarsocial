@@ -146,35 +146,33 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 USE_S3 = os.environ.get('USE_S3', 'False') == 'True'
 
 if USE_S3:
-    # AWS S3 Settings
+    # DigitalOcean Spaces Settings (S3-compatible)
     AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
-    AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'us-east-1')
-    
-    # Validate that all required S3 settings are present
+    AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'nyc3')
+    # Endpoint URL tells boto3 to use DO Spaces instead of AWS
+    AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL', f'https://{os.environ.get("AWS_S3_REGION_NAME", "nyc3")}.digitaloceanspaces.com')
+
+    # Validate that all required settings are present
     if not all([AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME]):
-        # If S3 is enabled but credentials are missing, fall back to local storage
         USE_S3 = False
-        print("Warning: USE_S3 is True but AWS credentials are missing. Falling back to local storage.")
+        print("Warning: USE_S3 is True but credentials are missing. Falling back to local storage.")
     else:
-        AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+        # DO Spaces CDN domain: bucket.region.digitaloceanspaces.com
+        AWS_S3_CUSTOM_DOMAIN = os.environ.get(
+            'AWS_S3_CUSTOM_DOMAIN',
+            f'{AWS_STORAGE_BUCKET_NAME}.{AWS_S3_REGION_NAME}.digitaloceanspaces.com'
+        )
         AWS_S3_OBJECT_PARAMETERS = {
             'CacheControl': 'max-age=86400',
         }
-        # Note: AWS has deprecated ACLs in some regions. If you get ACL errors, 
-        # remove AWS_DEFAULT_ACL and use bucket policies instead
-        AWS_DEFAULT_ACL = None  # Changed from 'public-read' - use bucket policy for public access
+        AWS_DEFAULT_ACL = 'public-read'  # Required for publicly accessible files on DO Spaces
         AWS_S3_FILE_OVERWRITE = False
         AWS_QUERYSTRING_AUTH = False
         AWS_S3_VERIFY = True
-        AWS_S3_USE_SSL = True
-        AWS_S3_USE_SIGNATURES_V4 = True
-        
-        # S3 static files settings (if you want to use S3 for static files too)
-        # STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-        
-        # S3 media files settings
+        AWS_S3_SIGNATURE_VERSION = 's3v4'
+
         DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
         MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
 

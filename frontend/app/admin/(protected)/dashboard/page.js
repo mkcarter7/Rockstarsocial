@@ -1,2 +1,2 @@
-import Dashboard from '@/views/admin/Dashboard';
+import Dashboard from '@/components/admin/Dashboard';
 export default Dashboard;

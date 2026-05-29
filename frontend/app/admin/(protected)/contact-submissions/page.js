@@ -1,2 +1,2 @@
-import ContactSubmissions from '@/views/admin/ContactSubmissions';
+import ContactSubmissions from '@/components/admin/ContactSubmissions';
 export default ContactSubmissions;

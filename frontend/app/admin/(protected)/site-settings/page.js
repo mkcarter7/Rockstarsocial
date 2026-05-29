@@ -1,2 +1,2 @@
-import SiteSettings from '@/views/admin/SiteSettings';
+import SiteSettings from '@/components/admin/SiteSettings';
 export default SiteSettings;

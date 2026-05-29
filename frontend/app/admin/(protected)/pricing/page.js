@@ -1,2 +1,2 @@
-import ManagePricing from '@/views/admin/ManagePricing';
+import ManagePricing from '@/components/admin/ManagePricing';
 export default ManagePricing;

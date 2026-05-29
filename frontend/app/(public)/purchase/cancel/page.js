@@ -1,2 +1,2 @@
-import PurchaseCancel from '@/views/PurchaseCancel';
+import PurchaseCancel from '@/components/PurchaseCancel';
 export default PurchaseCancel;

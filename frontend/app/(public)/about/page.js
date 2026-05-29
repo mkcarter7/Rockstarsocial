@@ -1,2 +1,2 @@
-import About from '@/views/About';
+import About from '@/components/About';
 export default About;

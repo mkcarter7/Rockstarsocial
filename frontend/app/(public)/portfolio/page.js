@@ -1,2 +1,2 @@
-import Portfolio from '@/views/Portfolio';
+import Portfolio from '@/components/Portfolio';
 export default Portfolio;

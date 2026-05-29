@@ -1,2 +1,2 @@
-import Contact from '@/views/Contact';
+import Contact from '@/components/Contact';
 export default Contact;

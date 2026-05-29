@@ -1,2 +1,2 @@
-import Testimonials from '@/views/Testimonials';
+import Testimonials from '@/components/Testimonials';
 export default Testimonials;

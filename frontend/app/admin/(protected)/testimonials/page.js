@@ -1,2 +1,2 @@
-import ManageTestimonials from '@/views/admin/ManageTestimonials';
+import ManageTestimonials from '@/components/admin/ManageTestimonials';
 export default ManageTestimonials;

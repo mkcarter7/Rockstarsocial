@@ -1,2 +1,2 @@
-import Themes from '@/views/Themes';
+import Themes from '@/components/Themes';
 export default Themes;

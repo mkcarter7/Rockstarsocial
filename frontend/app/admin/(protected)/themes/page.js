@@ -1,2 +1,2 @@
-import ManageThemes from '@/views/admin/ManageThemes';
+import ManageThemes from '@/components/admin/ManageThemes';
 export default ManageThemes;

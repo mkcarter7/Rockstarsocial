@@ -154,7 +154,7 @@ def create_checkout_session(request):
         amount_cents = int(price_decimal * 100)
         
         # Get the frontend URL for success/cancel redirects
-        frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+        frontend_url = os.environ.get('FRONTEND_URL', 'https://1rockstarsocial.com')
         
         # Get full image URL for Stripe
         image_url = None
@@ -446,7 +446,7 @@ def create_birthday_checkout(request):
         return Response({'error': 'That URL is already taken. Please choose a different one.'}, status=status.HTTP_400_BAD_REQUEST)
 
     price_cents = int(os.environ.get('BIRTHDAY_APP_PRICE', '2900'))
-    frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+    frontend_url = os.environ.get('FRONTEND_URL', 'https://1rockstarsocial.com')
 
     try:
         session = checkout_module.Session.create(
@@ -528,7 +528,7 @@ def create_theme_checkout(request):
         return Response({'error': 'Theme not found'}, status=status.HTTP_404_NOT_FOUND)
 
     price_cents = int(Decimal(str(theme.price)) * 100)
-    frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+    frontend_url = os.environ.get('FRONTEND_URL', 'https://1rockstarsocial.com')
 
     description = theme.description
     if len(description) > 500:

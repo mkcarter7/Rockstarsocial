@@ -42,7 +42,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Theme, ThemePurchase, BirthdayParty
+from .models import Theme, ThemePurchase, ThemePackage, ThemeOrder, BirthdayParty
 
 logger = logging.getLogger(__name__)
 
@@ -309,6 +309,23 @@ def stripe_webhook(request):
             except Exception as e:
                 logger.error(f"Error activating birthday party: {str(e)}", exc_info=True)
                 return HttpResponse(status=500)
+        elif purchase_type == 'theme_order':
+            # Complete a website theme package order
+            try:
+                with transaction.atomic():
+                    order = ThemeOrder.objects.select_for_update().get(
+                        stripe_session_id=session['id']
+                    )
+                    if order.status != 'completed':
+                        order.status = 'completed'
+                        order.save()
+                        logger.info(f"ThemeOrder completed: {order.id} for {order.customer_email}")
+            except ThemeOrder.DoesNotExist:
+                logger.error(f"ThemeOrder not found for session {session['id']}")
+                return HttpResponse(status=404)
+            except Exception as e:
+                logger.error(f"Error completing theme order: {str(e)}", exc_info=True)
+                return HttpResponse(status=500)
         else:
             # Theme purchase
             try:
@@ -481,5 +498,83 @@ def create_birthday_checkout(request):
         except Exception:
             pass
         return Response({'error': 'Failed to reserve party slot'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return Response({'checkout_url': session.url, 'session_id': session.id})
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def create_theme_checkout(request):
+    """Create a Stripe Checkout session for a website theme package purchase."""
+    if not stripe.api_key:
+        return Response({'error': 'Stripe is not configured'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    checkout_module = getattr(stripe, 'checkout', None) or stripe_checkout
+    if not checkout_module:
+        return Response({'error': 'Stripe checkout not available'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    theme_id = request.data.get('theme_id')
+    customer_email = request.data.get('customer_email', '').strip()
+
+    if not theme_id or not customer_email:
+        return Response(
+            {'error': 'theme_id and customer_email are required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        theme = ThemePackage.objects.get(id=theme_id)
+    except ThemePackage.DoesNotExist:
+        return Response({'error': 'Theme not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    price_cents = int(Decimal(str(theme.price)) * 100)
+    frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+
+    description = theme.description
+    if len(description) > 500:
+        description = description[:497].rsplit(' ', 1)[0] + '...'
+
+    try:
+        session = checkout_module.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {
+                        'name': theme.name,
+                        'description': description,
+                    },
+                    'unit_amount': price_cents,
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            customer_email=customer_email,
+            success_url=f'{frontend_url}/theme-setup?session_id={{CHECKOUT_SESSION_ID}}',
+            cancel_url=f'{frontend_url}/themes',
+            metadata={
+                'type': 'theme_order',
+                'theme_id': str(theme.id),
+                'customer_email': customer_email,
+            },
+        )
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe error creating theme checkout: {str(e)}")
+        return Response({'error': f'Payment error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    try:
+        ThemeOrder.objects.create(
+            theme=theme,
+            customer_email=customer_email,
+            stripe_session_id=session.id,
+            status='pending',
+        )
+    except Exception as e:
+        logger.error(f"Failed to create ThemeOrder: {str(e)}")
+        try:
+            checkout_module.Session.expire(session.id)
+        except Exception:
+            pass
+        return Response({'error': 'Failed to reserve order'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return Response({'checkout_url': session.url, 'session_id': session.id})

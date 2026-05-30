@@ -1,2 +1,3 @@
-import Themes from '@/components/Themes';
-export default Themes;
+import Pricing from '../../../src/components/Pricing';
+
+export default Pricing;

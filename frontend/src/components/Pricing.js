@@ -1,88 +1,122 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { getPricingPlans } from '../api/api';
-import Link from 'next/link';
-import './Pricing.css';
+import { getThemes, createThemeCheckout } from '../api/api';
 
 const Pricing = () => {
-  const [plans, setPlans] = useState([]);
+  const [themes, setThemes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchPricing = async () => {
+    const fetchThemes = async () => {
       try {
-        const response = await getPricingPlans();
-        setPlans(response.data);
+        const response = await getThemes();
+        setThemes(response.data);
       } catch (err) {
-        setError('Failed to load pricing plans');
+        setError('Failed to load themes');
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
-    fetchPricing();
+    fetchThemes();
   }, []);
 
+  const handleThemePurchase = async (theme) => {
+    const customerEmail = prompt('Please enter your email address to get started:');
+    if (!customerEmail) return;
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(customerEmail)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+
+    try {
+      const response = await createThemeCheckout({
+        theme_id: theme.id,
+        customer_email: customerEmail,
+      });
+      if (response.data.checkout_url) {
+        window.location.href = response.data.checkout_url;
+      }
+    } catch (err) {
+      console.error('Error creating checkout session:', err);
+      alert('Failed to start checkout. Please try again.');
+    }
+  };
+
   return (
-    <div className="pricing-page">
-      <section className="page-hero">
-        <div className="container">
-          <h1>Pricing Plans</h1>
-          <p>Choose the perfect plan for your business needs</p>
+    <div className="min-h-screen bg-white">
+      {/* Hero */}
+      <section className="bg-gradient-to-br from-black to-brand py-20 text-center text-white">
+        <div className="max-w-5xl mx-auto px-5">
+          <h1 className="text-5xl font-bold mb-4">Themes</h1>
+          <p className="text-lg opacity-90">Choose the perfect theme to launch your website today</p>
         </div>
       </section>
 
-      <section className="section">
-        <div className="container">
+      {/* Themes grid */}
+      <section className="py-20">
+        <div className="max-w-5xl mx-auto px-5">
           {loading ? (
-            <div className="loading">Loading pricing plans...</div>
+            <p className="text-center text-gray-500 py-16 text-lg">Loading themes...</p>
           ) : error ? (
-            <div className="error">{error}</div>
-          ) : plans.length > 0 ? (
-            <div className="pricing-grid">
-              {plans.map((plan) => (
-                <div 
-                  key={plan.id} 
-                  className={`card pricing-card ${plan.popular ? 'popular' : ''}`}
+            <p className="text-center text-red-500 py-16">{error}</p>
+          ) : themes.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-6">
+              {themes.map((theme) => (
+                <div
+                  key={theme.id}
+                  className={`relative bg-white rounded-2xl shadow-md p-8 text-center flex flex-col transition-transform duration-300 hover:-translate-y-2 hover:shadow-xl ${
+                    theme.popular ? 'border-2 border-brand scale-105' : ''
+                  }`}
                 >
-                  {plan.popular && (
-                    <div className="popular-badge">Most Popular</div>
+                  {theme.popular && (
+                    <span className="absolute -top-4 left-1/2 -translate-x-1/2 bg-brand text-white text-sm font-semibold px-5 py-1 rounded-full">
+                      Most Popular
+                    </span>
                   )}
-                  <h3>{plan.name}</h3>
-                  <div className="pricing-price">
-                    <span className="currency">$</span>
-                    <span className="amount">{plan.price}</span>
+                  <h3 className="text-2xl font-bold text-black mb-5">{theme.name}</h3>
+                  <div className="mb-5">
+                    <span className="text-2xl font-semibold text-brand align-top mt-2 inline-block">$</span>
+                    <span className="text-6xl font-bold text-brand">{theme.price}</span>
                   </div>
-                  <p className="pricing-description">{plan.description}</p>
-                  <ul className="pricing-features">
-                    {plan.features && plan.features.map((feature, index) => (
-                      <li key={index}>
-                        <span className="check-icon">✓</span>
+                  <p className="text-gray-600 mb-6 leading-relaxed">{theme.description}</p>
+                  <ul className="text-left mb-8 space-y-3 flex-1 min-h-[200px]">
+                    {theme.features && theme.features.map((feature, index) => (
+                      <li key={index} className="flex items-center gap-3 text-gray-700">
+                        <span className="text-green-500 font-bold text-xl">✓</span>
                         {feature}
                       </li>
                     ))}
                   </ul>
-                  <Link href="/contact" className="btn btn-primary pricing-btn">
-                    Get Started
-                  </Link>
+                  <button
+                    onClick={() => handleThemePurchase(theme)}
+                    className="w-full py-4 bg-brand text-white rounded-lg font-semibold text-lg hover:bg-brand-dark hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200"
+                  >
+                    Purchase
+                  </button>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="loading">No pricing plans available</div>
+            <p className="text-center text-gray-500 py-16 text-lg">No themes available</p>
           )}
         </div>
       </section>
 
-      <section className="section section-alt">
-        <div className="container">
-          <div className="pricing-cta">
-            <h2>Need a Custom Solution?</h2>
-            <p>We can create a tailored package that fits your specific requirements</p>
-            <Link href="/contact" className="btn btn-primary">Contact Us</Link>
-          </div>
+      {/* CTA */}
+      <section className="bg-gray-50 py-20">
+        <div className="max-w-5xl mx-auto px-5 text-center">
+          <h2 className="text-4xl font-bold text-black mb-4">Need Something Custom?</h2>
+          <p className="text-lg text-gray-600 mb-8">
+            We can build a tailored website that fits your specific needs
+          </p>
+          <a href="/contact" className="inline-block py-3 px-8 bg-brand text-white rounded-lg font-semibold hover:bg-brand-dark transition-colors duration-200">
+            Contact Us
+          </a>
         </div>
       </section>
     </div>
@@ -90,5 +124,3 @@ const Pricing = () => {
 };
 
 export default Pricing;
-
-

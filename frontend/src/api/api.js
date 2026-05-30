@@ -27,21 +27,24 @@ export const getFeaturedPortfolio = () => api.get('/portfolio/featured/');
 export const getTestimonials = () => api.get('/testimonials/');
 export const getFeaturedTestimonials = () => api.get('/testimonials/featured/');
 
-// Pricing
-export const getPricingPlans = () => api.get('/pricing/');
+// Themes (website theme packages — formerly pricing plans)
+export const getThemes = () => api.get('/themes/');
 
-// Themes
-export const getThemes = (params) => api.get('/themes/', { params });
-export const getFeaturedThemes = () => api.get('/themes/featured/');
-export const getThemeCategories = () => api.get('/theme-categories/');
+// Downloadable theme files (used by Home featured section)
+export const getFeaturedThemes = () => api.get('/theme-files/featured/');
 
 // Contact
 export const submitContact = (data) => api.post('/contact/', data);
 
-// Stripe
+// Stripe — downloadable theme file purchases (existing flow, kept as-is)
 export const createCheckoutSession = (data) => api.post('/stripe/create-checkout-session/', data);
 export const checkPurchaseStatus = (sessionId) => api.get(`/stripe/check-purchase-status/?session_id=${sessionId}`);
 export const createBirthdayCheckout = (data) => api.post('/stripe/create-birthday-checkout/', data);
+
+// Stripe — website theme package purchase + setup flow
+export const createThemeCheckout = (data) => api.post('/stripe/create-theme-checkout/', data);
+export const getThemeSetup = (sessionId) => api.get(`/theme-setup/?session_id=${sessionId}`);
+export const saveThemeSetup = (data) => api.post('/theme-setup/', data);
 
 // Birthday app
 export const checkBirthdaySlug = (slug) => api.get(`/birthday/check-slug/?slug=${slug}`);

@@ -14,11 +14,11 @@ try:
 except ImportError:
     BotoClientError = None
 from .models import (
-    PortfolioItem, Testimonial, PricingPlan,
+    PortfolioItem, Testimonial, ThemePackage,
     ThemeCategory, Theme, ContactSubmission, SiteSettings
 )
 from .serializers import (
-    PortfolioItemSerializer, TestimonialSerializer, PricingPlanSerializer,
+    PortfolioItemSerializer, TestimonialSerializer, ThemePackageSerializer,
     ThemeCategorySerializer, ThemeSerializer, ContactSubmissionSerializer,
     SiteSettingsSerializer
 )
@@ -427,10 +427,10 @@ class AdminThemeViewSet(viewsets.ModelViewSet):
             )
 
 
-class AdminPricingPlanViewSet(viewsets.ModelViewSet):
-    """Admin viewset for managing pricing plans"""
-    queryset = PricingPlan.objects.all()
-    serializer_class = PricingPlanSerializer
+class AdminThemePackageViewSet(viewsets.ModelViewSet):
+    """Admin viewset for managing website theme packages"""
+    queryset = ThemePackage.objects.all()
+    serializer_class = ThemePackageSerializer
     permission_classes = [FirebasePermission]
 
 

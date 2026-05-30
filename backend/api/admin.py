@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
-    PortfolioItem, Testimonial, PricingPlan, 
-    ThemeCategory, Theme, ContactSubmission, SiteSettings
+    PortfolioItem, Testimonial, ThemePackage,
+    ThemeCategory, Theme, ThemeOrder, ContactSubmission, SiteSettings
 )
 
 
@@ -19,10 +19,17 @@ class TestimonialAdmin(admin.ModelAdmin):
     search_fields = ['client_name', 'company', 'testimonial_text']
 
 
-@admin.register(PricingPlan)
-class PricingPlanAdmin(admin.ModelAdmin):
+@admin.register(ThemePackage)
+class ThemePackageAdmin(admin.ModelAdmin):
     list_display = ['name', 'price', 'popular', 'created_at']
     list_filter = ['popular', 'created_at']
+
+
+@admin.register(ThemeOrder)
+class ThemeOrderAdmin(admin.ModelAdmin):
+    list_display = ['customer_email', 'theme', 'status', 'slug', 'created_at']
+    list_filter = ['status', 'created_at']
+    search_fields = ['customer_email', 'slug', 'business_name']
 
 
 @admin.register(ThemeCategory)

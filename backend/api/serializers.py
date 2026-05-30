@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.conf import settings
 from .models import (
-    PortfolioItem, Testimonial, PricingPlan,
+    PortfolioItem, Testimonial, ThemePackage,
     ThemeCategory, Theme, ThemePurchase, ContactSubmission, SiteSettings
 )
 
@@ -56,9 +56,9 @@ class TestimonialSerializer(serializers.ModelSerializer):
         return representation
 
 
-class PricingPlanSerializer(serializers.ModelSerializer):
+class ThemePackageSerializer(serializers.ModelSerializer):
     class Meta:
-        model = PricingPlan
+        model = ThemePackage
         fields = '__all__'
 
 

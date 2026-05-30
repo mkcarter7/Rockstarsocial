@@ -1,15 +1,16 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    PortfolioItemViewSet, TestimonialViewSet, PricingPlanViewSet,
+    PortfolioItemViewSet, TestimonialViewSet, ThemePackageViewSet,
     ThemeCategoryViewSet, ThemeViewSet, ContactSubmissionViewSet
 )
 from .admin_views import (
-    AdminPortfolioViewSet, AdminTestimonialViewSet, AdminPricingPlanViewSet,
+    AdminPortfolioViewSet, AdminTestimonialViewSet, AdminThemePackageViewSet,
     AdminThemeViewSet, AdminThemeCategoryViewSet, AdminContactSubmissionViewSet,
     VerifyTokenView, SiteSettingsView
 )
-from .stripe_views import create_checkout_session, stripe_webhook, check_purchase_status, create_birthday_checkout
+from .stripe_views import create_checkout_session, stripe_webhook, check_purchase_status, create_birthday_checkout, create_theme_checkout
+from .theme_setup_views import theme_setup_view
 from .birthday_views import (
     check_slug, party_detail, party_setup,
     party_photos, delete_photo, party_guestbook,
@@ -20,17 +21,17 @@ from .birthday_views import (
 router = DefaultRouter()
 router.register(r'portfolio', PortfolioItemViewSet, basename='portfolio')
 router.register(r'testimonials', TestimonialViewSet, basename='testimonials')
-router.register(r'pricing', PricingPlanViewSet, basename='pricing')
+router.register(r'themes', ThemePackageViewSet, basename='themes')
 router.register(r'theme-categories', ThemeCategoryViewSet, basename='theme-categories')
-router.register(r'themes', ThemeViewSet, basename='themes')
+router.register(r'theme-files', ThemeViewSet, basename='theme-files')
 router.register(r'contact', ContactSubmissionViewSet, basename='contact')
 
 # Admin router (with Firebase authentication)
 admin_router = DefaultRouter()
 admin_router.register(r'admin/portfolio', AdminPortfolioViewSet, basename='admin-portfolio')
 admin_router.register(r'admin/testimonials', AdminTestimonialViewSet, basename='admin-testimonials')
-admin_router.register(r'admin/pricing', AdminPricingPlanViewSet, basename='admin-pricing')
-admin_router.register(r'admin/themes', AdminThemeViewSet, basename='admin-themes')
+admin_router.register(r'admin/themes', AdminThemePackageViewSet, basename='admin-themes')
+admin_router.register(r'admin/theme-files', AdminThemeViewSet, basename='admin-theme-files')
 admin_router.register(r'admin/theme-categories', AdminThemeCategoryViewSet, basename='admin-theme-categories')
 admin_router.register(r'admin/contact-submissions', AdminContactSubmissionViewSet, basename='admin-contact-submissions')
 
@@ -44,8 +45,11 @@ urlpatterns = [
     # Stripe endpoints
     path('stripe/create-checkout-session/', create_checkout_session, name='create-checkout-session'),
     path('stripe/create-birthday-checkout/', create_birthday_checkout, name='create-birthday-checkout'),
+    path('stripe/create-theme-checkout/', create_theme_checkout, name='create-theme-checkout'),
     path('stripe/webhook/', stripe_webhook, name='stripe-webhook'),
     path('stripe/check-purchase-status/', check_purchase_status, name='check-purchase-status'),
+    # Theme setup
+    path('theme-setup/', theme_setup_view, name='theme-setup'),
     # Birthday app endpoints
     path('birthday/check-slug/', check_slug, name='birthday-check-slug'),
     path('birthday/setup/', party_setup, name='birthday-setup'),

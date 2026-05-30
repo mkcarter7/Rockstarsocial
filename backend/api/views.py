@@ -2,11 +2,11 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import (
-    PortfolioItem, Testimonial, PricingPlan,
+    PortfolioItem, Testimonial, ThemePackage,
     ThemeCategory, Theme, ContactSubmission
 )
 from .serializers import (
-    PortfolioItemSerializer, TestimonialSerializer, PricingPlanSerializer,
+    PortfolioItemSerializer, TestimonialSerializer, ThemePackageSerializer,
     ThemeCategorySerializer, ThemeSerializer, ContactSubmissionSerializer
 )
 
@@ -38,9 +38,9 @@ class TestimonialViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data)
 
 
-class PricingPlanViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = PricingPlan.objects.all()
-    serializer_class = PricingPlanSerializer
+class ThemePackageViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = ThemePackage.objects.all()
+    serializer_class = ThemePackageSerializer
 
 
 class ThemeCategoryViewSet(viewsets.ReadOnlyModelViewSet):

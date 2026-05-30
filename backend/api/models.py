@@ -41,18 +41,18 @@ class Testimonial(models.Model):
         return f"{self.client_name} - {self.company}"
 
 
-class PricingPlan(models.Model):
-    """Model for pricing plans"""
+class ThemePackage(models.Model):
+    """Website theme packages available for purchase"""
     name = models.CharField(max_length=200)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    features = models.JSONField(default=list)  # List of feature strings
+    features = models.JSONField(default=list)
     popular = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         ordering = ['price']
-    
+
     def __str__(self):
         return self.name
 
@@ -123,6 +123,28 @@ class ThemePurchase(models.Model):
     class Meta:
         ordering = ['-created_at']
     
+    def __str__(self):
+        return f"{self.customer_email} - {self.theme.name} ({self.status})"
+
+
+class ThemeOrder(models.Model):
+    """Tracks a customer's website theme package purchase and setup"""
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    ]
+    theme             = models.ForeignKey(ThemePackage, on_delete=models.PROTECT, related_name='orders')
+    customer_email    = models.EmailField()
+    stripe_session_id = models.CharField(max_length=255, unique=True)
+    status            = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    slug              = models.SlugField(max_length=100, blank=True)
+    business_name     = models.CharField(max_length=200, blank=True)
+    created_at        = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
     def __str__(self):
         return f"{self.customer_email} - {self.theme.name} ({self.status})"
 

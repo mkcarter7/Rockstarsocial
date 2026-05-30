@@ -25,14 +25,25 @@ function ThemeSetupInner() {
       setLoading(false);
       return;
     }
-    getThemeSetup(sessionId)
-      .then((res) => {
+
+    const fetchWithRetry = async (retriesLeft = 5) => {
+      try {
+        const res = await getThemeSetup(sessionId);
         setOrder(res.data);
         setSlug(res.data.slug || '');
         setBusinessName(res.data.business_name || '');
-      })
-      .catch(() => setError('Could not verify your purchase. Please contact support.'))
-      .finally(() => setLoading(false));
+        setLoading(false);
+      } catch (err) {
+        if (err.response?.status === 402 && retriesLeft > 0) {
+          setTimeout(() => fetchWithRetry(retriesLeft - 1), 2000);
+        } else {
+          setError('Could not verify your purchase. Please contact support.');
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchWithRetry();
   }, [sessionId]);
 
   const handleSlugChange = (value) => {

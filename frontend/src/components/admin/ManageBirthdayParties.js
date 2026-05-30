@@ -81,7 +81,7 @@ const ManageEventPages = () => {
               <tr>
                 <th>Type</th>
                 <th>Name</th>
-                <th>URL Slug</th>
+                <th>Web Path</th>
                 <th>Host Email</th>
                 <th>Event Date</th>
                 <th>Status</th>
@@ -100,7 +100,7 @@ const ManageEventPages = () => {
                   <td>{page.name}</td>
                   <td>
                     <a href={`/birthday/${page.slug}`} target="_blank" rel="noreferrer" className="slug-link">
-                      {page.slug}
+                      /birthday/{page.slug}
                     </a>
                   </td>
                   <td>{page.host_email}</td>

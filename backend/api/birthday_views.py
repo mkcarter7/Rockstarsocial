@@ -370,25 +370,68 @@ def trivia_leaderboard(request, slug):
 
 # ─── Admin ────────────────────────────────────────────────────────────────────
 
-@api_view(['GET'])
-def admin_birthday_parties(request):
-    """Firebase-protected list of all birthday parties."""
-    from .firebase_auth import get_firebase_user
-    if not get_firebase_user(request):
-        return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
-
-    parties = BirthdayParty.objects.all()
-    return Response([{
+def _serialize_event_page(p, event_type):
+    return {
         'id': p.id,
+        'event_type': event_type,
         'slug': p.slug,
-        'birthday_person_name': p.birthday_person_name,
+        'name': p.birthday_person_name,
         'party_date': p.party_date.isoformat(),
         'host_email': p.host_email,
         'is_active': p.is_active,
         'is_expired': p.is_expired,
         'expires_at': p.expires_at.isoformat(),
         'created_at': p.created_at.isoformat(),
-    } for p in parties])
+    }
+
+
+# Event type registry — add new models here as they are created
+EVENT_TYPE_MODELS = {
+    'birthday': BirthdayParty,
+}
+
+
+@api_view(['GET'])
+def admin_event_pages(request):
+    """Firebase-protected list of all event pages across all types."""
+    from .firebase_auth import get_firebase_user
+    if not get_firebase_user(request):
+        return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    results = []
+    for event_type, Model in EVENT_TYPE_MODELS.items():
+        label = event_type.capitalize()
+        for p in Model.objects.all().order_by('-created_at'):
+            results.append(_serialize_event_page(p, label))
+
+    results.sort(key=lambda x: x['created_at'], reverse=True)
+    return Response(results)
+
+
+@api_view(['DELETE'])
+def admin_delete_event_page(request, event_type, page_id):
+    """Firebase-protected delete an event page by type and ID."""
+    from .firebase_auth import get_firebase_user
+    if not get_firebase_user(request):
+        return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    Model = EVENT_TYPE_MODELS.get(event_type.lower())
+    if not Model:
+        return Response({'error': f'Unknown event type: {event_type}'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        page = Model.objects.get(id=page_id)
+    except Model.DoesNotExist:
+        return Response({'error': 'Event page not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    page.delete()
+    return Response({'message': 'Event page deleted'}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def admin_birthday_parties(request):
+    """Legacy alias — kept for backwards compatibility."""
+    return admin_event_pages(request)
 
 
 # ─── Cleanup management command helper ────────────────────────────────────────

@@ -17,18 +17,20 @@ const Dashboard = () => {
   const [themeCount, setThemeCount] = useState(0);
   const [contactCount, setContactCount] = useState(0);
   const [unreadContactCount, setUnreadContactCount] = useState(0);
+  const [birthdayCount, setBirthdayCount] = useState(0);
 
   const loadDashboardData = useCallback(async () => {
     try {
       const token = await getIdToken();
       
       // Fetch counts from admin API
-      const [portfolioRes, testimonialRes, pricingRes, themeRes, contactRes] = await Promise.all([
+      const [portfolioRes, testimonialRes, pricingRes, themeRes, contactRes, birthdayRes] = await Promise.all([
         api.get('/admin/portfolio/', { headers: { Authorization: `Bearer ${token}` } }),
         api.get('/admin/testimonials/', { headers: { Authorization: `Bearer ${token}` } }),
         api.get('/admin/pricing/', { headers: { Authorization: `Bearer ${token}` } }),
         api.get('/admin/themes/', { headers: { Authorization: `Bearer ${token}` } }),
-        api.get('/admin/contact-submissions/', { headers: { Authorization: `Bearer ${token}` } })
+        api.get('/admin/contact-submissions/', { headers: { Authorization: `Bearer ${token}` } }),
+        api.get('/admin/event-pages/', { headers: { Authorization: `Bearer ${token}` } }),
       ]);
 
       setPortfolioCount(portfolioRes.data.length);
@@ -37,6 +39,7 @@ const Dashboard = () => {
       setThemeCount(themeRes.data.length);
       setContactCount(contactRes.data.length);
       setUnreadContactCount(contactRes.data.filter(s => !s.read).length);
+      setBirthdayCount(birthdayRes.data.length);
     } catch (err) {
       console.error('Error loading dashboard data:', err);
     } finally {
@@ -111,6 +114,10 @@ const Dashboard = () => {
               <p className="stat-badge">({unreadContactCount} unread)</p>
             )}
           </div>
+          <div className="stat-card">
+            <h3>Event Pages</h3>
+            <p className="stat-number">{birthdayCount}</p>
+          </div>
         </div>
 
         <div className="dashboard-actions">
@@ -149,11 +156,17 @@ const Dashboard = () => {
                 <span className="action-badge">{unreadContactCount}</span>
               )}
             </button>
-            <button 
+            <button
               className="btn-action"
               onClick={() => router.push('/admin/site-settings')}
             >
               Site Settings
+            </button>
+            <button
+              className="btn-action"
+              onClick={() => router.push('/admin/birthday-parties')}
+            >
+              Manage Event Pages
             </button>
           </div>
         </div>

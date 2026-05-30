@@ -63,4 +63,8 @@ export const addTriviaQuestion = (slug, data) => api.post(`/birthday/${slug}/tri
 export const submitTriviaAnswers = (slug, data) => api.post(`/birthday/${slug}/trivia/submit/`, data);
 export const getTriviaLeaderboard = (slug) => api.get(`/birthday/${slug}/trivia/leaderboard/`);
 
+// Admin — Event pages (all types: birthday, wedding, etc.)
+export const getAdminEventPages = (token) => api.get('/admin/event-pages/', { headers: { Authorization: `Bearer ${token}` } });
+export const deleteAdminEventPage = (eventType, id, token) => api.delete(`/admin/event-pages/${eventType}/${id}/`, { headers: { Authorization: `Bearer ${token}` } });
+
 export default api;

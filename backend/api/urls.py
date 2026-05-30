@@ -16,6 +16,7 @@ from .birthday_views import (
     party_photos, delete_photo, party_guestbook,
     party_rsvp, party_trivia, submit_trivia,
     trivia_leaderboard, admin_birthday_parties,
+    admin_event_pages, admin_delete_event_page,
 )
 
 router = DefaultRouter()
@@ -62,4 +63,6 @@ urlpatterns = [
     path('birthday/<slug:slug>/trivia/submit/', submit_trivia, name='birthday-trivia-submit'),
     path('birthday/<slug:slug>/trivia/leaderboard/', trivia_leaderboard, name='birthday-leaderboard'),
     path('admin/birthday-parties/', admin_birthday_parties, name='admin-birthday-parties'),
+    path('admin/event-pages/', admin_event_pages, name='admin-event-pages'),
+    path('admin/event-pages/<str:event_type>/<int:page_id>/', admin_delete_event_page, name='admin-delete-event-page'),
 ]

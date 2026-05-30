@@ -34,6 +34,7 @@ def _get_theme_setup(request):
 
     return Response({
         'theme_name': order.theme.name,
+        'theme_type': order.theme.theme_type,
         'customer_email': order.customer_email,
         'slug': order.slug,
         'business_name': order.business_name,
@@ -78,5 +79,5 @@ def _save_theme_setup(request):
     return Response({
         'slug': order.slug,
         'business_name': order.business_name,
-        'site_url': f'1rockstarsocial.com/sites/{order.slug}',
+        'site_url': f'1rockstarsocial.com/{order.theme.theme_type}/{order.slug}',
     })

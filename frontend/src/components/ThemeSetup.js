@@ -18,6 +18,7 @@ function ThemeSetupInner() {
   const [slug, setSlug] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [slugError, setSlugError] = useState('');
+  const [themeType, setThemeType] = useState('birthday');
 
   useEffect(() => {
     if (!sessionId) {
@@ -32,6 +33,7 @@ function ThemeSetupInner() {
         setOrder(res.data);
         setSlug(res.data.slug || '');
         setBusinessName(res.data.business_name || '');
+        setThemeType(res.data.theme_type || 'birthday');
         setLoading(false);
       } catch (err) {
         if (err.response?.status === 402 && retriesLeft > 0) {
@@ -65,7 +67,7 @@ function ThemeSetupInner() {
     setError('');
     try {
       await saveThemeSetup({ session_id: sessionId, slug, business_name: businessName });
-      router.push(`/sites/${slug}`);
+      router.push(`/${themeType}/${slug}`);
     } catch (err) {
       const msg = err.response?.data?.error || 'Failed to save. Please try again.';
       setError(msg);
@@ -120,7 +122,7 @@ function ThemeSetupInner() {
             <div className="bg-gray-50 rounded-xl p-4">
               <p className="text-sm text-gray-500 mb-1 font-medium">Your website URL will be:</p>
               <p className="font-mono text-brand font-semibold text-lg break-all">
-                1rockstarsocial.com/sites/<span className="text-black">{slug || 'your-path'}</span>
+                1rockstarsocial.com/{themeType}/<span className="text-black">{slug || 'your-path'}</span>
               </p>
             </div>
 

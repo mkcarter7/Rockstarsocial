@@ -76,6 +76,8 @@ function ThemeSetupInner() {
   };
 
   if (saved) {
+    const setupUrl = `/${themeType}/setup?session_id=${sessionId}`;
+
     return (
       <div className="min-h-screen bg-white flex items-center justify-center px-5">
         <div className="text-center max-w-lg">
@@ -84,14 +86,19 @@ function ThemeSetupInner() {
           <p className="text-gray-600 mb-2">
             Your order for <strong>{order?.theme_name}</strong> has been confirmed.
           </p>
-          {businessName && (
-            <p className="text-gray-600 mb-6">
-              We'll be in touch at <strong>{order?.customer_email}</strong> to get your site built.
-            </p>
-          )}
+          <p className="text-gray-600 mb-8">
+            Now let's set up your party — add your details, colours, and trivia below.
+          </p>
+          <a
+            href={setupUrl}
+            className="inline-block py-3 px-8 bg-brand text-white rounded-lg font-semibold hover:bg-brand-dark transition-colors duration-200 mb-4"
+          >
+            Set Up My Party →
+          </a>
+          <br />
           <a
             href="/"
-            className="inline-block py-3 px-8 bg-brand text-white rounded-lg font-semibold hover:bg-brand-dark transition-colors duration-200"
+            className="text-sm text-gray-500 hover:text-gray-700 underline"
           >
             Back to Home
           </a>

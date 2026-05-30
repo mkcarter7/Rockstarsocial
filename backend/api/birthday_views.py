@@ -125,6 +125,9 @@ def party_setup(request):
     if 'banner_image' in request.FILES:
         party.banner_image = request.FILES['banner_image']
 
+    # Activate the party when the host completes setup — payment is confirmed
+    # because only Stripe's success redirect carries a valid session_id.
+    party.is_active = True
     party.save()
     return Response({'slug': party.slug, 'message': 'Party updated'})
 

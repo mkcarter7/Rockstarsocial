@@ -42,14 +42,30 @@ const BirthdayParty = ({ slug }) => {
   const [party, setParty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [notActive, setNotActive] = useState(false);
 
   useEffect(() => {
     getBirthdayParty(slug)
       .then(res => { setParty(res.data); setLoading(false); })
-      .catch(() => { setNotFound(true); setLoading(false); });
+      .catch(err => {
+        const msg = err?.response?.data?.error || '';
+        if (msg === 'This party is not yet active') {
+          setNotActive(true);
+        } else {
+          setNotFound(true);
+        }
+        setLoading(false);
+      });
   }, [slug]);
 
   if (loading) return <div className="party-loading"><p>Loading party...</p></div>;
+  if (notActive) return (
+    <div className="party-not-found">
+      <h1>Almost Ready!</h1>
+      <p>This birthday page is being set up. Check back in a moment or finish your setup.</p>
+      <Link href="/" className="btn btn-primary">Go Home</Link>
+    </div>
+  );
   if (notFound) return (
     <div className="party-not-found">
       <h1>Party Not Found</h1>

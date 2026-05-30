@@ -117,7 +117,7 @@ const BirthdaySetup = () => {
                 >
                   1rockstarsocial.com/birthday/{party?.slug}
                 </a>
-                <p className="setup-note">Your page is already live! Customize it below and click Save.</p>
+                <p className="setup-note">Customize your page below, then click Save to make it live.</p>
               </div>
 
               <div className="form-group">

@@ -1,14 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { getThemeSetup, saveThemeSetup } from '../api/api';
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 function ThemeSetupInner() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const sessionId = searchParams.get('session_id');
 
   const [order, setOrder] = useState(null);
@@ -19,6 +18,7 @@ function ThemeSetupInner() {
   const [businessName, setBusinessName] = useState('');
   const [slugError, setSlugError] = useState('');
   const [themeType, setThemeType] = useState('birthday');
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (!sessionId) {
@@ -67,13 +67,38 @@ function ThemeSetupInner() {
     setError('');
     try {
       await saveThemeSetup({ session_id: sessionId, slug, business_name: businessName });
-      router.push(`/${themeType}/${slug}`);
+      setSaved(true);
     } catch (err) {
       const msg = err.response?.data?.error || 'Failed to save. Please try again.';
       setError(msg);
       setSaving(false);
     }
   };
+
+  if (saved) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center px-5">
+        <div className="text-center max-w-lg">
+          <div className="text-6xl mb-4">🎉</div>
+          <h1 className="text-3xl font-bold mb-3">You're All Set!</h1>
+          <p className="text-gray-600 mb-2">
+            Your order for <strong>{order?.theme_name}</strong> has been confirmed.
+          </p>
+          {businessName && (
+            <p className="text-gray-600 mb-6">
+              We'll be in touch at <strong>{order?.customer_email}</strong> to get your site built.
+            </p>
+          )}
+          <a
+            href="/"
+            className="inline-block py-3 px-8 bg-brand text-white rounded-lg font-semibold hover:bg-brand-dark transition-colors duration-200"
+          >
+            Back to Home
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

@@ -43,6 +43,7 @@ const BirthdayParty = ({ slug }) => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [notActive, setNotActive] = useState(false);
+  const [expired, setExpired] = useState(false);
 
   useEffect(() => {
     getBirthdayParty(slug)
@@ -51,6 +52,8 @@ const BirthdayParty = ({ slug }) => {
         const msg = err?.response?.data?.error || '';
         if (msg === 'This party is not yet active') {
           setNotActive(true);
+        } else if (msg === 'This party has expired') {
+          setExpired(true);
         } else {
           setNotFound(true);
         }
@@ -63,6 +66,13 @@ const BirthdayParty = ({ slug }) => {
     <div className="party-not-found">
       <h1>Almost Ready!</h1>
       <p>This birthday page is being set up. Check back in a moment or finish your setup.</p>
+      <Link href="/" className="btn btn-primary">Go Home</Link>
+    </div>
+  );
+  if (expired) return (
+    <div className="party-not-found">
+      <h1>This Party Has Ended</h1>
+      <p>This birthday page has expired and is no longer available.</p>
       <Link href="/" className="btn btn-primary">Go Home</Link>
     </div>
   );

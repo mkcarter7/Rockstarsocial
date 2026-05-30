@@ -93,6 +93,7 @@ const BirthdayPurchase = () => {
                   name="party_date"
                   value={form.party_date}
                   onChange={handleChange}
+                  min={new Date().toISOString().split('T')[0]}
                   required
                 />
                 <small>Your page will be automatically deleted 60 days after this date.</small>

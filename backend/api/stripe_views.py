@@ -435,6 +435,7 @@ def create_birthday_checkout(request):
     party_date = request.data.get('party_date', '')
     host_email = request.data.get('host_email', '').strip()
     host_name = request.data.get('host_name', '').strip()
+    theme_id = request.data.get('theme_id')
 
     if not all([slug, birthday_person_name, party_date, host_email]):
         return Response(
@@ -445,7 +446,16 @@ def create_birthday_checkout(request):
     if BirthdayParty.objects.filter(slug=slug).exists():
         return Response({'error': 'That URL is already taken. Please choose a different one.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    price_cents = int(os.environ.get('BIRTHDAY_APP_PRICE', '2900'))
+    # Use the ThemePackage price if a theme_id was passed, otherwise fall back to env var
+    if theme_id:
+        try:
+            theme_package = ThemePackage.objects.get(id=theme_id)
+            price_cents = int(Decimal(str(theme_package.price)) * 100)
+        except ThemePackage.DoesNotExist:
+            return Response({'error': 'Theme not found'}, status=status.HTTP_404_NOT_FOUND)
+    else:
+        price_cents = int(os.environ.get('BIRTHDAY_APP_PRICE', '2900'))
+
     frontend_url = os.environ.get('FRONTEND_URL', 'https://1rockstarsocial.com')
 
     try:

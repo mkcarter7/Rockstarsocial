@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { getThemes, createThemeCheckout } from '../api/api';
 
 const Pricing = () => {
+  const router = useRouter();
   const [themes, setThemes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,6 +26,11 @@ const Pricing = () => {
   }, []);
 
   const handleThemePurchase = async (theme) => {
+    if (theme.theme_type === 'birthday') {
+      router.push(`/birthday/purchase?theme_id=${theme.id}`);
+      return;
+    }
+
     const customerEmail = prompt('Please enter your email address to get started:');
     if (!customerEmail) return;
 

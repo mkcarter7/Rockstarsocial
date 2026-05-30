@@ -40,8 +40,8 @@ const BirthdaySetup = () => {
       setLoading(false);
       return;
     }
-    Promise.all([getBirthdaySetup(sessionId), getBirthdaySetup(sessionId)])
-      .then(([res]) => {
+    getBirthdaySetup(sessionId)
+      .then((res) => {
         setParty(res.data);
         setThemeColor(res.data.theme_color || '#ff6b9d');
         setWelcomeMessage(res.data.welcome_message || '');

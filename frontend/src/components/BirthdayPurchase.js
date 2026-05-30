@@ -1,10 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { checkBirthdaySlug, createBirthdayCheckout } from '../api/api';
 import './BirthdayPurchase.css';
 
 const BirthdayPurchase = () => {
+  const searchParams = useSearchParams();
+  const themeId = searchParams.get('theme_id');
+
   const [form, setForm] = useState({
     birthday_person_name: '',
     party_date: '',
@@ -49,6 +53,7 @@ const BirthdayPurchase = () => {
     setLoading(true);
     try {
       const payload = { ...form, slug: formatSlug(form.slug) };
+      if (themeId) payload.theme_id = themeId;
       const res = await createBirthdayCheckout(payload);
       window.location.href = res.data.checkout_url;
     } catch (err) {
@@ -152,7 +157,7 @@ const BirthdayPurchase = () => {
                 className="btn btn-primary btn-large"
                 disabled={loading || slugStatus === 'taken'}
               >
-                {loading ? 'Redirecting to payment...' : 'Continue to Payment — $29'}
+                {loading ? 'Redirecting to payment...' : 'Continue to Payment'}
               </button>
             </form>
 

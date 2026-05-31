@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getBirthdayParty, getBirthdayTrivia, submitTriviaAnswers, getTriviaLeaderboard } from '../../api/api';
-import './PartyFeature.css';
 
 const PartyTrivia = ({ slug }) => {
   const [party, setParty] = useState(null);
@@ -19,12 +18,7 @@ const PartyTrivia = ({ slug }) => {
 
   useEffect(() => {
     Promise.all([getBirthdayParty(slug), getBirthdayTrivia(slug), getTriviaLeaderboard(slug)])
-      .then(([partyRes, triviaRes, lbRes]) => {
-        setParty(partyRes.data);
-        setQuestions(triviaRes.data);
-        setLeaderboard(lbRes.data);
-        setLoading(false);
-      })
+      .then(([partyRes, triviaRes, lbRes]) => { setParty(partyRes.data); setQuestions(triviaRes.data); setLeaderboard(lbRes.data); setLoading(false); })
       .catch(() => setLoading(false));
   }, [slug]);
 
@@ -44,30 +38,30 @@ const PartyTrivia = ({ slug }) => {
   };
 
   const color = party?.theme_color || '#ff6b9d';
-  if (loading) return <div className="feature-loading">Loading...</div>;
+  if (loading) return <div className="text-center py-[60px] px-5">Loading...</div>;
 
   const maxScore = questions.reduce((s, q) => s + q.points, 0);
 
   return (
-    <div className="party-feature-page">
-      <div className="feature-header" style={{ background: `linear-gradient(135deg, ${color} 0%, #c850c0 100%)` }}>
+    <div className="min-h-screen">
+      <div className="py-[50px] pb-10 text-white" style={{ background: `linear-gradient(135deg, ${color} 0%, #c850c0 100%)` }}>
         <div className="container">
-          <Link href={`/birthday/${slug}`} className="back-link">← Back to Party</Link>
-          <h1>🎯 Trivia</h1>
-          <p>How well do you know {party?.birthday_person_name}?</p>
+          <Link href={`/birthday/${slug}`} className="text-[rgba(255,255,255,0.85)] no-underline text-[0.9rem] inline-block mb-[10px] hover:text-white">← Back to Party</Link>
+          <h1 className="text-[2rem] my-[10px] mb-[5px] text-white">🎯 Trivia</h1>
+          <p className="opacity-90 m-0">How well do you know {party?.birthday_person_name}?</p>
         </div>
       </div>
 
-      <div className="container feature-content">
+      <div className="container py-10">
         {questions.length === 0 ? (
-          <div className="empty-state">No trivia questions yet — check back soon!</div>
+          <div className="text-center py-[60px] px-5 text-[#888]">No trivia questions yet — check back soon!</div>
         ) : submitted ? (
-          <div className="trivia-result">
-            <h2>🎉 You scored {result?.score} / {maxScore}!</h2>
+          <div className="bg-white rounded-[12px] p-10 text-center shadow-[0_2px_12px_rgba(0,0,0,0.06)] mb-10">
+            <h2 className="text-[1.8rem] mb-[10px]">🎉 You scored {result?.score} / {maxScore}!</h2>
             <p>Nice work, {result?.player_name}!</p>
-            <div className="trivia-answers-review">
+            <div className="mt-[25px] text-left flex flex-col gap-2">
               {result?.results?.map((r, i) => (
-                <div key={i} className={`answer-review ${r.correct ? 'correct' : 'wrong'}`}>
+                <div key={i} className={`flex justify-between py-[10px] px-[15px] rounded-[6px] text-[0.9rem] ${r.correct ? 'bg-[#f0fdf4] text-[#16a34a]' : 'bg-[#fef2f2] text-[#dc2626]'}`}>
                   <span>{r.correct ? '✓' : '✗'} Q{i + 1}: {r.correct ? 'Correct' : `Wrong — Answer was ${r.correct_answer.toUpperCase()}`}</span>
                   <span>{r.correct ? `+${r.points_earned}` : '0'} pts</span>
                 </div>
@@ -75,35 +69,30 @@ const PartyTrivia = ({ slug }) => {
             </div>
           </div>
         ) : !started ? (
-          <div className="trivia-start">
-            <h3>Ready to play?</h3>
-            <p>{questions.length} questions · Up to {maxScore} points</p>
+          <div className="text-center bg-white rounded-[12px] py-[50px] px-[30px] shadow-[0_2px_12px_rgba(0,0,0,0.06)] mb-10">
+            <h3 className="text-[1.5rem] mb-[10px]">Ready to play?</h3>
+            <p className="text-[#666] mb-5">{questions.length} questions · Up to {maxScore} points</p>
             <input
               type="text"
               placeholder="Your name"
               value={playerName}
               onChange={e => setPlayerName(e.target.value)}
-              className="player-name-input"
+              className="block w-full max-w-[300px] mx-auto mb-5 py-3 px-4 border border-[#ddd] rounded-[8px] text-base text-center"
             />
-            <button
-              className="btn btn-primary"
-              style={{ background: color }}
-              disabled={!playerName.trim()}
-              onClick={() => setStarted(true)}
-            >
+            <button className="btn btn-primary disabled:opacity-60 disabled:cursor-not-allowed" style={{ background: color }} disabled={!playerName.trim()} onClick={() => setStarted(true)}>
               Start Trivia
             </button>
           </div>
         ) : (
-          <div className="trivia-questions">
+          <div className="flex flex-col gap-5">
             {questions.map((q, i) => (
-              <div key={q.id} className="trivia-question-card">
-                <p className="question-text"><strong>Q{i + 1}.</strong> {q.question}</p>
-                <div className="trivia-options">
+              <div key={q.id} className="bg-white rounded-[12px] p-[25px] shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
+                <p className="text-[1.05rem] mb-[15px] text-[#333]"><strong>Q{i + 1}.</strong> {q.question}</p>
+                <div className="grid grid-cols-2 sm:grid-cols-1 gap-[10px]">
                   {['a', 'b', 'c', 'd'].map(opt => (
                     <button
                       key={opt}
-                      className={`trivia-option ${answers[q.id] === opt ? 'selected' : ''}`}
+                      className="py-3 px-[15px] border-2 rounded-[8px] bg-white text-left cursor-pointer text-[0.9rem] transition-all duration-200 hover:opacity-85"
                       style={answers[q.id] === opt ? { background: color, borderColor: color, color: 'white' } : { borderColor: color }}
                       onClick={() => setAnswers(prev => ({ ...prev, [q.id]: opt }))}
                     >
@@ -114,7 +103,7 @@ const PartyTrivia = ({ slug }) => {
               </div>
             ))}
             <button
-              className="btn btn-primary"
+              className="btn btn-primary disabled:opacity-60 disabled:cursor-not-allowed"
               style={{ background: color }}
               disabled={submitting || Object.keys(answers).length < questions.length}
               onClick={handleSubmit}
@@ -122,19 +111,19 @@ const PartyTrivia = ({ slug }) => {
               {submitting ? 'Submitting...' : 'Submit Answers'}
             </button>
             {Object.keys(answers).length < questions.length && (
-              <p className="trivia-hint">Answer all {questions.length} questions to submit.</p>
+              <p className="text-[#888] text-[0.85rem] text-center">Answer all {questions.length} questions to submit.</p>
             )}
           </div>
         )}
 
         {leaderboard.length > 0 && (
-          <div className="leaderboard">
-            <h3>🏆 Leaderboard</h3>
+          <div className="bg-white rounded-[12px] p-[30px] shadow-[0_2px_10px_rgba(0,0,0,0.06)] mt-10">
+            <h3 className="mb-5 text-[1.2rem]">🏆 Leaderboard</h3>
             {leaderboard.map(entry => (
-              <div key={entry.rank} className="leaderboard-entry">
-                <span className="lb-rank">#{entry.rank}</span>
-                <span className="lb-name">{entry.player_name}</span>
-                <span className="lb-score" style={{ color }}>{entry.score} pts</span>
+              <div key={entry.rank} className="flex items-center gap-[15px] py-3 border-b border-[#f0f0f0]">
+                <span className="font-bold text-[#888] min-w-[30px]">#{entry.rank}</span>
+                <span className="flex-1">{entry.player_name}</span>
+                <span className="font-bold" style={{ color }}>{entry.score} pts</span>
               </div>
             ))}
           </div>

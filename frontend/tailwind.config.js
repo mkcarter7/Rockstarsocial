@@ -10,10 +10,10 @@ module.exports = {
         brand: '#fab3c2',
         'brand-dark': '#f89fb5',
       },
+      backgroundImage: {
+        'brand-gradient': 'linear-gradient(135deg, #000000 0%, #fab3c2 100%)',
+      },
     },
-  },
-  corePlugins: {
-    preflight: false,
   },
   plugins: [],
 }

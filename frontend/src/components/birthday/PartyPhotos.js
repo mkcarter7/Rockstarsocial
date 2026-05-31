@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getBirthdayParty, getBirthdayPhotos, uploadBirthdayPhoto } from '../../api/api';
-import './PartyFeature.css';
+
+const featureInputClass = "py-[10px] px-[14px] border border-[#ddd] rounded-[6px] text-[0.95rem] font-[inherit] w-full";
 
 const PartyPhotos = ({ slug }) => {
   const [party, setParty] = useState(null);
@@ -16,11 +17,7 @@ const PartyPhotos = ({ slug }) => {
 
   useEffect(() => {
     Promise.all([getBirthdayParty(slug), getBirthdayPhotos(slug)])
-      .then(([partyRes, photosRes]) => {
-        setParty(partyRes.data);
-        setPhotos(photosRes.data);
-        setLoading(false);
-      })
+      .then(([partyRes, photosRes]) => { setParty(partyRes.data); setPhotos(photosRes.data); setLoading(false); })
       .catch(() => setLoading(false));
   }, [slug]);
 
@@ -46,62 +43,40 @@ const PartyPhotos = ({ slug }) => {
   };
 
   const color = party?.theme_color || '#ff6b9d';
-
-  if (loading) return <div className="feature-loading">Loading...</div>;
+  if (loading) return <div className="text-center py-[60px] px-5">Loading...</div>;
 
   return (
-    <div className="party-feature-page">
-      <div className="feature-header" style={{ background: `linear-gradient(135deg, ${color} 0%, #c850c0 100%)` }}>
+    <div className="min-h-screen">
+      <div className="py-[50px] pb-10 text-white" style={{ background: `linear-gradient(135deg, ${color} 0%, #c850c0 100%)` }}>
         <div className="container">
-          <Link href={`/birthday/${slug}`} className="back-link">← Back to Party</Link>
-          <h1>📸 Photo Gallery</h1>
-          <p>{party?.birthday_person_name}'s birthday memories</p>
+          <Link href={`/birthday/${slug}`} className="text-[rgba(255,255,255,0.85)] no-underline text-[0.9rem] inline-block mb-[10px] hover:text-white">← Back to Party</Link>
+          <h1 className="text-[2rem] my-[10px] mb-[5px] text-white">📸 Photo Gallery</h1>
+          <p className="opacity-90 m-0">{party?.birthday_person_name}'s birthday memories</p>
         </div>
       </div>
 
-      <div className="container feature-content">
-        <div className="upload-section">
-          <h3>Add a Photo</h3>
-          <form onSubmit={handleUpload} className="upload-form">
-            <input
-              type="text"
-              placeholder="Your name *"
-              value={uploaderName}
-              onChange={e => setUploaderName(e.target.value)}
-              required
-            />
-            <input
-              type="text"
-              placeholder="Caption (optional)"
-              value={caption}
-              onChange={e => setCaption(e.target.value)}
-            />
-            <input
-              type="file"
-              accept="image/*"
-              onChange={e => setFile(e.target.files[0])}
-              required
-            />
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={uploading}
-              style={{ background: color }}
-            >
+      <div className="container py-10">
+        <div className="bg-white rounded-[12px] p-[30px] shadow-[0_2px_12px_rgba(0,0,0,0.06)] mb-10">
+          <h3 className="mb-5 text-[1.2rem]">Add a Photo</h3>
+          <form onSubmit={handleUpload} className="flex flex-col gap-3">
+            <input type="text" placeholder="Your name *" value={uploaderName} onChange={e => setUploaderName(e.target.value)} required className={featureInputClass} />
+            <input type="text" placeholder="Caption (optional)" value={caption} onChange={e => setCaption(e.target.value)} className={featureInputClass} />
+            <input type="file" accept="image/*" onChange={e => setFile(e.target.files[0])} required className="py-[10px]" />
+            <button type="submit" className="btn btn-primary disabled:opacity-60 disabled:cursor-not-allowed" disabled={uploading} style={{ background: color }}>
               {uploading ? 'Uploading...' : 'Upload Photo'}
             </button>
           </form>
         </div>
 
         {photos.length === 0 ? (
-          <div className="empty-state">No photos yet — be the first to add one!</div>
+          <div className="text-center py-[60px] px-5 text-[#888]">No photos yet — be the first to add one!</div>
         ) : (
-          <div className="photos-grid">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-5">
             {photos.map(photo => (
-              <div key={photo.id} className="photo-card">
-                <img src={photo.image} alt={photo.caption || 'Party photo'} />
-                {photo.caption && <p className="photo-caption">{photo.caption}</p>}
-                <p className="photo-uploader">📷 {photo.uploaded_by_name}</p>
+              <div key={photo.id} className="rounded-[10px] overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.08)] bg-white">
+                <img src={photo.image} alt={photo.caption || 'Party photo'} className="w-full h-[180px] object-cover" />
+                {photo.caption && <p className="px-3 pt-2 pb-1 text-[0.9rem] text-[#444]">{photo.caption}</p>}
+                <p className="px-3 pb-[10px] text-[0.8rem] text-[#888]">📷 {photo.uploaded_by_name}</p>
               </div>
             ))}
           </div>

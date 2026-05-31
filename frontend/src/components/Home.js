@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getPortfolioItems, getFeaturedPortfolio, getFeaturedTestimonials, getFeaturedThemes } from '../api/api';
-import './Home.css';
-import './About.css';
 
 const Home = () => {
   const [portfolio, setPortfolio] = useState([]);
@@ -23,31 +21,16 @@ const Home = () => {
           getFeaturedThemes(),
         ]);
         setPortfolio(portfolioRes.data.slice(0, 3));
-        
-        // Combine portfolio items and themes for carousel
+
         const portfolioItems = allPortfolioRes.data
           .filter(item => item.image)
-          .map(item => ({
-            id: `portfolio-${item.id}`,
-            image: item.image,
-            url: item.website_url,
-            title: item.title,
-            type: 'portfolio'
-          }));
-        
+          .map(item => ({ id: `portfolio-${item.id}`, image: item.image, url: item.website_url, title: item.title, type: 'portfolio' }));
+
         const themeItems = themesRes.data
           .filter(theme => theme.preview_image)
-          .map(theme => ({
-            id: `theme-${theme.id}`,
-            image: theme.preview_image,
-            url: theme.demo_url,
-            title: theme.name,
-            type: 'theme'
-          }));
-        
-        // Combine and shuffle for variety
-        const combinedItems = [...portfolioItems, ...themeItems];
-        setCarouselItems(combinedItems);
+          .map(theme => ({ id: `theme-${theme.id}`, image: theme.preview_image, url: theme.demo_url, title: theme.name, type: 'theme' }));
+
+        setCarouselItems([...portfolioItems, ...themeItems]);
         setTestimonials(testimonialsRes.data.slice(0, 3));
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -58,59 +41,53 @@ const Home = () => {
     fetchData();
   }, []);
 
-  // Auto-rotate carousel
   useEffect(() => {
     if (carouselItems.length === 0) return;
-    
     const interval = setInterval(() => {
       setCarouselIndex((prevIndex) => (prevIndex + 1) % carouselItems.length);
-    }, 3000); // Rotate every 3 seconds
-
+    }, 3000);
     return () => clearInterval(interval);
   }, [carouselItems.length]);
 
   return (
-    <div className="home">
+    <div>
       <section className="hero">
         <div className="container">
           <h1>Transform Your Online Presence</h1>
           <p>Professional web design services and premium themes to elevate your business</p>
+
           {carouselItems.length > 0 && (
-            <div className="hero-carousel">
-              <div className="carousel-track">
+            /* hero-carousel class kept for ::before arc pseudo-element defined in App.css */
+            <div className="hero-carousel mt-[60px] mb-10 h-[350px] relative overflow-visible flex justify-center items-center py-10 px-5 md:h-[150px] md:mt-10 md:mb-[30px] md:overflow-hidden md:py-5 md:px-[10px]">
+              <div className="carousel-track relative w-full h-full flex justify-center items-center gap-[30px] z-[1] md:gap-[10px] md:overflow-visible md:w-full md:max-w-full">
                 {Array.from({ length: 3 }, (_, position) => {
-                  // Get the item for this position, wrapping around if needed
                   const totalItems = carouselItems.length;
                   const itemIndex = (carouselIndex + position) % totalItems;
                   const item = carouselItems[itemIndex];
-                  
                   if (!item) return null;
-                  
                   return (
-                    <div 
-                      key={`${item.id}-${position}-${carouselIndex}`} 
-                      className="carousel-item"
-                      data-position={position}
-                      onClick={() => {
-                        if (item.url) {
-                          window.open(item.url, '_blank', 'noopener,noreferrer');
-                        }
-                      }}
+                    /* carousel-item class kept for nth-child media rules in App.css */
+                    <div
+                      key={`${item.id}-${position}-${carouselIndex}`}
+                      className="carousel-item relative w-[280px] h-[280px] rounded-[12px] overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.3)] transition-all duration-[800ms] bg-white flex-shrink-0 hover:-translate-y-[10px] hover:scale-105 hover:shadow-[0_20px_50px_rgba(0,0,0,0.4)] hover:z-10 md:w-[100px] md:h-[100px] md:relative md:shadow-[0_5px_15px_rgba(0,0,0,0.2)]"
+                      onClick={() => { if (item.url) window.open(item.url, '_blank', 'noopener,noreferrer'); }}
                       style={{ cursor: item.url ? 'pointer' : 'default' }}
                     >
-                      <img src={item.image} alt={item.title} />
+                      <img src={item.image} alt={item.title} className="w-full h-full object-cover block" />
                     </div>
                   );
                 })}
               </div>
             </div>
           )}
-          <div className="hero-buttons">
-            <Link href="/contact" className="btn btn-secondary">Get Started</Link>
+
+          <div className="flex gap-5 justify-center flex-wrap md:flex-col md:items-center">
+            <Link href="/contact" className="btn btn-secondary md:w-full md:max-w-[300px]">Get Started</Link>
           </div>
         </div>
       </section>
 
+      {/* Featured Portfolio */}
       <section className="section">
         <div className="container">
           <h2 className="section-title">Featured Portfolio</h2>
@@ -118,22 +95,20 @@ const Home = () => {
           {loading ? (
             <div className="loading">Loading...</div>
           ) : portfolio.length > 0 ? (
-            <div className="grid grid-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[30px]">
               {portfolio.map((item) => (
-                <div key={item.id} className="card portfolio-card">
-                  <div className="portfolio-image">
+                <div key={item.id} className="card text-center">
+                  <div className="w-full h-[200px] overflow-hidden rounded-[8px] mb-5 bg-[#e2e8f0] relative">
                     {item.image ? (
-                      <img src={item.image} alt={item.title} />
+                      <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="placeholder-image">No Image</div>
+                      <div className="w-full h-full flex items-center justify-center text-[#666] text-[1.1rem]">No Image</div>
                     )}
                   </div>
-                  <h3>{item.title}</h3>
-                  <p>{item.description}</p>
+                  <h3 className="text-[1.3rem] mb-[10px] text-black">{item.title}</h3>
+                  <p className="text-[#333] mb-5 leading-relaxed">{item.description}</p>
                   {item.website_url && (
-                    <a href={item.website_url} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
-                      View Site
-                    </a>
+                    <a href={item.website_url} target="_blank" rel="noopener noreferrer" className="btn btn-primary">View Site</a>
                   )}
                 </div>
               ))}
@@ -141,57 +116,50 @@ const Home = () => {
           ) : (
             <div className="loading">No portfolio items available</div>
           )}
-          <div className="text-center" style={{ marginTop: '30px' }}>
+          <div className="text-center mt-[30px]">
             <Link href="/portfolio" className="btn btn-secondary">View All Projects</Link>
           </div>
         </div>
       </section>
 
-      <section className="section section-alt">
+      {/* About / Features */}
+      <section className="section bg-gradient-to-b from-[#e8e8e8] to-[#d8d8d8]">
         <div className="container">
-          <div className="about-content">
-            <div className="about-text">
+          <div className="max-w-[1000px] mx-auto">
+            <div className="mb-[60px]">
               <h2 className="section-title">Who We Are</h2>
-              <p>
-                RockStar Social is a small business specializing in creating 
-                stunning, responsive websites and premium themes for businesses of all sizes. 
-                I combine creativity with technical 
-                expertise to deliver exceptional digital experiences.
+              <p className="text-[1.1rem] text-[#4a5568] leading-[1.8] mb-5">
+                RockStar Social is a small business specializing in creating
+                stunning, responsive websites and premium themes for businesses of all sizes.
+                I combine creativity with technical expertise to deliver exceptional digital experiences.
               </p>
-              <p>
-                I work closely with clients to 
-                understand their unique needs and create custom solutions that drive results. 
-                Whether you need a complete website redesign, a custom Shopify theme, or a 
-                ready-made template, I've got you covered.
+              <p className="text-[1.1rem] text-[#4a5568] leading-[1.8] mb-5">
+                I work closely with clients to understand their unique needs and create custom solutions that drive results.
+                Whether you need a complete website redesign, a custom Shopify theme, or a ready-made template, I've got you covered.
               </p>
             </div>
 
-            <div className="about-features">
-              <h2>What We Offer</h2>
-              <div className="grid grid-2 features-grid">
-                <div className="feature-card">
-                  <h3>Custom Web Design</h3>
-                  <p>Bespoke websites tailored to your brand and business goals</p>
-                </div>
-                <div className="feature-card">
-                  <h3>Shopify Themes</h3>
-                  <p>Premium, customizable Shopify themes for your online store</p>
-                </div>
-                <div className="feature-card">
-                  <h3>Website Templates</h3>
-                  <p>Beautiful, responsive templates across various industries</p>
-                </div>
-                <div className="feature-card">
-                  <h3>Support</h3>
-                  <p>Hourly Technical Support and dedicated ongoing support to help you succeed online</p>
-                </div>
+            <div className="mb-[60px]">
+              <h2 className="text-[2.5rem] mb-10 text-black">What We Offer</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-[30px] mt-[30px]">
+                {[
+                  { title: 'Custom Web Design', desc: 'Bespoke websites tailored to your brand and business goals' },
+                  { title: 'Shopify Themes', desc: 'Premium, customizable Shopify themes for your online store' },
+                  { title: 'Website Templates', desc: 'Beautiful, responsive templates across various industries' },
+                  { title: 'Support', desc: 'Hourly Technical Support and dedicated ongoing support to help you succeed online' },
+                ].map(({ title, desc }) => (
+                  <div key={title} className="card">
+                    <h3 className="text-[1.5rem] mb-[15px] text-brand">{title}</h3>
+                    <p className="text-[#718096] leading-relaxed">{desc}</p>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div className="about-cta">
-              <h2>Ready to Get Started?</h2>
-              <p>Let's work together to bring your vision to life</p>
-              <div className="cta-buttons">
+            <div className="text-center py-[60px] px-5 bg-[#f7fafc] rounded-[10px]">
+              <h2 className="text-[2.5rem] mb-[15px] text-black">Ready to Get Started?</h2>
+              <p className="text-[1.2rem] text-[#333] mb-[30px]">Let's work together to bring your vision to life</p>
+              <div className="flex gap-5 justify-center flex-wrap">
                 <Link href="/contact" className="btn btn-primary">Contact Us</Link>
                 <Link href="/portfolio" className="btn btn-secondary">View Our Work</Link>
               </div>
@@ -200,6 +168,7 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Testimonials */}
       <section className="section">
         <div className="container">
           <h2 className="section-title">What Our Clients Say</h2>
@@ -207,14 +176,12 @@ const Home = () => {
           {loading ? (
             <div className="loading">Loading...</div>
           ) : testimonials.length > 0 ? (
-            <div className="grid grid-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[30px]">
               {testimonials.map((testimonial) => (
-                <div key={testimonial.id} className="card testimonial-card">
-                  <div className="testimonial-rating">
-                    {'★'.repeat(testimonial.rating)}
-                  </div>
-                  <p className="testimonial-text">"{testimonial.testimonial_text}"</p>
-                  <div className="testimonial-author">
+                <div key={testimonial.id} className="card text-center">
+                  <div className="text-[#fbbf24] text-[1.5rem] mb-[15px]">{'★'.repeat(testimonial.rating)}</div>
+                  <p className="italic text-[#333] mb-5 leading-[1.8] text-[1.1rem]">"{testimonial.testimonial_text}"</p>
+                  <div className="text-black text-[0.95rem]">
                     <strong>{testimonial.client_name}</strong>
                     {testimonial.company && <span>, {testimonial.company}</span>}
                   </div>
@@ -224,7 +191,7 @@ const Home = () => {
           ) : (
             <div className="loading">No testimonials available</div>
           )}
-          <div className="text-center" style={{ marginTop: '30px' }}>
+          <div className="text-center mt-[30px]">
             <Link href="/testimonials" className="btn btn-secondary">Read All Testimonials</Link>
           </div>
         </div>

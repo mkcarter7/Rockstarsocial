@@ -5,7 +5,6 @@ import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '../../api/api';
-import './Dashboard.css';
 
 const Dashboard = () => {
   const { currentUser, logout, getIdToken } = useAuth();
@@ -22,8 +21,7 @@ const Dashboard = () => {
   const loadDashboardData = useCallback(async () => {
     try {
       const token = await getIdToken();
-      
-      // Fetch counts from admin API
+
       const [portfolioRes, testimonialRes, pricingRes, themeRes, contactRes, birthdayRes] = await Promise.all([
         api.get('/admin/portfolio/', { headers: { Authorization: `Bearer ${token}` } }),
         api.get('/admin/testimonials/', { headers: { Authorization: `Bearer ${token}` } }),
@@ -48,7 +46,6 @@ const Dashboard = () => {
   }, [getIdToken]);
 
   useEffect(() => {
-    // Set up axios interceptor to add Firebase token to requests
     const interceptor = api.interceptors.request.use(async (config) => {
       const token = await getIdToken();
       if (token) {
@@ -57,7 +54,6 @@ const Dashboard = () => {
       return config;
     });
 
-    // Load dashboard data
     loadDashboardData();
 
     return () => {
@@ -75,97 +71,85 @@ const Dashboard = () => {
   };
 
   if (loading) {
-    return <div className="dashboard-loading">Loading...</div>;
+    return <div className="flex justify-center items-center min-h-screen text-[1.2rem] text-[#666]">Loading...</div>;
   }
 
   return (
-    <div className="admin-dashboard">
-      <header className="dashboard-header">
-        <h1>Admin Dashboard</h1>
-        <div className="dashboard-user">
-          <Link href="/" className="btn-home">Home</Link>
+    <div className="min-h-screen bg-[#f5f5f5]">
+      <header className="bg-brand-gradient text-white py-5 px-10 flex justify-between items-center shadow-[0_2px_4px_rgba(0,0,0,0.1)] md:flex-col md:gap-[15px] md:text-center">
+        <h1 className="m-0 text-[1.8rem]">Admin Dashboard</h1>
+        <div className="flex items-center gap-5">
+          <Link href="/" className="bg-[rgba(255,255,255,0.2)] text-white border border-[rgba(255,255,255,0.3)] py-2 px-4 rounded-[5px] text-[0.9rem] transition-colors duration-300 inline-block hover:bg-[rgba(255,255,255,0.3)]">
+            Home
+          </Link>
           <span>Welcome, {currentUser?.email}</span>
-          <button onClick={handleLogout} className="btn-logout">Logout</button>
+          <button
+            onClick={handleLogout}
+            className="bg-[rgba(255,255,255,0.2)] text-white border border-[rgba(255,255,255,0.3)] py-2 px-4 rounded-[5px] cursor-pointer text-[0.9rem] transition-colors duration-300 hover:bg-[rgba(255,255,255,0.3)]"
+          >
+            Logout
+          </button>
         </div>
       </header>
 
-      <div className="dashboard-content">
-        <div className="dashboard-stats">
-          <div className="stat-card">
-            <h3>Portfolio Items</h3>
-            <p className="stat-number">{portfolioCount}</p>
+      <div className="p-10 md:p-5 max-w-[1200px] mx-auto">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] md:grid-cols-1 gap-5 mb-10">
+          <div className="bg-white p-[30px] rounded-[10px] shadow-[0_2px_4px_rgba(0,0,0,0.1)] text-center">
+            <h3 className="text-[#666] mb-[15px] text-base font-medium">Portfolio Items</h3>
+            <p className="text-[2.5rem] font-bold text-brand m-0">{portfolioCount}</p>
           </div>
-          <div className="stat-card">
-            <h3>Testimonials</h3>
-            <p className="stat-number">{testimonialCount}</p>
+          <div className="bg-white p-[30px] rounded-[10px] shadow-[0_2px_4px_rgba(0,0,0,0.1)] text-center">
+            <h3 className="text-[#666] mb-[15px] text-base font-medium">Testimonials</h3>
+            <p className="text-[2.5rem] font-bold text-brand m-0">{testimonialCount}</p>
           </div>
-          <div className="stat-card">
-            <h3>Pricing Plans</h3>
-            <p className="stat-number">{pricingCount}</p>
+          <div className="bg-white p-[30px] rounded-[10px] shadow-[0_2px_4px_rgba(0,0,0,0.1)] text-center">
+            <h3 className="text-[#666] mb-[15px] text-base font-medium">Pricing Plans</h3>
+            <p className="text-[2.5rem] font-bold text-brand m-0">{pricingCount}</p>
           </div>
-          <div className="stat-card">
-            <h3>Themes</h3>
-            <p className="stat-number">{themeCount}</p>
+          <div className="bg-white p-[30px] rounded-[10px] shadow-[0_2px_4px_rgba(0,0,0,0.1)] text-center">
+            <h3 className="text-[#666] mb-[15px] text-base font-medium">Themes</h3>
+            <p className="text-[2.5rem] font-bold text-brand m-0">{themeCount}</p>
           </div>
-          <div className="stat-card">
-            <h3>Contact Submissions</h3>
-            <p className="stat-number">{contactCount}</p>
+          <div className="bg-white p-[30px] rounded-[10px] shadow-[0_2px_4px_rgba(0,0,0,0.1)] text-center">
+            <h3 className="text-[#666] mb-[15px] text-base font-medium">Contact Submissions</h3>
+            <p className="text-[2.5rem] font-bold text-brand m-0">{contactCount}</p>
             {unreadContactCount > 0 && (
-              <p className="stat-badge">({unreadContactCount} unread)</p>
+              <p className="text-[0.9rem] text-[#e53e3e] mt-[5px] font-medium">({unreadContactCount} unread)</p>
             )}
           </div>
-          <div className="stat-card">
-            <h3>Event Pages</h3>
-            <p className="stat-number">{birthdayCount}</p>
+          <div className="bg-white p-[30px] rounded-[10px] shadow-[0_2px_4px_rgba(0,0,0,0.1)] text-center">
+            <h3 className="text-[#666] mb-[15px] text-base font-medium">Event Pages</h3>
+            <p className="text-[2.5rem] font-bold text-brand m-0">{birthdayCount}</p>
           </div>
         </div>
 
-        <div className="dashboard-actions">
-          <h2>Quick Actions</h2>
-          <div className="action-buttons">
-            <button 
-              className="btn-action"
-              onClick={() => router.push('/admin/portfolio')}
-            >
+        <div className="bg-white p-[30px] rounded-[10px] shadow-[0_2px_4px_rgba(0,0,0,0.1)]">
+          <h2 className="mb-5 text-[#333]">Quick Actions</h2>
+          <div className="flex gap-[15px] flex-wrap">
+            <button className="bg-brand text-white border-none py-3 px-6 rounded-[5px] text-base font-semibold cursor-pointer transition-colors duration-300 relative hover:bg-brand-dark" onClick={() => router.push('/admin/portfolio')}>
               Manage Portfolio
             </button>
-            <button 
-              className="btn-action"
-              onClick={() => router.push('/admin/testimonials')}
-            >
+            <button className="bg-brand text-white border-none py-3 px-6 rounded-[5px] text-base font-semibold cursor-pointer transition-colors duration-300 relative hover:bg-brand-dark" onClick={() => router.push('/admin/testimonials')}>
               Manage Testimonials
             </button>
-            <button 
-              className="btn-action"
-              onClick={() => router.push('/admin/pricing')}
-            >
+            <button className="bg-brand text-white border-none py-3 px-6 rounded-[5px] text-base font-semibold cursor-pointer transition-colors duration-300 relative hover:bg-brand-dark" onClick={() => router.push('/admin/pricing')}>
               Manage Pricing Plans
             </button>
-            <button 
-              className="btn-action"
-              onClick={() => router.push('/admin/themes')}
-            >
+            <button className="bg-brand text-white border-none py-3 px-6 rounded-[5px] text-base font-semibold cursor-pointer transition-colors duration-300 relative hover:bg-brand-dark" onClick={() => router.push('/admin/themes')}>
               Manage Themes
             </button>
-            <button 
-              className="btn-action"
-              onClick={() => router.push('/admin/contact-submissions')}
-            >
+            <button className="bg-brand text-white border-none py-3 px-6 rounded-[5px] text-base font-semibold cursor-pointer transition-colors duration-300 relative hover:bg-brand-dark" onClick={() => router.push('/admin/contact-submissions')}>
               View Contact Submissions
               {unreadContactCount > 0 && (
-                <span className="action-badge">{unreadContactCount}</span>
+                <span className="absolute -top-2 -right-2 bg-[#e53e3e] text-white rounded-full w-6 h-6 flex items-center justify-center text-[0.75rem] font-bold">
+                  {unreadContactCount}
+                </span>
               )}
             </button>
-            <button
-              className="btn-action"
-              onClick={() => router.push('/admin/site-settings')}
-            >
+            <button className="bg-brand text-white border-none py-3 px-6 rounded-[5px] text-base font-semibold cursor-pointer transition-colors duration-300 relative hover:bg-brand-dark" onClick={() => router.push('/admin/site-settings')}>
               Site Settings
             </button>
-            <button
-              className="btn-action"
-              onClick={() => router.push('/admin/birthday-parties')}
-            >
+            <button className="bg-brand text-white border-none py-3 px-6 rounded-[5px] text-base font-semibold cursor-pointer transition-colors duration-300 relative hover:bg-brand-dark" onClick={() => router.push('/admin/birthday-parties')}>
               Manage Event Pages
             </button>
           </div>

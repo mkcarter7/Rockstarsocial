@@ -3,17 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getBirthdaySetup, saveBirthdaySetup, getBirthdayTrivia, addTriviaQuestion } from '../api/api';
-import './BirthdaySetup.css';
 
-const emptyQuestion = {
-  question: '',
-  option_a: '',
-  option_b: '',
-  option_c: '',
-  option_d: '',
-  correct_answer: 'a',
-  points: 10,
-};
+const inputClass = "py-[10px] px-3 border border-[#ddd] rounded-[6px] text-[0.9rem] font-[inherit] outline-none focus:border-brand w-full";
+
+const emptyQuestion = { question: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'a', points: 10 };
 
 const BirthdaySetup = () => {
   const searchParams = useSearchParams();
@@ -27,28 +20,25 @@ const BirthdaySetup = () => {
   const [themeColor, setThemeColor] = useState('#ff6b9d');
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const [bannerImage, setBannerImage] = useState(null);
-
-  // Trivia
+  const [partyTime, setPartyTime] = useState('');
+  const [locationName, setLocationName] = useState('');
+  const [locationAddress, setLocationAddress] = useState('');
   const [questions, setQuestions] = useState([]);
   const [newQ, setNewQ] = useState(emptyQuestion);
   const [addingQ, setAddingQ] = useState(false);
   const [qError, setQError] = useState('');
 
   useEffect(() => {
-    if (!sessionId) {
-      setError('No session ID found. Please complete payment first.');
-      setLoading(false);
-      return;
-    }
+    if (!sessionId) { setError('No session ID found. Please complete payment first.'); setLoading(false); return; }
     getBirthdaySetup(sessionId)
       .then((res) => {
         setParty(res.data);
         setThemeColor(res.data.theme_color || '#ff6b9d');
         setWelcomeMessage(res.data.welcome_message || '');
-        // Load existing trivia questions if party is active
-        if (res.data.is_active) {
-          return getBirthdayTrivia(res.data.slug).then(tRes => setQuestions(tRes.data));
-        }
+        setPartyTime(res.data.party_time || '');
+        setLocationName(res.data.location_name || '');
+        setLocationAddress(res.data.location_address || '');
+        if (res.data.is_active) return getBirthdayTrivia(res.data.slug).then(tRes => setQuestions(tRes.data));
       })
       .catch(() => setError('Could not load your party. Please contact support.'))
       .finally(() => setLoading(false));
@@ -63,7 +53,9 @@ const BirthdaySetup = () => {
     formData.append('theme_color', themeColor);
     formData.append('welcome_message', welcomeMessage);
     if (bannerImage) formData.append('banner_image', bannerImage);
-
+    formData.append('party_time', partyTime);
+    formData.append('location_name', locationName);
+    formData.append('location_address', locationAddress);
     try {
       await saveBirthdaySetup(formData);
       router.push(`/birthday/${party.slug}`);
@@ -87,12 +79,15 @@ const BirthdaySetup = () => {
     setAddingQ(false);
   };
 
-  if (loading) return <div className="birthday-setup-loading"><p>Loading your party...</p></div>;
-  if (error && !party) return <div className="birthday-setup-error"><p>{error}</p></div>;
+  if (loading) return <div className="text-center py-[60px] px-5"><p>Loading your party...</p></div>;
+  if (error && !party) return <div className="text-center py-[60px] px-5"><p>{error}</p></div>;
 
   return (
-    <div className="birthday-setup-page">
-      <section className="page-hero" style={{ background: `linear-gradient(135deg, ${themeColor} 0%, #c850c0 100%)` }}>
+    <div>
+      <section
+        className="py-[80px] text-center text-white"
+        style={{ background: `linear-gradient(135deg, ${themeColor} 0%, #c850c0 100%)` }}
+      >
         <div className="container">
           <h1>🎉 Almost there, {party?.host_name}!</h1>
           <p>Customize {party?.birthday_person_name}'s party page before it goes live.</p>
@@ -100,152 +95,118 @@ const BirthdaySetup = () => {
       </section>
 
       <section className="section">
-        <div className="container setup-two-col">
-
-          {/* Left: Party customization */}
+        <div className="container grid grid-cols-2 lg:grid-cols-1 gap-10 items-start">
           <div>
-            <form onSubmit={handleSave} className="birthday-setup-form">
-              {error && <div className="alert alert-error">{error}</div>}
+            <form onSubmit={handleSave} className="max-w-[600px] mx-auto bg-white p-10 rounded-[12px] shadow-[0_2px_15px_rgba(0,0,0,0.08)]">
+              {error && (
+                <div className="py-[15px] px-5 rounded-[5px] mb-5 bg-[#fed7d7] text-[#742a2a] border border-[#fc8181]">{error}</div>
+              )}
 
-              <div className="setup-preview">
-                <h3>Your page URL:</h3>
-                <a
-                  href={`/birthday/${party?.slug}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="party-url-preview"
-                >
+              <div className="bg-[#fff8ff] border-2 border-[#ff6b9d] rounded-[8px] p-5 mb-[30px] text-center">
+                <h3 className="mb-[10px] text-[#333]">Your page URL:</h3>
+                <a href={`/birthday/${party?.slug}`} target="_blank" rel="noreferrer" className="inline-block text-base text-[#ff6b9d] font-semibold break-all mb-[10px]">
                   1rockstarsocial.com/birthday/{party?.slug}
                 </a>
-                <p className="setup-note">Customize your page below, then click Save to make it live.</p>
+                <p className="text-[0.85rem] text-[#888] m-0">Customize your page below, then click Save to make it live.</p>
               </div>
 
-              <div className="form-group">
-                <label>Theme Color</label>
-                <div className="color-input-wrapper">
-                  <input
-                    type="color"
-                    value={themeColor}
-                    onChange={e => setThemeColor(e.target.value)}
-                    className="color-picker"
-                  />
-                  <input
-                    type="text"
-                    value={themeColor}
-                    onChange={e => setThemeColor(e.target.value)}
-                    className="color-text"
-                    placeholder="#ff6b9d"
-                  />
+              <div className="flex flex-col gap-2 mb-5">
+                <label className="font-semibold text-black">Theme Color</label>
+                <div className="flex gap-[10px] items-center">
+                  <input type="color" value={themeColor} onChange={e => setThemeColor(e.target.value)} className="w-[60px] h-10 border-2 border-[#ddd] rounded-[5px] cursor-pointer" />
+                  <input type="text" value={themeColor} onChange={e => setThemeColor(e.target.value)} placeholder="#ff6b9d" className="flex-1 py-[10px] px-3 border border-[#ddd] rounded-[6px] font-mono text-[0.95rem] outline-none focus:border-brand" />
                 </div>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="welcome_message">Welcome Message</label>
-                <textarea
-                  id="welcome_message"
-                  value={welcomeMessage}
-                  onChange={e => setWelcomeMessage(e.target.value)}
-                  rows="4"
-                  placeholder={`Welcome to ${party?.birthday_person_name}'s birthday celebration!`}
-                />
+              <div className="flex flex-col gap-2 mb-5">
+                <label htmlFor="welcome_message" className="font-semibold text-black">Welcome Message</label>
+                <textarea id="welcome_message" value={welcomeMessage} onChange={e => setWelcomeMessage(e.target.value)} rows="4" placeholder={`Welcome to ${party?.birthday_person_name}'s birthday celebration!`} className={inputClass} />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="banner_image">Banner Image (optional)</label>
-                <input
-                  type="file"
-                  id="banner_image"
-                  accept="image/*"
-                  onChange={e => setBannerImage(e.target.files[0])}
-                />
+              <div className="flex flex-col gap-2 mb-5">
+                <label htmlFor="banner_image" className="font-semibold text-black">Banner Image (optional)</label>
+                <p className="text-[0.8rem] text-[#888] -mt-1">Upload an image to use as the hero background instead of the color gradient.</p>
+                <input type="file" id="banner_image" accept="image/*" onChange={e => setBannerImage(e.target.files[0])} className="py-[5px]" />
               </div>
 
-              <button type="submit" className="btn btn-primary btn-large" disabled={saving}>
+              <div className="flex flex-col gap-2 mb-5">
+                <label htmlFor="party_time" className="font-semibold text-black">Party Time (optional)</label>
+                <input type="time" id="party_time" value={partyTime} onChange={e => setPartyTime(e.target.value)} className={inputClass} />
+              </div>
+
+              <div className="flex flex-col gap-2 mb-5">
+                <label htmlFor="location_name" className="font-semibold text-black">Venue Name (optional)</label>
+                <input type="text" id="location_name" value={locationName} onChange={e => setLocationName(e.target.value)} placeholder="e.g. The Grand Ballroom" className={inputClass} />
+              </div>
+
+              <div className="flex flex-col gap-2 mb-5">
+                <label htmlFor="location_address" className="font-semibold text-black">Venue Address (optional)</label>
+                <p className="text-[0.8rem] text-[#888] -mt-1">Used for the weather forecast and map on your party page.</p>
+                <textarea id="location_address" value={locationAddress} onChange={e => setLocationAddress(e.target.value)} rows="3" placeholder="123 Party Lane, New York, NY 10001" className={inputClass} />
+              </div>
+
+              <button type="submit" className="btn btn-primary py-4 px-10 text-[1.1rem] disabled:opacity-60 disabled:cursor-not-allowed" disabled={saving}>
                 {saving ? 'Saving...' : 'Save & Go to My Party Page'}
               </button>
             </form>
           </div>
 
-          {/* Right: Trivia questions */}
-          <div className="trivia-setup-section">
-            <h2>🎯 Add Trivia Questions</h2>
-            <p className="trivia-setup-intro">
+          <div className="bg-white rounded-[12px] p-[30px] shadow-[0_2px_15px_rgba(0,0,0,0.08)]">
+            <h2 className="mb-2">🎯 Add Trivia Questions</h2>
+            <p className="text-[#666] text-[0.9rem] mb-5">
               Create custom questions about {party?.birthday_person_name} for guests to answer.
               You can skip this and add questions later by visiting your party page.
             </p>
 
-            {qError && <div className="alert alert-error">{qError}</div>}
+            {qError && (
+              <div className="py-[15px] px-5 rounded-[5px] mb-5 bg-[#fed7d7] text-[#742a2a] border border-[#fc8181]">{qError}</div>
+            )}
 
             {questions.length > 0 && (
-              <div className="questions-added">
-                <h4>{questions.length} question{questions.length !== 1 ? 's' : ''} added:</h4>
+              <div className="bg-[#f8f8f8] rounded-[8px] p-[15px] mb-5">
+                <h4 className="mb-[10px] text-[0.9rem] text-[#555]">{questions.length} question{questions.length !== 1 ? 's' : ''} added:</h4>
                 {questions.map((q, i) => (
-                  <div key={q.id} className="question-added-item">
-                    <span className="q-num">Q{i + 1}</span>
-                    <span className="q-text">{q.question}</span>
+                  <div key={q.id} className="flex gap-[10px] items-start py-[6px] border-b border-[#ececec] text-[0.9rem]">
+                    <span className="font-bold text-[#ff6b9d] min-w-[25px]">Q{i + 1}</span>
+                    <span className="text-[#444]">{q.question}</span>
                   </div>
                 ))}
               </div>
             )}
 
-            <form onSubmit={handleAddQuestion} className="trivia-add-form">
-              <div className="form-group">
-                <label>Question *</label>
-                <input
-                  type="text"
-                  value={newQ.question}
-                  onChange={e => setNewQ(p => ({ ...p, question: e.target.value }))}
-                  placeholder="e.g. What is Kate's favorite movie?"
-                  required
-                />
+            <form onSubmit={handleAddQuestion} className="flex flex-col gap-[15px]">
+              <div className="flex flex-col gap-2">
+                <label className="font-semibold text-black text-[0.9rem]">Question *</label>
+                <input type="text" value={newQ.question} onChange={e => setNewQ(p => ({ ...p, question: e.target.value }))} placeholder="e.g. What is Kate's favorite movie?" required className={inputClass} />
               </div>
-
-              <div className="trivia-options-grid">
+              <div className="grid grid-cols-2 sm:grid-cols-1 gap-3">
                 {['a', 'b', 'c', 'd'].map(opt => (
-                  <div key={opt} className="form-group">
-                    <label>Option {opt.toUpperCase()} *</label>
-                    <input
-                      type="text"
-                      value={newQ[`option_${opt}`]}
-                      onChange={e => setNewQ(p => ({ ...p, [`option_${opt}`]: e.target.value }))}
-                      placeholder={`Option ${opt.toUpperCase()}`}
-                      required
-                    />
+                  <div key={opt} className="flex flex-col gap-1">
+                    <label className="font-semibold text-black text-[0.9rem]">Option {opt.toUpperCase()} *</label>
+                    <input type="text" value={newQ[`option_${opt}`]} onChange={e => setNewQ(p => ({ ...p, [`option_${opt}`]: e.target.value }))} placeholder={`Option ${opt.toUpperCase()}`} required className={inputClass} />
                   </div>
                 ))}
               </div>
-
-              <div className="trivia-bottom-row">
-                <div className="form-group">
-                  <label>Correct Answer *</label>
-                  <select
-                    value={newQ.correct_answer}
-                    onChange={e => setNewQ(p => ({ ...p, correct_answer: e.target.value }))}
-                  >
+              <div className="grid grid-cols-[1fr_100px] sm:grid-cols-1 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-black text-[0.9rem]">Correct Answer *</label>
+                  <select value={newQ.correct_answer} onChange={e => setNewQ(p => ({ ...p, correct_answer: e.target.value }))} className={inputClass}>
                     <option value="a">A — {newQ.option_a || 'Option A'}</option>
                     <option value="b">B — {newQ.option_b || 'Option B'}</option>
                     <option value="c">C — {newQ.option_c || 'Option C'}</option>
                     <option value="d">D — {newQ.option_d || 'Option D'}</option>
                   </select>
                 </div>
-                <div className="form-group">
-                  <label>Points</label>
-                  <input
-                    type="number"
-                    min="5"
-                    max="50"
-                    value={newQ.points}
-                    onChange={e => setNewQ(p => ({ ...p, points: parseInt(e.target.value) }))}
-                  />
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-black text-[0.9rem]">Points</label>
+                  <input type="number" min="5" max="50" value={newQ.points} onChange={e => setNewQ(p => ({ ...p, points: parseInt(e.target.value) }))} className={inputClass} />
                 </div>
               </div>
-
-              <button type="submit" className="btn btn-secondary" disabled={addingQ}>
+              <button type="submit" className="btn btn-secondary disabled:opacity-60 disabled:cursor-not-allowed" disabled={addingQ}>
                 {addingQ ? 'Adding...' : '+ Add Question'}
               </button>
             </form>
           </div>
-
         </div>
       </section>
     </div>

@@ -47,6 +47,9 @@ def _serialize_party(party, request=None):
         'slug': party.slug,
         'birthday_person_name': party.birthday_person_name,
         'party_date': party.party_date.isoformat(),
+        'party_time': party.party_time.strftime('%H:%M') if party.party_time else None,
+        'location_name': party.location_name,
+        'location_address': party.location_address,
         'welcome_message': party.welcome_message,
         'host_name': party.host_name,
         'theme_color': party.theme_color,
@@ -106,6 +109,9 @@ def party_setup(request):
             'is_active': party.is_active,
             'theme_color': party.theme_color,
             'welcome_message': party.welcome_message,
+            'party_time': party.party_time.strftime('%H:%M') if party.party_time else '',
+            'location_name': party.location_name,
+            'location_address': party.location_address,
         })
 
     # POST — save setup
@@ -124,6 +130,12 @@ def party_setup(request):
         party.welcome_message = request.data['welcome_message']
     if 'banner_image' in request.FILES:
         party.banner_image = request.FILES['banner_image']
+    if 'party_time' in request.data:
+        party.party_time = request.data['party_time'] or None
+    if 'location_name' in request.data:
+        party.location_name = request.data['location_name']
+    if 'location_address' in request.data:
+        party.location_address = request.data['location_address']
 
     # Activate the party when the host completes setup — payment is confirmed
     # because only Stripe's success redirect carries a valid session_id.

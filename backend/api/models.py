@@ -55,7 +55,7 @@ class ThemePackage(models.Model):
 
     name = models.CharField(max_length=200)
     description = models.TextField()
-    theme_type = models.CharField(max_length=20, choices=THEME_TYPES, default='birthday')
+    theme_type = models.CharField(max_length=20, choices=THEME_TYPES)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     features = models.JSONField(default=list)
     popular = models.BooleanField(default=False)

@@ -22,6 +22,8 @@ const BirthdaySetup = () => {
   const [themeColor, setThemeColor] = useState('#ff6b9d');
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const [bannerImage, setBannerImage] = useState(null);
+  const [bannerImagePreview, setBannerImagePreview] = useState(null);
+  const [existingBannerUrl, setExistingBannerUrl] = useState(null);
   const [partyTime, setPartyTime] = useState('');
   const [locationName, setLocationName] = useState('');
   const [locationAddress, setLocationAddress] = useState('');
@@ -44,6 +46,7 @@ const BirthdaySetup = () => {
         setPartyTime(res.data.party_time || '');
         setLocationName(res.data.location_name || '');
         setLocationAddress(res.data.location_address || '');
+        if (res.data.banner_image) setExistingBannerUrl(res.data.banner_image);
         if (res.data.is_active) return getBirthdayTrivia(res.data.slug).then(tRes => setQuestions(tRes.data));
       })
       .catch(() => setError('Could not load your party. Please contact support.'))
@@ -98,10 +101,17 @@ const BirthdaySetup = () => {
   return (
     <div>
       <section
-        className="py-[80px] text-center text-white"
-        style={{ background: `linear-gradient(135deg, ${themeColor} 0%, #c850c0 100%)` }}
+        className="py-[80px] text-center text-white relative overflow-hidden"
+        style={
+          bannerImagePreview || existingBannerUrl
+            ? { backgroundImage: `url(${bannerImagePreview || existingBannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+            : { background: `linear-gradient(135deg, ${themeColor} 0%, #c850c0 100%)` }
+        }
       >
-        <div className="container">
+        {(bannerImagePreview || existingBannerUrl) && (
+          <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.45)' }} />
+        )}
+        <div className="container relative z-[1]">
           <h1>🎉 Almost there, {party?.host_name}!</h1>
           <p>Customize {party?.birthday_person_name}'s party page before it goes live.</p>
         </div>
@@ -124,22 +134,48 @@ const BirthdaySetup = () => {
               </div>
 
               <div className="flex flex-col gap-2 mb-5">
-                <label className="font-semibold text-black">Theme Color</label>
+                <label className="font-semibold text-black">Hero Appearance</label>
+                <p className="text-[0.8rem] text-[#888] -mt-1">Pick a color, or upload a photo — the photo will replace the gradient if both are set.</p>
+
                 <div className="flex gap-[10px] items-center">
                   <input type="color" value={themeColor} onChange={e => setThemeColor(e.target.value)} className="w-[60px] h-10 border-2 border-[#ddd] rounded-[5px] cursor-pointer" />
                   <input type="text" value={themeColor} onChange={e => setThemeColor(e.target.value)} placeholder="#ff6b9d" className="flex-1 py-[10px] px-3 border border-[#ddd] rounded-[6px] font-mono text-[0.95rem] outline-none focus:border-brand" />
                 </div>
+
+                {(existingBannerUrl || bannerImagePreview) && (
+                  <div className="relative w-full h-[90px] rounded-[6px] overflow-hidden border border-[#ddd]">
+                    <img
+                      src={bannerImagePreview || existingBannerUrl}
+                      alt="Banner preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <span className="absolute bottom-1 left-2 text-white text-[0.7rem] bg-[rgba(0,0,0,0.5)] px-2 py-[2px] rounded-full">
+                      {bannerImagePreview ? 'New image' : 'Current image'}
+                    </span>
+                  </div>
+                )}
+
+                <label htmlFor="banner_image" className="font-semibold text-black text-[0.85rem]">
+                  {existingBannerUrl ? 'Replace banner image' : 'Add a banner image'} <span className="text-[#aaa] font-normal">(optional)</span>
+                </label>
+                <input
+                  type="file"
+                  id="banner_image"
+                  accept="image/*"
+                  onChange={e => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      setBannerImage(file);
+                      setBannerImagePreview(URL.createObjectURL(file));
+                    }
+                  }}
+                  className="py-[5px]"
+                />
               </div>
 
               <div className="flex flex-col gap-2 mb-5">
                 <label htmlFor="welcome_message" className="font-semibold text-black">Welcome Message</label>
                 <textarea id="welcome_message" value={welcomeMessage} onChange={e => setWelcomeMessage(e.target.value)} rows="4" placeholder={`Welcome to ${party?.birthday_person_name}'s birthday celebration!`} className={inputClass} />
-              </div>
-
-              <div className="flex flex-col gap-2 mb-5">
-                <label htmlFor="banner_image" className="font-semibold text-black">Banner Image (optional)</label>
-                <p className="text-[0.8rem] text-[#888] -mt-1">Upload an image to use as the hero background instead of the color gradient.</p>
-                <input type="file" id="banner_image" accept="image/*" onChange={e => setBannerImage(e.target.files[0])} className="py-[5px]" />
               </div>
 
               <div className="flex flex-col gap-2 mb-5">

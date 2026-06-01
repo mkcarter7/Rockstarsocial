@@ -148,6 +148,7 @@ def party_setup(request):
             'party_time': party.party_time.strftime('%H:%M') if party.party_time else '',
             'location_name': party.location_name,
             'location_address': party.location_address,
+            'banner_image': request.build_absolute_uri(party.banner_image.url) if party.banner_image else None,
         })
 
     # POST — save setup

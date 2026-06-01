@@ -428,18 +428,16 @@ const BirthdayParty = ({ slug }) => {
         </p>
       </div>
 
-      {/* ── Manage Party button (host only) ── */}
-      {isHost && (
-        <div className="fixed bottom-6 right-6 z-50">
-          <Link
-            href="/host/dashboard"
-            className="flex items-center gap-2 text-white font-semibold py-3 px-5 rounded-full shadow-lg hover:opacity-90 transition-opacity text-[0.9rem]"
-            style={{ background: color }}
-          >
-            ⚙️ Manage Party
-          </Link>
-        </div>
-      )}
+      {/* ── Manage Party button (always visible) ── */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <Link
+          href={isHost ? '/host/dashboard' : '/host/login'}
+          className="flex items-center gap-2 text-white font-semibold py-3 px-5 rounded-full shadow-lg hover:opacity-90 transition-opacity text-[0.9rem]"
+          style={{ background: color }}
+        >
+          ⚙️ {isHost ? 'Manage Party' : 'Host Login'}
+        </Link>
+      </div>
     </div>
   );
 };

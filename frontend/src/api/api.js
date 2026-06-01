@@ -70,7 +70,8 @@ export const getTriviaLeaderboard = (slug) => api.get(`/birthday/${slug}/trivia/
 export const getAdminEventPages = (token) => api.get('/admin/event-pages/', { headers: { Authorization: `Bearer ${token}` } });
 export const deleteAdminEventPage = (eventType, id, token) => api.delete(`/admin/event-pages/${eventType}/${id}/`, { headers: { Authorization: `Bearer ${token}` } });
 
-// Host magic link auth
+// Host auth
+export const hostLogin = (email, password) => api.post('/host/login/', { email, password });
 export const requestHostAccess = (email) => api.post('/host/request-access/', { email });
 export const verifyHostToken = (token) => api.get(`/host/verify-token/?token=${token}`);
 export const getHostPartyStats = (slug, hostToken) =>

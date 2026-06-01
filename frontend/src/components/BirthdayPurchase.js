@@ -10,7 +10,7 @@ const BirthdayPurchase = () => {
   const searchParams = useSearchParams();
   const themeId = searchParams.get('theme_id');
 
-  const [form, setForm] = useState({ birthday_person_name: '', party_date: '', slug: '', host_email: '', host_name: '' });
+  const [form, setForm] = useState({ birthday_person_name: '', party_date: '', slug: '', host_email: '', host_name: '', password: '', confirm_password: '' });
   const [slugStatus, setSlugStatus] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -40,9 +40,11 @@ const BirthdayPurchase = () => {
     e.preventDefault();
     setError('');
     if (slugStatus === 'taken') { setError('That URL is already taken. Please choose a different one.'); return; }
+    if (form.password.length < 8) { setError('Password must be at least 8 characters.'); return; }
+    if (form.password !== form.confirm_password) { setError('Passwords do not match.'); return; }
     setLoading(true);
     try {
-      const payload = { ...form, slug: formatSlug(form.slug) };
+      const { confirm_password, ...payload } = { ...form, slug: formatSlug(form.slug) };
       if (themeId) payload.theme_id = themeId;
       const res = await createBirthdayCheckout(payload);
       window.location.href = res.data.checkout_url;
@@ -113,6 +115,17 @@ const BirthdayPurchase = () => {
                 <label htmlFor="host_email" className="font-semibold text-black text-[0.95rem]">Your Email *</label>
                 <input type="email" id="host_email" name="host_email" value={form.host_email} onChange={handleChange} required placeholder="you@email.com" className={inputClass} />
                 <small className="text-[#666] text-[0.85rem]">Your receipt and party link will be sent here.</small>
+              </div>
+
+              <div className="flex flex-col gap-2 mb-5">
+                <label htmlFor="password" className="font-semibold text-black text-[0.95rem]">Create a Password *</label>
+                <input type="password" id="password" name="password" value={form.password} onChange={handleChange} required placeholder="At least 8 characters" className={inputClass} />
+                <small className="text-[#666] text-[0.85rem]">You'll use this to log into your party dashboard later.</small>
+              </div>
+
+              <div className="flex flex-col gap-2 mb-5">
+                <label htmlFor="confirm_password" className="font-semibold text-black text-[0.95rem]">Confirm Password *</label>
+                <input type="password" id="confirm_password" name="confirm_password" value={form.confirm_password} onChange={handleChange} required placeholder="Re-enter your password" className={inputClass} />
               </div>
 
               <button

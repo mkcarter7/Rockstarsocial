@@ -20,6 +20,25 @@ const HostDashboard = () => {
   const [error, setError] = useState('');
   const [hostToken, setHostToken] = useState('');
   const [hostSlug, setHostSlug] = useState('');
+  const [allParties, setAllParties] = useState(null);
+
+  const loadParty = (slug, token) => {
+    setLoading(true);
+    setError('');
+    getHostPartyStats(slug, token)
+      .then(res => { setStats(res.data); setLoading(false); })
+      .catch(err => {
+        if (err?.response?.status === 401 || err?.response?.status === 403) {
+          localStorage.removeItem('hostToken');
+          localStorage.removeItem('hostPartySlug');
+          localStorage.removeItem('hostAllParties');
+          router.push('/host/login');
+        } else {
+          setError(err?.response?.data?.error || 'Could not load your party. Please try again.');
+          setLoading(false);
+        }
+      });
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('hostToken');
@@ -30,30 +49,62 @@ const HostDashboard = () => {
       return;
     }
 
+    const parties = JSON.parse(localStorage.getItem('hostAllParties') || 'null');
+
     setHostToken(token);
     setHostSlug(slug);
+    if (parties && parties.length > 1) setAllParties(parties);
 
-    getHostPartyStats(slug, token)
-      .then(res => { setStats(res.data); setLoading(false); })
-      .catch(err => {
-        const msg = err?.response?.data?.error || '';
-        if (err?.response?.status === 401 || err?.response?.status === 403) {
-          // Token expired or invalid — clear and redirect to login
-          localStorage.removeItem('hostToken');
-          localStorage.removeItem('hostPartySlug');
-          router.push('/host/login');
-        } else {
-          setError(msg || 'Could not load your party. Please try again.');
-          setLoading(false);
-        }
-      });
+    loadParty(slug, token);
   }, [router]);
+
+  const pickParty = (slug) => {
+    localStorage.setItem('hostPartySlug', slug);
+    setHostSlug(slug);
+    setAllParties(null);
+    loadParty(slug, hostToken);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('hostToken');
     localStorage.removeItem('hostPartySlug');
+    localStorage.removeItem('hostAllParties');
     router.push('/host/login');
   };
+
+  if (allParties && allParties.length > 1 && !stats) {
+    const formatDate = (d) => {
+      const [y, m, day] = d.split('-').map(Number);
+      return new Date(y, m - 1, day).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    };
+    return (
+      <div className="min-h-screen bg-[#fafafa]">
+        <section className="py-[80px] text-center text-white" style={{ background: 'linear-gradient(135deg, #ff6b9d 0%, #c850c0 100%)' }}>
+          <div className="container">
+            <h1 className="text-[2.2rem] text-white mb-3">🎂 Your Parties</h1>
+            <p className="opacity-90">Select a party to manage.</p>
+          </div>
+        </section>
+        <section className="section">
+          <div className="container" style={{ maxWidth: 480 }}>
+            <div className="flex flex-col gap-4">
+              {allParties.map(p => (
+                <button
+                  key={p.slug}
+                  onClick={() => pickParty(p.slug)}
+                  className="bg-white border-2 border-[#ff6b9d] rounded-[12px] p-6 text-left hover:-translate-y-[2px] hover:shadow-md transition-[transform,box-shadow] cursor-pointer"
+                >
+                  <div className="font-bold text-[1.1rem] text-[#333]">🎂 {p.birthday_person_name}</div>
+                  <div className="text-[#888] text-[0.9rem] mt-1">{formatDate(p.party_date)}</div>
+                  <div className="text-[#ff6b9d] text-[0.85rem] mt-1">1rockstarsocial.com/birthday/{p.slug}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

@@ -177,6 +177,15 @@ class ContactSubmission(models.Model):
         return f"{self.name} - {self.subject}"
 
 
+class HostAccount(models.Model):
+    email = models.EmailField(unique=True)
+    password = models.CharField(max_length=256)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.email
+
+
 class BirthdayParty(models.Model):
     slug = models.SlugField(unique=True, max_length=100)
     birthday_person_name = models.CharField(max_length=200)
@@ -193,6 +202,10 @@ class BirthdayParty(models.Model):
     stripe_session_id = models.CharField(max_length=255, unique=True, blank=True, null=True)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+    host_account = models.ForeignKey(
+        'HostAccount', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='parties',
+    )
 
     class Meta:
         ordering = ['-created_at']

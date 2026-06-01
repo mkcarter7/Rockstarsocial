@@ -18,7 +18,7 @@ from .birthday_views import (
     trivia_leaderboard, admin_birthday_parties,
     admin_event_pages, admin_delete_event_page,
 )
-from .host_auth_views import request_magic_link, verify_magic_link, host_party_stats
+from .host_auth_views import request_magic_link, verify_magic_link, host_party_stats, host_login
 
 router = DefaultRouter()
 router.register(r'portfolio', PortfolioItemViewSet, basename='portfolio')
@@ -66,7 +66,9 @@ urlpatterns = [
     path('admin/birthday-parties/', admin_birthday_parties, name='admin-birthday-parties'),
     path('admin/event-pages/', admin_event_pages, name='admin-event-pages'),
     path('admin/event-pages/<str:event_type>/<int:page_id>/', admin_delete_event_page, name='admin-delete-event-page'),
-    # Host magic link auth
+    # Host auth
+    path('host/login/', host_login, name='host-login'),
+    path('host/forgot-password/', request_magic_link, name='host-forgot-password'),
     path('host/request-access/', request_magic_link, name='host-request-access'),
     path('host/verify-token/', verify_magic_link, name='host-verify-token'),
     path('host/party/<slug:slug>/', host_party_stats, name='host-party-stats'),

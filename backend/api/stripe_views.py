@@ -42,7 +42,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Theme, ThemePurchase, ThemePackage, ThemeOrder, BirthdayParty
+from .models import Theme, ThemePurchase, ThemePackage, ThemeOrder, BirthdayParty, HostAccount
+from django.contrib.auth.hashers import make_password, check_password
 
 logger = logging.getLogger(__name__)
 
@@ -438,11 +439,25 @@ def create_birthday_checkout(request):
     host_email = request.data.get('host_email', '').strip()
     host_name = request.data.get('host_name', '').strip()
     theme_id = request.data.get('theme_id')
+    password = request.data.get('password', '').strip()
 
     if not all([slug, birthday_person_name, party_date, host_email]):
         return Response(
             {'error': 'slug, birthday_person_name, party_date, and host_email are required'},
             status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if not password or len(password) < 8:
+        return Response({'error': 'Password must be at least 8 characters'}, status=status.HTTP_400_BAD_REQUEST)
+
+    host_account, created = HostAccount.objects.get_or_create(
+        email=host_email.lower(),
+        defaults={'password': make_password(password)},
+    )
+    if not created and not check_password(password, host_account.password):
+        return Response(
+            {'error': 'An account already exists for this email. Please use your existing password.'},
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
     if BirthdayParty.objects.filter(slug=slug).exists():
@@ -498,10 +513,11 @@ def create_birthday_checkout(request):
             slug=slug,
             birthday_person_name=birthday_person_name,
             party_date=datetime.strptime(party_date, '%Y-%m-%d').date(),
-            host_email=host_email,
+            host_email=host_email.lower(),
             host_name=host_name,
             stripe_session_id=session.id,
             is_active=False,
+            host_account=host_account,
         )
     except Exception as e:
         logger.error(f"Failed to create pending birthday party: {str(e)}")

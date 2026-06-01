@@ -12,7 +12,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 
-from .models import BirthdayParty, HostAccessToken
+from django.contrib.auth.hashers import check_password
+from .models import BirthdayParty, HostAccessToken, HostAccount
 
 logger = logging.getLogger(__name__)
 
@@ -166,6 +167,54 @@ def verify_magic_link(request):
     return Response({
         'session_token': str(session_token.token),
         'party_slug': token_obj.party.slug,
+    })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def host_login(request):
+    """
+    POST /api/host/login/
+    Body: { email, password }
+    Validates credentials and returns a 30-day session token.
+    """
+    email = request.data.get('email', '').strip().lower()
+    password = request.data.get('password', '')
+
+    if not email or not password:
+        return Response({'error': 'email and password are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        account = HostAccount.objects.get(email=email)
+    except HostAccount.DoesNotExist:
+        return Response({'error': 'Invalid email or password'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    if not check_password(password, account.password):
+        return Response({'error': 'Invalid email or password'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    # Most recent active party via FK; fall back to host_email match for pre-account parties
+    party = (
+        account.parties.filter(is_active=True).order_by('-created_at').first()
+        or BirthdayParty.objects.filter(host_email=email, is_active=True).order_by('-created_at').first()
+    )
+    if not party:
+        return Response({'error': 'No active party found for this account.'}, status=status.HTTP_404_NOT_FOUND)
+
+    all_parties = list(
+        account.parties.filter(is_active=True).order_by('-created_at')
+        .values('slug', 'birthday_person_name', 'party_date')
+    )
+
+    session_token = HostAccessToken.objects.create(
+        party=party,
+        token_type='session',
+        expires_at=timezone.now() + timedelta(days=30),
+    )
+
+    return Response({
+        'session_token': str(session_token.token),
+        'party_slug': party.slug,
+        'all_parties': all_parties,
     })
 
 

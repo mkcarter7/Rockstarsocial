@@ -53,7 +53,7 @@ export const getBirthdaySetup = (sessionId, sessionToken = null) =>
   sessionToken
     ? api.get(`/birthday/setup/?session_token=${sessionToken}`)
     : api.get(`/birthday/setup/?session_id=${sessionId}`);
-export const saveBirthdaySetup = (data) => api.post('/birthday/setup/', data);
+export const saveBirthdaySetup = (data) => api.post('/birthday/setup/', data, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const getBirthdayPhotos = (slug) => api.get(`/birthday/${slug}/photos/`);
 export const uploadBirthdayPhoto = (slug, formData) => api.post(`/birthday/${slug}/photos/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const deleteBirthdayPhoto = (slug, photoId, sessionId) => api.delete(`/birthday/${slug}/photos/${photoId}/?session_id=${sessionId}`);

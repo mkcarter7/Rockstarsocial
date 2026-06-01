@@ -167,6 +167,8 @@ def party_setup(request):
     else:
         return Response({'error': 'session_id or session_token is required'}, status=status.HTTP_400_BAD_REQUEST)
 
+    was_active = party.is_active
+
     if 'theme_color' in request.data:
         party.theme_color = request.data['theme_color']
     if 'welcome_message' in request.data:
@@ -185,6 +187,12 @@ def party_setup(request):
         party.is_active = True
 
     party.save()
+
+    # Send welcome email the first time the party is activated via setup.
+    # Guards against double-email: if the webhook already fired and set is_active=True,
+    # was_active will be True here and we skip this call.
+    if session_id and not was_active:
+        _send_welcome_email(party)
 
     return Response({'slug': party.slug, 'message': 'Party updated'})
 

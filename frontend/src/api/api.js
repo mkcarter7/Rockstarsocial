@@ -49,7 +49,10 @@ export const saveThemeSetup = (data) => api.post('/theme-setup/', data);
 // Birthday app
 export const checkBirthdaySlug = (slug) => api.get(`/birthday/check-slug/?slug=${slug}`);
 export const getBirthdayParty = (slug) => api.get(`/birthday/${slug}/`);
-export const getBirthdaySetup = (sessionId) => api.get(`/birthday/setup/?session_id=${sessionId}`);
+export const getBirthdaySetup = (sessionId, sessionToken = null) =>
+  sessionToken
+    ? api.get(`/birthday/setup/?session_token=${sessionToken}`)
+    : api.get(`/birthday/setup/?session_id=${sessionId}`);
 export const saveBirthdaySetup = (data) => api.post('/birthday/setup/', data);
 export const getBirthdayPhotos = (slug) => api.get(`/birthday/${slug}/photos/`);
 export const uploadBirthdayPhoto = (slug, formData) => api.post(`/birthday/${slug}/photos/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -66,5 +69,11 @@ export const getTriviaLeaderboard = (slug) => api.get(`/birthday/${slug}/trivia/
 // Admin — Event pages (all types: birthday, wedding, etc.)
 export const getAdminEventPages = (token) => api.get('/admin/event-pages/', { headers: { Authorization: `Bearer ${token}` } });
 export const deleteAdminEventPage = (eventType, id, token) => api.delete(`/admin/event-pages/${eventType}/${id}/`, { headers: { Authorization: `Bearer ${token}` } });
+
+// Host magic link auth
+export const requestHostAccess = (email) => api.post('/host/request-access/', { email });
+export const verifyHostToken = (token) => api.get(`/host/verify-token/?token=${token}`);
+export const getHostPartyStats = (slug, hostToken) =>
+  api.get(`/host/party/${slug}/`, { headers: { 'X-Host-Token': hostToken } });
 
 export default api;

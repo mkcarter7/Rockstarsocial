@@ -12,6 +12,8 @@ const BirthdaySetup = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const sessionId = searchParams.get('session_id');
+  const sessionToken = searchParams.get('session_token');
+  const isHostReturn = !!sessionToken;
 
   const [party, setParty] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,8 +31,12 @@ const BirthdaySetup = () => {
   const [qError, setQError] = useState('');
 
   useEffect(() => {
-    if (!sessionId) { setError('No session ID found. Please complete payment first.'); setLoading(false); return; }
-    getBirthdaySetup(sessionId)
+    if (!sessionId && !sessionToken) {
+      setError('No session found. Please complete payment or log in first.');
+      setLoading(false);
+      return;
+    }
+    getBirthdaySetup(sessionId, sessionToken)
       .then((res) => {
         setParty(res.data);
         setThemeColor(res.data.theme_color || '#ff6b9d');
@@ -42,14 +48,18 @@ const BirthdaySetup = () => {
       })
       .catch(() => setError('Could not load your party. Please contact support.'))
       .finally(() => setLoading(false));
-  }, [sessionId]);
+  }, [sessionId, sessionToken]);
 
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
     setError('');
     const formData = new FormData();
-    formData.append('session_id', sessionId);
+    if (isHostReturn) {
+      formData.append('session_token', sessionToken);
+    } else {
+      formData.append('session_id', sessionId);
+    }
     formData.append('theme_color', themeColor);
     formData.append('welcome_message', welcomeMessage);
     if (bannerImage) formData.append('banner_image', bannerImage);
@@ -70,7 +80,10 @@ const BirthdaySetup = () => {
     setQError('');
     setAddingQ(true);
     try {
-      const res = await addTriviaQuestion(party.slug, { ...newQ, session_id: sessionId });
+      const triviaData = isHostReturn
+        ? { ...newQ, session_token: sessionToken }
+        : { ...newQ, session_id: sessionId };
+      const res = await addTriviaQuestion(party.slug, triviaData);
       setQuestions(prev => [...prev, res.data]);
       setNewQ(emptyQuestion);
     } catch (err) {
@@ -146,7 +159,7 @@ const BirthdaySetup = () => {
               </div>
 
               <button type="submit" className="btn btn-primary py-4 px-10 text-[1.1rem] disabled:opacity-60 disabled:cursor-not-allowed" disabled={saving}>
-                {saving ? 'Saving...' : 'Save & Go to My Party Page'}
+                {saving ? 'Saving...' : isHostReturn ? 'Save Changes' : 'Save & Go to My Party Page'}
               </button>
             </form>
           </div>

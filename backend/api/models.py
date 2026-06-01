@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 
@@ -287,6 +288,22 @@ class TriviaScore(models.Model):
 
     def __str__(self):
         return f"{self.player_name} - {self.score} pts ({self.party.slug})"
+
+
+class HostAccessToken(models.Model):
+    TOKEN_TYPES = [('magic_link', 'Magic Link'), ('session', 'Session')]
+    party = models.ForeignKey(BirthdayParty, on_delete=models.CASCADE, related_name='access_tokens')
+    token = models.UUIDField(default=uuid.uuid4, unique=True)
+    token_type = models.CharField(max_length=20, choices=TOKEN_TYPES)
+    expires_at = models.DateTimeField()
+    used = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.token_type} token for {self.party.slug}"
 
 
 class SiteSettings(models.Model):

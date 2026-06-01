@@ -259,6 +259,7 @@ const BirthdayParty = ({ slug }) => {
   const [notFound, setNotFound] = useState(false);
   const [notActive, setNotActive] = useState(false);
   const [expired, setExpired] = useState(false);
+  const [isHost, setIsHost] = useState(false);
 
   useEffect(() => {
     getBirthdayParty(slug)
@@ -270,6 +271,12 @@ const BirthdayParty = ({ slug }) => {
         else setNotFound(true);
         setLoading(false);
       });
+  }, [slug]);
+
+  useEffect(() => {
+    const hostToken = localStorage.getItem('hostToken');
+    const hostSlug = localStorage.getItem('hostPartySlug');
+    setIsHost(!!(hostToken && hostSlug === slug));
   }, [slug]);
 
   if (loading) return <div className={notFoundClass}><p>Loading party...</p></div>;
@@ -420,6 +427,19 @@ const BirthdayParty = ({ slug }) => {
           &nbsp;·&nbsp; Active until {new Date(party.expires_at).toLocaleDateString()}
         </p>
       </div>
+
+      {/* ── Manage Party button (host only) ── */}
+      {isHost && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <Link
+            href="/host/dashboard"
+            className="flex items-center gap-2 text-white font-semibold py-3 px-5 rounded-full shadow-lg hover:opacity-90 transition-opacity text-[0.9rem]"
+            style={{ background: color }}
+          >
+            ⚙️ Manage Party
+          </Link>
+        </div>
+      )}
     </div>
   );
 };

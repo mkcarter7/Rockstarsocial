@@ -14,6 +14,7 @@ from .models import (
     BirthdayParty, PartyPhoto, GuestBookEntry,
     PartyRSVP, TriviaQuestion, TriviaScore
 )
+from .host_auth_views import verify_host_session_by_token_str
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +60,33 @@ def _serialize_party(party, request=None):
     }
 
 
+def _send_welcome_email(party):
+    """Send welcome email after party setup is first completed."""
+    from django.core.mail import send_mail
+    from django.conf import settings
+    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+    try:
+        send_mail(
+            subject=f"🎉 Your party page is live — {party.birthday_person_name}'s Birthday",
+            message=(
+                f"Hi {party.host_name or 'there'},\n\n"
+                f"Your birthday party page is now live!\n\n"
+                f"🎂 Party page: {frontend_url}/birthday/{party.slug}\n\n"
+                f"Share this link with your guests so they can RSVP, sign the guestbook, "
+                f"upload photos, and play trivia.\n\n"
+                f"To manage your party page anytime (edit colors, welcome message, or add trivia), visit:\n"
+                f"{frontend_url}/host/login\n\n"
+                f"Just enter this email address ({party.host_email}) to receive a login link.\n\n"
+                f"Enjoy the party!\n— RockStar Social"
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[party.host_email],
+            fail_silently=True,
+        )
+    except Exception as e:
+        logger.error(f"Failed to send welcome email to {party.host_email}: {e}")
+
+
 # ─── Public party endpoints ───────────────────────────────────────────────────
 
 @api_view(['GET'])
@@ -95,12 +123,20 @@ def party_setup(request):
     """
     if request.method == 'GET':
         session_id = request.query_params.get('session_id')
-        if not session_id:
-            return Response({'error': 'session_id is required'}, status=status.HTTP_400_BAD_REQUEST)
-        try:
-            party = BirthdayParty.objects.get(stripe_session_id=session_id)
-        except BirthdayParty.DoesNotExist:
-            return Response({'error': 'Party not found'}, status=status.HTTP_404_NOT_FOUND)
+        session_token = request.query_params.get('session_token')
+
+        if session_token:
+            party, err = verify_host_session_by_token_str(session_token)
+            if err:
+                return Response(err, status=status.HTTP_401_UNAUTHORIZED)
+        elif session_id:
+            try:
+                party = BirthdayParty.objects.get(stripe_session_id=session_id)
+            except BirthdayParty.DoesNotExist:
+                return Response({'error': 'Party not found'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({'error': 'session_id or session_token is required'}, status=status.HTTP_400_BAD_REQUEST)
+
         return Response({
             'slug': party.slug,
             'birthday_person_name': party.birthday_person_name,
@@ -116,13 +152,21 @@ def party_setup(request):
 
     # POST — save setup
     session_id = request.data.get('session_id')
-    if not session_id:
-        return Response({'error': 'session_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+    session_token = request.data.get('session_token')
+    first_activation = False
 
-    try:
-        party = BirthdayParty.objects.get(stripe_session_id=session_id)
-    except BirthdayParty.DoesNotExist:
-        return Response({'error': 'Party not found'}, status=status.HTTP_404_NOT_FOUND)
+    if session_token:
+        party, err = verify_host_session_by_token_str(session_token)
+        if err:
+            return Response(err, status=status.HTTP_401_UNAUTHORIZED)
+    elif session_id:
+        try:
+            party = BirthdayParty.objects.get(stripe_session_id=session_id)
+        except BirthdayParty.DoesNotExist:
+            return Response({'error': 'Party not found'}, status=status.HTTP_404_NOT_FOUND)
+        first_activation = not party.is_active
+    else:
+        return Response({'error': 'session_id or session_token is required'}, status=status.HTTP_400_BAD_REQUEST)
 
     if 'theme_color' in request.data:
         party.theme_color = request.data['theme_color']
@@ -137,10 +181,15 @@ def party_setup(request):
     if 'location_address' in request.data:
         party.location_address = request.data['location_address']
 
-    # Activate the party when the host completes setup — payment is confirmed
-    # because only Stripe's success redirect carries a valid session_id.
-    party.is_active = True
+    if session_id:
+        # First-time Stripe setup — activate the party
+        party.is_active = True
+
     party.save()
+
+    if first_activation:
+        _send_welcome_email(party)
+
     return Response({'slug': party.slug, 'message': 'Party updated'})
 
 
@@ -307,9 +356,14 @@ def party_trivia(request, slug):
             'points': q.points,
         } for q in questions])
 
-    # POST — host adds a question (verified via session_id)
+    # POST — host adds a question (verified via session_id or session_token)
     session_id = request.data.get('session_id')
-    if not session_id or party.stripe_session_id != session_id:
+    session_token = request.data.get('session_token')
+    if session_token:
+        _, err = verify_host_session_by_token_str(session_token, slug)
+        if err:
+            return Response({'error': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
+    elif not session_id or party.stripe_session_id != session_id:
         return Response({'error': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
 
     required = ['question', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_answer']

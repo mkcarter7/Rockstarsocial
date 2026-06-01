@@ -227,6 +227,7 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
+    'x-host-token',
 ]
 
 # CSRF trusted origins (for admin panel and forms)
@@ -236,6 +237,16 @@ CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS.copy()
 api_domain = 'https://api.1rockstarsocial.com'
 if api_domain not in CSRF_TRUSTED_ORIGINS:
     CSRF_TRUSTED_ORIGINS.append(api_domain)
+
+# Email settings (SMTP — configure in .env for production)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
 
 # REST Framework settings
 REST_FRAMEWORK = {

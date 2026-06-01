@@ -26,7 +26,7 @@
   }
 
   .container {
-    @apply max-w-[1200px] mx-auto px-5 md:px-[15px];
+    @apply max-w-[1200px] mx-auto px-4 md:px-5;
   }
 
   /* Buttons */
@@ -44,33 +44,33 @@
 
   /* Sections */
   .section {
-    @apply py-20 md:py-[50px];
+    @apply py-10 md:py-[50px] lg:py-20;
   }
 
   .section-title {
-    @apply text-[2.5rem] md:text-[2rem] font-bold text-center mb-5 text-black;
+    @apply text-[1.6rem] md:text-[2rem] lg:text-[2.5rem] font-bold text-center mb-5 text-black;
   }
 
   .section-subtitle {
-    @apply text-center text-[#333] text-[1.1rem] md:text-base max-w-[600px] mx-auto mb-[50px];
+    @apply text-center text-[#333] text-[0.95rem] md:text-base lg:text-[1.1rem] max-w-[600px] mx-auto mb-8 md:mb-[50px];
   }
 
   /* Hero */
   .hero {
-    @apply bg-brand-gradient text-white py-[120px] md:py-[80px] text-center;
+    @apply bg-brand-gradient text-white py-[60px] md:py-[80px] lg:py-[120px] text-center;
   }
 
   .hero h1 {
-    @apply text-[3.5rem] md:text-[2.5rem] font-bold mb-5;
+    @apply text-[2rem] md:text-[2.5rem] lg:text-[3.5rem] font-bold mb-5;
   }
 
   .hero p {
-    @apply text-[1.3rem] md:text-[1.1rem] mb-[30px] opacity-90;
+    @apply text-base md:text-[1.1rem] lg:text-[1.3rem] mb-[30px] opacity-90;
   }
 
   /* Card */
   .card {
-    @apply bg-white rounded-[10px] p-[30px] md:p-5 shadow-[0_4px_6px_rgba(0,0,0,0.1)]
+    @apply bg-white rounded-[10px] p-5 md:p-5 lg:p-[30px] shadow-[0_4px_6px_rgba(0,0,0,0.1)]
            transition-[transform,box-shadow] duration-300
            hover:-translate-y-[5px] hover:shadow-[0_10px_25px_rgba(0,0,0,0.15)];
   }
@@ -103,16 +103,19 @@
   }
 
   /* nth-child carousel visibility — can't be expressed inline */
-  @media (max-width: 1024px) {
+
+  /* Phone: show only 1 item */
+  @media (max-width: 767px) {
     .carousel-item:nth-child(2),
-    .carousel-item:nth-child(4),
-    .carousel-item:nth-child(5),
-    .carousel-item:nth-child(6) {
+    .carousel-item:nth-child(3) {
       display: none;
     }
+  }
 
-    .carousel-item:nth-child(3) {
-      display: block;
+  /* Tablet: show 2 items (hide middle) */
+  @media (min-width: 768px) and (max-width: 1024px) {
+    .carousel-item:nth-child(2) {
+      display: none;
     }
   }
 }

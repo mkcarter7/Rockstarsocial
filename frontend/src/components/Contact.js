@@ -40,7 +40,7 @@ const Contact = () => {
 
       <section className="section">
         <div className="container">
-          <div className="grid grid-cols-[1fr_2fr] lg:grid-cols-1 gap-[50px] max-w-[1200px] mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-[30px] md:gap-[50px] max-w-[1200px] mx-auto">
             <div>
               <h2 className="text-[2rem] md:text-[1.5rem] mb-[30px] text-black">Contact Information</h2>
               <div className="mb-[30px]">
@@ -89,7 +89,7 @@ const Contact = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="btn btn-primary py-[15px] px-[30px] text-[1.1rem] self-start disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="btn btn-primary py-[15px] px-[30px] text-[1.1rem] w-full md:w-auto disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Sending...' : 'Send Message'}
                 </button>

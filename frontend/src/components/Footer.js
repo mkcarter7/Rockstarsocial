@@ -3,9 +3,9 @@ import Link from 'next/link';
 
 const Footer = () => {
   return (
-    <footer className="bg-black text-white pt-[50px] pb-5 mt-auto">
+    <footer className="bg-black text-white pt-8 md:pt-[50px] pb-5 mt-auto">
       <div className="container">
-        <div className="grid grid-cols-4 lg:grid-cols-2 md:grid-cols-1 gap-10 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-10 mb-6 md:mb-10">
           <div>
             <h3 className="text-[1.5rem] mb-[15px] text-brand">RockStar Social</h3>
             <p className="text-[#a0aec0] leading-[1.8] mb-[10px]">Professional web design services and premium themes for your business.</p>

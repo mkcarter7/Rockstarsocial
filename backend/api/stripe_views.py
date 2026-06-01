@@ -303,6 +303,8 @@ def stripe_webhook(request):
                         party.is_active = True
                         party.save()
                         logger.info(f"Birthday party activated: {party.slug}")
+                        from .birthday_views import _send_welcome_email
+                        _send_welcome_email(party)
             except BirthdayParty.DoesNotExist:
                 logger.error(f"BirthdayParty not found for session {session['id']}")
                 return HttpResponse(status=404)

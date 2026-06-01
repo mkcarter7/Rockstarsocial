@@ -153,7 +153,6 @@ def party_setup(request):
     # POST — save setup
     session_id = request.data.get('session_id')
     session_token = request.data.get('session_token')
-    first_activation = False
 
     if session_token:
         party, err = verify_host_session_by_token_str(session_token)
@@ -164,7 +163,6 @@ def party_setup(request):
             party = BirthdayParty.objects.get(stripe_session_id=session_id)
         except BirthdayParty.DoesNotExist:
             return Response({'error': 'Party not found'}, status=status.HTTP_404_NOT_FOUND)
-        first_activation = not party.is_active
     else:
         return Response({'error': 'session_id or session_token is required'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -186,9 +184,6 @@ def party_setup(request):
         party.is_active = True
 
     party.save()
-
-    if first_activation:
-        _send_welcome_email(party)
 
     return Response({'slug': party.slug, 'message': 'Party updated'})
 

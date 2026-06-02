@@ -20,6 +20,7 @@ const BirthdaySetup = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [themeColor, setThemeColor] = useState('#ff6b9d');
+  const [secondaryColor, setSecondaryColor] = useState('#ffffff');
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const [bannerImage, setBannerImage] = useState(null);
   const [bannerImagePreview, setBannerImagePreview] = useState(null);
@@ -27,6 +28,7 @@ const BirthdaySetup = () => {
   const [partyTime, setPartyTime] = useState('');
   const [locationName, setLocationName] = useState('');
   const [locationAddress, setLocationAddress] = useState('');
+  const [giftRegistryUrl, setGiftRegistryUrl] = useState('');
   const [questions, setQuestions] = useState([]);
   const [newQ, setNewQ] = useState(emptyQuestion);
   const [addingQ, setAddingQ] = useState(false);
@@ -42,10 +44,12 @@ const BirthdaySetup = () => {
       .then((res) => {
         setParty(res.data);
         setThemeColor(res.data.theme_color || '#ff6b9d');
+        setSecondaryColor(res.data.secondary_color || '#ffffff');
         setWelcomeMessage(res.data.welcome_message || '');
         setPartyTime(res.data.party_time || '');
         setLocationName(res.data.location_name || '');
         setLocationAddress(res.data.location_address || '');
+        setGiftRegistryUrl(res.data.gift_registry_url || '');
         if (res.data.banner_image) setExistingBannerUrl(res.data.banner_image);
         if (res.data.is_active) return getBirthdayTrivia(res.data.slug).then(tRes => setQuestions(tRes.data));
       })
@@ -64,11 +68,13 @@ const BirthdaySetup = () => {
       formData.append('session_id', sessionId);
     }
     formData.append('theme_color', themeColor);
+    formData.append('secondary_color', secondaryColor);
     formData.append('welcome_message', welcomeMessage);
     if (bannerImage) formData.append('banner_image', bannerImage);
     formData.append('party_time', partyTime);
     formData.append('location_name', locationName);
     formData.append('location_address', locationAddress);
+    formData.append('gift_registry_url', giftRegistryUrl);
     try {
       await saveBirthdaySetup(formData);
       router.push(`/${party.slug}`);
@@ -105,7 +111,7 @@ const BirthdaySetup = () => {
         style={
           bannerImagePreview || existingBannerUrl
             ? { backgroundImage: `url(${bannerImagePreview || existingBannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-            : { background: `linear-gradient(135deg, ${themeColor} 0%, #c850c0 100%)` }
+            : { background: themeColor }
         }
       >
         {(bannerImagePreview || existingBannerUrl) && (
@@ -174,6 +180,15 @@ const BirthdaySetup = () => {
               </div>
 
               <div className="flex flex-col gap-2 mb-5">
+                <label className="font-semibold text-black">Page Background Color</label>
+                <p className="text-[0.8rem] text-[#888] -mt-1">Shown below the header on all party pages. Defaults to white.</p>
+                <div className="flex gap-[10px] items-center">
+                  <input type="color" value={secondaryColor} onChange={e => setSecondaryColor(e.target.value)} className="w-[60px] h-10 border-2 border-[#ddd] rounded-[5px] cursor-pointer" />
+                  <input type="text" value={secondaryColor} onChange={e => setSecondaryColor(e.target.value)} placeholder="#ffffff" className="flex-1 py-[10px] px-3 border border-[#ddd] rounded-[6px] font-mono text-[0.95rem] outline-none focus:border-brand" />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 mb-5">
                 <label htmlFor="welcome_message" className="font-semibold text-black">Welcome Message</label>
                 <textarea id="welcome_message" value={welcomeMessage} onChange={e => setWelcomeMessage(e.target.value)} rows="4" placeholder={`Welcome to ${party?.birthday_person_name}'s birthday celebration!`} className={inputClass} />
               </div>
@@ -192,6 +207,12 @@ const BirthdaySetup = () => {
                 <label htmlFor="location_address" className="font-semibold text-black">Venue Address (optional)</label>
                 <p className="text-[0.8rem] text-[#888] -mt-1">Used for the weather forecast and map on your party page.</p>
                 <textarea id="location_address" value={locationAddress} onChange={e => setLocationAddress(e.target.value)} rows="3" placeholder="123 Party Lane, New York, NY 10001" className={inputClass} />
+              </div>
+
+              <div className="flex flex-col gap-2 mb-5">
+                <label htmlFor="gift_registry_url" className="font-semibold text-black">Gift Registry Link (optional)</label>
+                <p className="text-[0.8rem] text-[#888] -mt-1">Paste a link to your Amazon wishlist, Target registry, Babylist, etc. Guests will see a button to view it.</p>
+                <input type="url" id="gift_registry_url" value={giftRegistryUrl} onChange={e => setGiftRegistryUrl(e.target.value)} placeholder="https://www.amazon.com/hz/wishlist/..." className={inputClass} />
               </div>
 
               <button type="submit" className="btn btn-primary py-4 px-10 text-[1.1rem] disabled:opacity-60 disabled:cursor-not-allowed" disabled={saving}>

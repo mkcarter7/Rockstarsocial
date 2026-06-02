@@ -39,12 +39,18 @@ const PartyGuestbook = ({ slug }) => {
 
   const color = party?.theme_color || '#ff6b9d';
   const secondaryColor = party?.secondary_color || '#ffffff';
+  const heroStyle = party?.banner_image
+    ? { backgroundImage: `url(${party.banner_image})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+    : { background: color };
   if (loading) return <div className="text-center py-[60px] px-5">Loading...</div>;
 
   return (
     <div className="min-h-screen" style={{ background: secondaryColor }}>
-      <div className="py-[50px] pb-10 text-white" style={{ background: color }}>
-        <div className="container">
+      <div className="py-[50px] pb-10 text-white relative overflow-hidden" style={heroStyle}>
+        {party?.banner_image && (
+          <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.45)' }} />
+        )}
+        <div className="container relative z-[1]">
           <Link href={`/${slug}`} className="text-[rgba(255,255,255,0.85)] no-underline text-[0.9rem] inline-block mb-[10px] hover:text-white">← Back to Party</Link>
           <h1 className="text-[2rem] my-[10px] mb-[5px] text-white">📖 Guest Book</h1>
           <p className="opacity-90 m-0">Leave a message for {party?.birthday_person_name}</p>

@@ -253,6 +253,9 @@ const PartyGifts = ({ slug }) => {
 
   const color = party?.theme_color || '#ff6b9d';
   const secondaryColor = party?.secondary_color || '#ffffff';
+  const heroStyle = party?.banner_image
+    ? { backgroundImage: `url(${party.banner_image})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+    : { background: color };
 
   if (loading) return <div className="text-center py-[60px] px-5">Loading...</div>;
 
@@ -263,10 +266,13 @@ const PartyGifts = ({ slug }) => {
     <div className="min-h-screen" style={{ background: secondaryColor }}>
       {/* Hero */}
       <div
-        className="py-[50px] pb-10 text-white"
-        style={{ background: color }}
+        className="py-[50px] pb-10 text-white relative overflow-hidden"
+        style={heroStyle}
       >
-        <div className="container">
+        {party?.banner_image && (
+          <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.45)' }} />
+        )}
+        <div className="container relative z-[1]">
           <Link
             href={`/birthday/${slug}`}
             className="text-[rgba(255,255,255,0.85)] no-underline text-[0.9rem] inline-block mb-[10px] hover:text-white"

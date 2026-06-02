@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { getBirthdayParty, getBirthdayPhotos } from '../api/api';
 
@@ -175,6 +175,7 @@ const WeatherWidget = ({ partyDate, locationAddress, themeColor, secondaryColor 
 const PhotoCarousel = ({ slug, themeColor, secondaryColor }) => {
   const [photos, setPhotos] = useState([]);
   const [idx, setIdx] = useState(0);
+  const timerRef = useRef(null);
 
   useEffect(() => {
     getBirthdayPhotos(slug)
@@ -182,10 +183,25 @@ const PhotoCarousel = ({ slug, themeColor, secondaryColor }) => {
       .catch(() => {});
   }, [slug]);
 
+  useEffect(() => {
+    if (photos.length <= 1) return;
+    timerRef.current = setInterval(() => {
+      setIdx(i => (i + 1) % photos.length);
+    }, 4000);
+    return () => clearInterval(timerRef.current);
+  }, [photos.length]);
+
   if (!photos.length) return null;
 
-  const prev = () => setIdx(i => (i - 1 + photos.length) % photos.length);
-  const next = () => setIdx(i => (i + 1) % photos.length);
+  const resetTimer = () => {
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setIdx(i => (i + 1) % photos.length);
+    }, 4000);
+  };
+
+  const prev = () => { setIdx(i => (i - 1 + photos.length) % photos.length); resetTimer(); };
+  const next = () => { setIdx(i => (i + 1) % photos.length); resetTimer(); };
   const photo = photos[idx];
 
   return (
@@ -232,7 +248,7 @@ const PhotoCarousel = ({ slug, themeColor, secondaryColor }) => {
                 {photos.map((_, i) => (
                   <button
                     key={i}
-                    onClick={() => setIdx(i)}
+                    onClick={() => { setIdx(i); resetTimer(); }}
                     aria-label={`Go to photo ${i + 1}`}
                     className="w-2 h-2 rounded-full transition-colors"
                     style={{ background: i === idx ? themeColor : '#ccc' }}

@@ -63,6 +63,7 @@ def _serialize_party(party, request=None):
         'welcome_message': party.welcome_message,
         'host_name': party.host_name,
         'theme_color': party.theme_color,
+        'secondary_color': party.secondary_color,
         'banner_image': banner_url,
         'expires_at': party.expires_at.isoformat(),
         'rsvp_count': party.rsvps.filter(status='yes').count(),
@@ -154,6 +155,7 @@ def party_setup(request):
             'host_name': party.host_name,
             'is_active': party.is_active,
             'theme_color': party.theme_color,
+            'secondary_color': party.secondary_color,
             'welcome_message': party.welcome_message,
             'party_time': party.party_time.strftime('%H:%M') if party.party_time else '',
             'location_name': party.location_name,
@@ -182,6 +184,8 @@ def party_setup(request):
 
     if 'theme_color' in request.data:
         party.theme_color = request.data['theme_color']
+    if 'secondary_color' in request.data:
+        party.secondary_color = request.data['secondary_color']
     if 'welcome_message' in request.data:
         party.welcome_message = request.data['welcome_message']
     if 'banner_image' in request.FILES:

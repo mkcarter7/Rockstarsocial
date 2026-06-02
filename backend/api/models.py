@@ -194,6 +194,7 @@ class BirthdayParty(models.Model):
     host_email = models.EmailField()
     host_name = models.CharField(max_length=200, blank=True)
     theme_color = models.CharField(max_length=7, default='#ff6b9d')
+    secondary_color = models.CharField(max_length=7, default='#ffffff', blank=True)
     banner_image = models.ImageField(upload_to='birthday/banners/', blank=True, null=True)
     party_time = models.TimeField(null=True, blank=True)
     location_name = models.CharField(max_length=200, blank=True)

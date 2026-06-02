@@ -70,7 +70,7 @@ const WMO_CODES = {
 
 const toF = c => Math.round(c * 9 / 5 + 32);
 
-const WeatherWidget = ({ partyDate, locationAddress, themeColor }) => {
+const WeatherWidget = ({ partyDate, locationAddress, themeColor, secondaryColor }) => {
   const [weather, setWeather] = useState(null);
   // 'loading' | 'ok' | 'too-far' | 'error'
   const [wStatus, setWStatus] = useState('loading');
@@ -133,7 +133,7 @@ const WeatherWidget = ({ partyDate, locationAddress, themeColor }) => {
   if (!locationAddress) return null;
 
   return (
-    <section className="py-10 bg-white">
+    <section className="py-10" style={{ background: secondaryColor }}>
       <div className="container" style={{ maxWidth: 620 }}>
         <h2 className="text-center text-[1.4rem] font-bold mb-5 text-[#333]">🌤️ Party Day Forecast</h2>
         <div className="rounded-[16px] border-2 p-8 text-center bg-[#fafcff]" style={{ borderColor: themeColor }}>
@@ -172,7 +172,7 @@ const WeatherWidget = ({ partyDate, locationAddress, themeColor }) => {
 
 // ─── Photo carousel ───────────────────────────────────────────────────────────
 
-const PhotoCarousel = ({ slug, themeColor }) => {
+const PhotoCarousel = ({ slug, themeColor, secondaryColor }) => {
   const [photos, setPhotos] = useState([]);
   const [idx, setIdx] = useState(0);
 
@@ -189,7 +189,7 @@ const PhotoCarousel = ({ slug, themeColor }) => {
   const photo = photos[idx];
 
   return (
-    <section className="py-12 bg-[#fafafa]">
+    <section className="py-12" style={{ background: secondaryColor }}>
       <div className="container">
         <h2 className="text-center text-[1.4rem] font-bold mb-6 text-[#333]">📸 Party Memories</h2>
         <div className="relative max-w-[700px] mx-auto">
@@ -321,14 +321,15 @@ const BirthdayParty = ({ slug }) => {
   );
 
   const color = party.theme_color || '#ff6b9d';
+  const secondaryColor = party.secondary_color || '#ffffff';
 
-  // Hero background: full image if provided, otherwise gradient
+  // Hero background: full image if provided, otherwise solid theme color
   const heroStyle = party.banner_image
     ? { backgroundImage: `url(${party.banner_image})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-    : { background: `linear-gradient(135deg, ${color} 0%, #c850c0 100%)` };
+    : { background: color };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" style={{ background: secondaryColor }}>
 
       {/* ── Hero ── */}
       <section className="relative text-white py-[80px] text-center overflow-hidden" style={heroStyle}>
@@ -345,7 +346,7 @@ const BirthdayParty = ({ slug }) => {
       </section>
 
       {/* ── Nav links ── */}
-      <section className="py-10 bg-[#fafafa]">
+      <section className="py-10" style={{ background: secondaryColor }}>
         <div className="container">
           <div className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-5">
             {[
@@ -371,7 +372,7 @@ const BirthdayParty = ({ slug }) => {
 
       {/* ── Party Details ── */}
       {(party.party_date || party.party_time || party.location_name || party.location_address) && (
-        <section className="py-10 bg-white">
+        <section className="py-10" style={{ background: secondaryColor }}>
           <div className="container" style={{ maxWidth: 620 }}>
             <h2 className="text-center text-[1.4rem] font-bold mb-5 text-[#333]">🎉 Event Details</h2>
             <div className="rounded-[16px] border-2 overflow-hidden" style={{ borderColor: color }}>
@@ -402,11 +403,11 @@ const BirthdayParty = ({ slug }) => {
       )}
 
       {/* ── Weather widget ── */}
-      <WeatherWidget partyDate={party.party_date} locationAddress={party.location_address} themeColor={color} />
+      <WeatherWidget partyDate={party.party_date} locationAddress={party.location_address} themeColor={color} secondaryColor={secondaryColor} />
 
       {/* ── Map ── */}
       {party.location_address && (
-        <section className="bg-white pb-10">
+        <section className="pb-10" style={{ background: secondaryColor }}>
           <div className="container" style={{ maxWidth: 800 }}>
             <h2 className="text-center text-[1.4rem] font-bold mb-5 text-[#333]">🗺️ Getting There</h2>
             <div className="rounded-[14px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.1)] border-2" style={{ borderColor: color }}>
@@ -437,7 +438,7 @@ const BirthdayParty = ({ slug }) => {
       )}
 
       {/* ── Photo carousel ── */}
-      <PhotoCarousel slug={slug} themeColor={color} />
+      <PhotoCarousel slug={slug} themeColor={color} secondaryColor={secondaryColor} />
 
       {/* ── Footer ── */}
       <div className="text-center py-[30px] text-[#999] text-[0.85rem]">

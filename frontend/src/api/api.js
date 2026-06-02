@@ -65,6 +65,17 @@ export const getBirthdayTrivia = (slug) => api.get(`/birthday/${slug}/trivia/`);
 export const addTriviaQuestion = (slug, data) => api.post(`/birthday/${slug}/trivia/`, data);
 export const submitTriviaAnswers = (slug, data) => api.post(`/birthday/${slug}/trivia/submit/`, data);
 export const getTriviaLeaderboard = (slug) => api.get(`/birthday/${slug}/trivia/leaderboard/`);
+export const getBirthdayGifts = (slug, sessionToken = null) =>
+  sessionToken
+    ? api.get(`/birthday/${slug}/gifts/?session_token=${sessionToken}`)
+    : api.get(`/birthday/${slug}/gifts/`);
+export const addGiftItem = (slug, data) => api.post(`/birthday/${slug}/gifts/`, data);
+export const claimGiftItem = (slug, giftId, claimerName) =>
+  api.post(`/birthday/${slug}/gifts/${giftId}/claim/`, { claimer_name: claimerName });
+export const unclaimGiftItem = (slug, giftId, sessionToken) =>
+  api.post(`/birthday/${slug}/gifts/${giftId}/`, { session_token: sessionToken });
+export const deleteGiftItem = (slug, giftId, sessionToken) =>
+  api.delete(`/birthday/${slug}/gifts/${giftId}/?session_token=${sessionToken}`);
 
 // Admin — Event pages (all types: birthday, wedding, etc.)
 export const getAdminEventPages = (token) => api.get('/admin/event-pages/', { headers: { Authorization: `Bearer ${token}` } });

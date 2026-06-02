@@ -353,6 +353,7 @@ const BirthdayParty = ({ slug }) => {
               { href: `/birthday/${slug}/guestbook`, icon: '📖', label: 'Guest Book' },
               { href: `/birthday/${slug}/rsvp`, icon: '✅', label: 'RSVP' },
               { href: `/birthday/${slug}/trivia`, icon: '🎯', label: 'Trivia' },
+              { href: `/birthday/${slug}/gifts`, icon: '🎁', label: 'Gift Registry' },
             ].map(({ href, icon, label }) => (
               <Link
                 key={label}

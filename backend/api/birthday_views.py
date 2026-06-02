@@ -13,7 +13,7 @@ from rest_framework import status
 from django.contrib.auth.hashers import make_password
 from .models import (
     BirthdayParty, HostAccount, PartyPhoto, GuestBookEntry,
-    PartyRSVP, TriviaQuestion, TriviaScore
+    PartyRSVP, TriviaQuestion, TriviaScore, GiftItem
 )
 from .host_auth_views import verify_host_session_by_token_str
 
@@ -579,3 +579,117 @@ def admin_reset_host_password(request, account_id):
     account.password = make_password(new_password)
     account.save(update_fields=['password'])
     return Response({'message': f'Password reset for {account.email}'})
+
+
+# ─── Gift Registry ─────────────────────────────────────────────────────────────
+
+def _serialize_gift(gift, is_host=False):
+    return {
+        'id': gift.id,
+        'title': gift.title,
+        'description': gift.description,
+        'link_url': gift.link_url,
+        'price': str(gift.price) if gift.price is not None else None,
+        'claimed': bool(gift.claimed_by),
+        'claimed_by': gift.claimed_by if is_host else None,
+        'claimed_at': gift.claimed_at.isoformat() if gift.claimed_at else None,
+        'order': gift.order,
+        'created_at': gift.created_at.isoformat(),
+    }
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+def party_gifts(request, slug):
+    party, err = _get_party_or_404(slug)
+    if err:
+        return Response(err, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        session_token = request.query_params.get('session_token', '')
+        is_host = False
+        if session_token:
+            _, token_err = verify_host_session_by_token_str(session_token, slug)
+            is_host = (token_err is None)
+        return Response([_serialize_gift(g, is_host=is_host) for g in party.gift_items.all()])
+
+    # POST — host only
+    session_token = request.data.get('session_token', '')
+    _, token_err = verify_host_session_by_token_str(session_token, slug)
+    if token_err:
+        return Response({'error': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
+
+    title = request.data.get('title', '').strip()
+    if not title:
+        return Response({'error': 'title is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    price = request.data.get('price')
+    if price not in (None, ''):
+        try:
+            price = float(price)
+            if price < 0:
+                return Response({'error': 'price must be a positive number'}, status=status.HTTP_400_BAD_REQUEST)
+        except (ValueError, TypeError):
+            return Response({'error': 'price must be a valid number'}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        price = None
+
+    gift = GiftItem.objects.create(
+        party=party,
+        title=title,
+        description=request.data.get('description', '').strip(),
+        link_url=request.data.get('link_url', '').strip(),
+        price=price,
+        order=party.gift_items.count(),
+    )
+    return Response(_serialize_gift(gift, is_host=True), status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def claim_gift(request, slug, gift_id):
+    party, err = _get_party_or_404(slug)
+    if err:
+        return Response(err, status=status.HTTP_404_NOT_FOUND)
+    try:
+        gift = GiftItem.objects.get(id=gift_id, party=party)
+    except GiftItem.DoesNotExist:
+        return Response({'error': 'Gift not found'}, status=status.HTTP_404_NOT_FOUND)
+    if gift.claimed_by:
+        return Response({'error': 'This gift has already been claimed'}, status=status.HTTP_400_BAD_REQUEST)
+    claimer_name = request.data.get('claimer_name', '').strip()
+    if not claimer_name:
+        return Response({'error': 'claimer_name is required'}, status=status.HTTP_400_BAD_REQUEST)
+    from django.utils import timezone as tz
+    gift.claimed_by = claimer_name
+    gift.claimed_at = tz.now()
+    gift.save(update_fields=['claimed_by', 'claimed_at'])
+    return Response(_serialize_gift(gift, is_host=False))
+
+
+@api_view(['POST', 'DELETE'])
+@permission_classes([AllowAny])
+def manage_gift(request, slug, gift_id):
+    party, err = _get_party_or_404(slug)
+    if err:
+        return Response(err, status=status.HTTP_404_NOT_FOUND)
+    session_token = (
+        request.query_params.get('session_token', '')
+        if request.method == 'DELETE'
+        else request.data.get('session_token', '')
+    )
+    _, token_err = verify_host_session_by_token_str(session_token, slug)
+    if token_err:
+        return Response({'error': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
+    try:
+        gift = GiftItem.objects.get(id=gift_id, party=party)
+    except GiftItem.DoesNotExist:
+        return Response({'error': 'Gift not found'}, status=status.HTTP_404_NOT_FOUND)
+    if request.method == 'DELETE':
+        gift.delete()
+        return Response({'message': 'Gift deleted'})
+    # POST — unclaim
+    gift.claimed_by = ''
+    gift.claimed_at = None
+    gift.save(update_fields=['claimed_by', 'claimed_at'])
+    return Response(_serialize_gift(gift, is_host=True))

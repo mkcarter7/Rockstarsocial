@@ -18,6 +18,7 @@ from .birthday_views import (
     trivia_leaderboard, admin_birthday_parties,
     admin_event_pages, admin_delete_event_page,
     admin_host_accounts, admin_reset_host_password,
+    party_gifts, claim_gift, manage_gift,
 )
 from .host_auth_views import request_magic_link, verify_magic_link, host_party_stats, host_login, switch_party, change_password
 
@@ -64,6 +65,9 @@ urlpatterns = [
     path('birthday/<slug:slug>/trivia/', party_trivia, name='birthday-trivia'),
     path('birthday/<slug:slug>/trivia/submit/', submit_trivia, name='birthday-trivia-submit'),
     path('birthday/<slug:slug>/trivia/leaderboard/', trivia_leaderboard, name='birthday-leaderboard'),
+    path('birthday/<slug:slug>/gifts/', party_gifts, name='birthday-gifts'),
+    path('birthday/<slug:slug>/gifts/<int:gift_id>/claim/', claim_gift, name='birthday-gift-claim'),
+    path('birthday/<slug:slug>/gifts/<int:gift_id>/', manage_gift, name='birthday-gift-manage'),
     path('admin/birthday-parties/', admin_birthday_parties, name='admin-birthday-parties'),
     path('admin/event-pages/', admin_event_pages, name='admin-event-pages'),
     path('admin/event-pages/<str:event_type>/<int:page_id>/', admin_delete_event_page, name='admin-delete-event-page'),

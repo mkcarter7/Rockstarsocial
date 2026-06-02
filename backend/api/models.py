@@ -303,6 +303,24 @@ class TriviaScore(models.Model):
         return f"{self.player_name} - {self.score} pts ({self.party.slug})"
 
 
+class GiftItem(models.Model):
+    party = models.ForeignKey(BirthdayParty, on_delete=models.CASCADE, related_name='gift_items')
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    link_url = models.URLField(blank=True)
+    price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    claimed_by = models.CharField(max_length=100, blank=True)
+    claimed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'created_at']
+
+    def __str__(self):
+        return f"{self.title} ({self.party.slug})"
+
+
 class HostAccessToken(models.Model):
     TOKEN_TYPES = [('magic_link', 'Magic Link'), ('session', 'Session')]
     party = models.ForeignKey(BirthdayParty, on_delete=models.CASCADE, related_name='access_tokens')

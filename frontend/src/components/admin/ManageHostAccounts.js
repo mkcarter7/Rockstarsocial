@@ -100,7 +100,7 @@ const ManageHostAccounts = () => {
                         {account.parties.map(p => (
                           <a
                             key={p.slug}
-                            href={`/birthday/${p.slug}`}
+                            href={`/${p.slug}`}
                             target="_blank"
                             rel="noreferrer"
                             className="font-mono text-[0.8rem] text-brand hover:underline"

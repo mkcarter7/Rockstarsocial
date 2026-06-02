@@ -86,8 +86,8 @@ const ManageEventPages = () => {
                   </td>
                   <td className="py-3 px-4 border-b border-[#eee] align-middle">{page.name}</td>
                   <td className="py-3 px-4 border-b border-[#eee] align-middle">
-                    <a href={`/birthday/${page.slug}`} target="_blank" rel="noreferrer" className="text-brand no-underline font-mono hover:underline">
-                      /birthday/{page.slug}
+                    <a href={`/${page.slug}`} target="_blank" rel="noreferrer" className="text-brand no-underline font-mono hover:underline">
+                      /{page.slug}
                     </a>
                   </td>
                   <td className="py-3 px-4 border-b border-[#eee] align-middle">{page.host_email}</td>

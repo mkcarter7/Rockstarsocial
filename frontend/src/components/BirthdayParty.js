@@ -349,11 +349,11 @@ const BirthdayParty = ({ slug }) => {
         <div className="container">
           <div className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-5">
             {[
-              { href: `/birthday/${slug}/photos`, icon: '📸', label: 'Photos' },
-              { href: `/birthday/${slug}/guestbook`, icon: '📖', label: 'Guest Book' },
-              { href: `/birthday/${slug}/rsvp`, icon: '✅', label: 'RSVP' },
-              { href: `/birthday/${slug}/trivia`, icon: '🎯', label: 'Trivia' },
-              { href: `/birthday/${slug}/gifts`, icon: '🎁', label: 'Gift Registry' },
+              { href: `/${slug}/photos`, icon: '📸', label: 'Photos' },
+              { href: `/${slug}/guestbook`, icon: '📖', label: 'Guest Book' },
+              { href: `/${slug}/rsvp`, icon: '✅', label: 'RSVP' },
+              { href: `/${slug}/trivia`, icon: '🎯', label: 'Trivia' },
+              { href: `/${slug}/gifts`, icon: '🎁', label: 'Gift Registry' },
             ].map(({ href, icon, label }) => (
               <Link
                 key={label}

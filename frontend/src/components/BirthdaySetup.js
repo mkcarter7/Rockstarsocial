@@ -71,7 +71,7 @@ const BirthdaySetup = () => {
     formData.append('location_address', locationAddress);
     try {
       await saveBirthdaySetup(formData);
-      router.push(`/birthday/${party.slug}`);
+      router.push(`/${party.slug}`);
     } catch {
       setError('Failed to save. Please try again.');
       setSaving(false);
@@ -127,8 +127,8 @@ const BirthdaySetup = () => {
 
               <div className="bg-[#fff8ff] border-2 border-[#ff6b9d] rounded-[8px] p-5 mb-[30px] text-center">
                 <h3 className="mb-[10px] text-[#333]">Your page URL:</h3>
-                <a href={`/birthday/${party?.slug}`} target="_blank" rel="noreferrer" className="inline-block text-base text-[#ff6b9d] font-semibold break-all mb-[10px]">
-                  1rockstarsocial.com/birthday/{party?.slug}
+                <a href={`/${party?.slug}`} target="_blank" rel="noreferrer" className="inline-block text-base text-[#ff6b9d] font-semibold break-all mb-[10px]">
+                  1rockstarsocial.com/{party?.slug}
                 </a>
                 <p className="text-[0.85rem] text-[#888] m-0">Customize your page below, then click Save to make it live.</p>
               </div>

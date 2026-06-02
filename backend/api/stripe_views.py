@@ -483,7 +483,7 @@ def create_birthday_checkout(request):
                     'currency': 'usd',
                     'product_data': {
                         'name': f"Birthday Party Page — {birthday_person_name}",
-                        'description': f"Your custom birthday party page at 1rockstarsocial.com/birthday/{slug}",
+                        'description': f"Your custom birthday party page at 1rockstarsocial.com/{slug}",
                     },
                     'unit_amount': price_cents,
                 },

@@ -44,7 +44,7 @@ const PartyGuestbook = ({ slug }) => {
     <div className="min-h-screen">
       <div className="py-[50px] pb-10 text-white" style={{ background: `linear-gradient(135deg, ${color} 0%, #c850c0 100%)` }}>
         <div className="container">
-          <Link href={`/birthday/${slug}`} className="text-[rgba(255,255,255,0.85)] no-underline text-[0.9rem] inline-block mb-[10px] hover:text-white">← Back to Party</Link>
+          <Link href={`/${slug}`} className="text-[rgba(255,255,255,0.85)] no-underline text-[0.9rem] inline-block mb-[10px] hover:text-white">← Back to Party</Link>
           <h1 className="text-[2rem] my-[10px] mb-[5px] text-white">📖 Guest Book</h1>
           <p className="opacity-90 m-0">Leave a message for {party?.birthday_person_name}</p>
         </div>

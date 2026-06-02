@@ -9,7 +9,7 @@ const FEATURES = [
   { icon: '📖', title: 'Guest Book', desc: 'Let guests leave heartfelt messages and wishes for the birthday person to read and keep forever.' },
   { icon: '✅', title: 'RSVP', desc: "Guests can RSVP yes, no, or maybe. See at a glance who's coming and how many people to expect." },
   { icon: '🎯', title: 'Trivia Game', desc: 'Create custom trivia questions about the birthday person. Guests compete for the top spot on the leaderboard.' },
-  { icon: '🔗', title: 'Your Own URL', desc: <span>Choose a custom URL like <strong>1rockstarsocial.com/birthday/kate-smith</strong> that's easy to share with everyone.</span> },
+  { icon: '🔗', title: 'Your Own URL', desc: <span>Choose a custom URL like <strong>1rockstarsocial.com/kate-smith</strong> that's easy to share with everyone.</span> },
 ];
 
 const BirthdayLanding = () => {

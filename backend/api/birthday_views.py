@@ -80,7 +80,7 @@ def _send_welcome_email(party):
             message=(
                 f"Hi {party.host_name or 'there'},\n\n"
                 f"Your birthday party page is now live!\n\n"
-                f"🎂 Party page: {frontend_url}/birthday/{party.slug}\n\n"
+                f"🎂 Party page: {frontend_url}/{party.slug}\n\n"
                 f"Share this link with your guests so they can RSVP, sign the guestbook, "
                 f"upload photos, and play trivia.\n\n"
                 f"To manage your party page anytime (edit colors, welcome message, or add trivia), visit:\n"

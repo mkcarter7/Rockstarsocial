@@ -116,7 +116,7 @@ const HostDashboard = () => {
                 >
                   <div className="font-bold text-[1.1rem] text-[#333]">🎂 {p.birthday_person_name}</div>
                   <div className="text-[#888] text-[0.9rem] mt-1">{formatDate(p.party_date)}</div>
-                  <div className="text-[#ff6b9d] text-[0.85rem] mt-1">1rockstarsocial.com/birthday/{p.slug}</div>
+                  <div className="text-[#ff6b9d] text-[0.85rem] mt-1">1rockstarsocial.com/{p.slug}</div>
                 </button>
               ))}
             </div>
@@ -179,7 +179,7 @@ const HostDashboard = () => {
 
           <div className="flex flex-col gap-4">
             <Link
-              href={`/birthday/${hostSlug}`}
+              href={`/${hostSlug}`}
               className="flex items-center justify-center gap-2 bg-white border-2 rounded-[10px] py-4 px-6 font-semibold text-[#333] hover:-translate-y-[2px] hover:shadow-md transition-[transform,box-shadow]"
               style={{ borderColor: color }}
             >

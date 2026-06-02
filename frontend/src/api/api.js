@@ -77,4 +77,13 @@ export const verifyHostToken = (token) => api.get(`/host/verify-token/?token=${t
 export const getHostPartyStats = (slug, hostToken) =>
   api.get(`/host/party/${slug}/`, { headers: { 'X-Host-Token': hostToken } });
 
+export const changeHostPassword = (newPassword, hostToken) =>
+  api.post('/host/change-password/', { new_password: newPassword }, { headers: { 'X-Host-Token': hostToken } });
+
+export const getAdminHostAccounts = (token) =>
+  api.get('/admin/host-accounts/', { headers: { Authorization: `Bearer ${token}` } });
+
+export const adminResetHostPassword = (accountId, newPassword, token) =>
+  api.post(`/admin/host-accounts/${accountId}/reset-password/`, { new_password: newPassword }, { headers: { Authorization: `Bearer ${token}` } });
+
 export default api;

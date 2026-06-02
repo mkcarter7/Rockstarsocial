@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getHostPartyStats } from '../api/api';
+import { getHostPartyStats, changeHostPassword } from '../api/api';
 
 const StatCard = ({ icon, label, value, color }) => (
   <div className="bg-white rounded-[12px] border-2 p-6 text-center" style={{ borderColor: color }}>
@@ -21,6 +21,9 @@ const HostDashboard = () => {
   const [hostToken, setHostToken] = useState('');
   const [hostSlug, setHostSlug] = useState('');
   const [allParties, setAllParties] = useState(null);
+  const [showChangePw, setShowChangePw] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [pwStatus, setPwStatus] = useState({ type: '', message: '' });
 
   const loadParty = (slug, token) => {
     setLoading(true);
@@ -63,6 +66,23 @@ const HostDashboard = () => {
     setHostSlug(slug);
     setAllParties(null);
     loadParty(slug, hostToken);
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPwStatus({ type: '', message: '' });
+    if (newPassword.length < 8) {
+      setPwStatus({ type: 'error', message: 'Password must be at least 8 characters.' });
+      return;
+    }
+    try {
+      await changeHostPassword(newPassword, hostToken);
+      setPwStatus({ type: 'success', message: 'Password updated successfully!' });
+      setNewPassword('');
+      setShowChangePw(false);
+    } catch (err) {
+      setPwStatus({ type: 'error', message: err?.response?.data?.error || 'Could not update password. Please try again.' });
+    }
   };
 
   const handleLogout = () => {
@@ -174,9 +194,44 @@ const HostDashboard = () => {
               ✏️ Edit Party (colors, message, trivia)
             </Link>
 
+            <div className="mt-2">
+              <button
+                onClick={() => { setShowChangePw(!showChangePw); setPwStatus({ type: '', message: '' }); }}
+                className="text-[#999] text-[0.9rem] underline hover:text-[#666] transition-colors"
+              >
+                {showChangePw ? 'Cancel' : 'Change password'}
+              </button>
+
+              {showChangePw && (
+                <form onSubmit={handleChangePassword} className="mt-3 flex flex-col gap-2">
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    placeholder="New password (min 8 characters)"
+                    className="border border-[#ddd] rounded-[8px] px-4 py-2 text-[0.95rem] w-full"
+                    minLength={8}
+                    required
+                  />
+                  {pwStatus.message && (
+                    <p className={`text-[0.85rem] ${pwStatus.type === 'error' ? 'text-[#c53030]' : 'text-[#276749]'}`}>
+                      {pwStatus.message}
+                    </p>
+                  )}
+                  <button
+                    type="submit"
+                    className="text-white rounded-[8px] py-2 px-5 font-semibold text-[0.9rem] hover:opacity-90 transition-opacity"
+                    style={{ background: color }}
+                  >
+                    Save new password
+                  </button>
+                </form>
+              )}
+            </div>
+
             <button
               onClick={handleLogout}
-              className="text-[#999] text-[0.9rem] underline hover:text-[#666] transition-colors mt-2"
+              className="text-[#999] text-[0.9rem] underline hover:text-[#666] transition-colors mt-1"
             >
               Log out
             </button>

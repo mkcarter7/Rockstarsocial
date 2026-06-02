@@ -152,6 +152,9 @@ const Dashboard = () => {
             <button className="bg-brand text-white border-none py-3 px-6 rounded-[5px] text-base font-semibold cursor-pointer transition-colors duration-300 relative hover:bg-brand-dark" onClick={() => router.push('/admin/birthday-parties')}>
               Manage Event Pages
             </button>
+            <button className="bg-brand text-white border-none py-3 px-6 rounded-[5px] text-base font-semibold cursor-pointer transition-colors duration-300 relative hover:bg-brand-dark" onClick={() => router.push('/admin/host-accounts')}>
+              Host Accounts
+            </button>
           </div>
         </div>
       </div>

@@ -218,6 +218,75 @@ def host_login(request):
     })
 
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def switch_party(request):
+    """
+    POST /api/host/switch-party/
+    Body: { email, password, party_slug }
+    Returns a new 30-day session token scoped to a different party on the same account.
+    """
+    email = request.data.get('email', '').strip().lower()
+    password = request.data.get('password', '')
+    party_slug = request.data.get('party_slug', '').strip()
+
+    if not all([email, password, party_slug]):
+        return Response({'error': 'email, password, and party_slug are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        account = HostAccount.objects.get(email=email)
+    except HostAccount.DoesNotExist:
+        return Response({'error': 'Invalid email or password'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    if not check_password(password, account.password):
+        return Response({'error': 'Invalid email or password'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        party = account.parties.get(slug=party_slug, is_active=True)
+    except BirthdayParty.DoesNotExist:
+        return Response({'error': 'Party not found on this account'}, status=status.HTTP_404_NOT_FOUND)
+
+    session_token = HostAccessToken.objects.create(
+        party=party,
+        token_type='session',
+        expires_at=timezone.now() + timedelta(days=30),
+    )
+
+    return Response({
+        'session_token': str(session_token.token),
+        'party_slug': party.slug,
+    })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def change_password(request):
+    """
+    POST /api/host/change-password/
+    Header: X-Host-Token: <session_token>
+    Body: { "new_password": "..." }
+    Lets an authenticated host set a new password on their account.
+    """
+    from django.contrib.auth.hashers import make_password as _make_password
+    token_str = request.headers.get('X-Host-Token', '').strip()
+    party, err = verify_host_session_by_token_str(token_str)
+    if err:
+        return Response(err, status=status.HTTP_401_UNAUTHORIZED)
+
+    new_password = request.data.get('new_password', '').strip()
+    if not new_password or len(new_password) < 8:
+        return Response({'error': 'Password must be at least 8 characters'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        account = HostAccount.objects.get(email__iexact=party.host_email)
+    except HostAccount.DoesNotExist:
+        return Response({'error': 'No account found for this party'}, status=status.HTTP_404_NOT_FOUND)
+
+    account.password = _make_password(new_password)
+    account.save(update_fields=['password'])
+    return Response({'message': 'Password updated successfully'})
+
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def host_party_stats(request, slug):

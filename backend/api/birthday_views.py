@@ -10,8 +10,9 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
+from django.contrib.auth.hashers import make_password
 from .models import (
-    BirthdayParty, PartyPhoto, GuestBookEntry,
+    BirthdayParty, HostAccount, PartyPhoto, GuestBookEntry,
     PartyRSVP, TriviaQuestion, TriviaScore
 )
 from .host_auth_views import verify_host_session_by_token_str
@@ -19,15 +20,23 @@ from .host_auth_views import verify_host_session_by_token_str
 logger = logging.getLogger(__name__)
 
 
+def _delete_party_and_maybe_account(party):
+    """Delete a party, then delete its HostAccount if it owns no other parties."""
+    host_account = party.host_account
+    party.delete()
+    if host_account is not None and not host_account.parties.exists():
+        host_account.delete()
+
+
 def _get_party_or_404(slug):
     """Return party if active and not expired, else None with error dict."""
     try:
-        party = BirthdayParty.objects.get(slug=slug)
+        party = BirthdayParty.objects.select_related('host_account').get(slug=slug)
     except BirthdayParty.DoesNotExist:
         return None, {'error': 'Party not found'}
 
     if party.is_expired:
-        party.delete()
+        _delete_party_and_maybe_account(party)
         return None, {'error': 'This party has expired'}
 
     if not party.is_active:
@@ -490,11 +499,14 @@ def admin_delete_event_page(request, event_type, page_id):
         return Response({'error': f'Unknown event type: {event_type}'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        page = Model.objects.get(id=page_id)
+        page = Model.objects.select_related('host_account').get(id=page_id) if Model is BirthdayParty else Model.objects.get(id=page_id)
     except Model.DoesNotExist:
         return Response({'error': 'Event page not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    page.delete()
+    if Model is BirthdayParty:
+        _delete_party_and_maybe_account(page)
+    else:
+        page.delete()
     return Response({'message': 'Event page deleted'}, status=status.HTTP_200_OK)
 
 
@@ -509,14 +521,61 @@ def admin_birthday_parties(request):
 def cleanup_expired_parties():
     """Delete all expired parties. Call from a management command or scheduled task."""
     deleted = 0
-    for party in BirthdayParty.objects.filter(is_active=True):
+    for party in BirthdayParty.objects.filter(is_active=True).select_related('host_account'):
         if party.is_expired:
-            party.delete()
+            _delete_party_and_maybe_account(party)
             deleted += 1
     # Also clean up abandoned checkouts older than 24 hours
     from django.utils import timezone
     cutoff = timezone.now() - timedelta(hours=24)
-    abandoned = BirthdayParty.objects.filter(is_active=False, created_at__lt=cutoff)
-    abandoned_count = abandoned.count()
-    abandoned.delete()
+    abandoned = list(BirthdayParty.objects.filter(is_active=False, created_at__lt=cutoff).select_related('host_account'))
+    abandoned_count = len(abandoned)
+    for party in abandoned:
+        _delete_party_and_maybe_account(party)
     return deleted, abandoned_count
+
+
+# ─── Admin: host account management ──────────────────────────────────────────
+
+@api_view(['GET'])
+def admin_host_accounts(request):
+    """Firebase-protected: list all host accounts with their parties."""
+    from .firebase_auth import get_firebase_user
+    if not get_firebase_user(request):
+        return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    accounts = HostAccount.objects.prefetch_related('parties').order_by('-created_at')
+    data = []
+    for account in accounts:
+        parties = list(
+            account.parties.values('id', 'slug', 'birthday_person_name', 'party_date', 'is_active', 'created_at')
+        )
+        data.append({
+            'id': account.id,
+            'email': account.email,
+            'created_at': account.created_at.isoformat(),
+            'party_count': len(parties),
+            'parties': parties,
+        })
+    return Response(data)
+
+
+@api_view(['POST'])
+def admin_reset_host_password(request, account_id):
+    """Firebase-protected: set a new password for a host account."""
+    from .firebase_auth import get_firebase_user
+    if not get_firebase_user(request):
+        return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    new_password = request.data.get('new_password', '').strip()
+    if not new_password or len(new_password) < 8:
+        return Response({'error': 'new_password must be at least 8 characters'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        account = HostAccount.objects.get(id=account_id)
+    except HostAccount.DoesNotExist:
+        return Response({'error': 'Host account not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    account.password = make_password(new_password)
+    account.save(update_fields=['password'])
+    return Response({'message': f'Password reset for {account.email}'})

@@ -17,8 +17,9 @@ from .birthday_views import (
     party_rsvp, party_trivia, submit_trivia,
     trivia_leaderboard, admin_birthday_parties,
     admin_event_pages, admin_delete_event_page,
+    admin_host_accounts, admin_reset_host_password,
 )
-from .host_auth_views import request_magic_link, verify_magic_link, host_party_stats, host_login
+from .host_auth_views import request_magic_link, verify_magic_link, host_party_stats, host_login, switch_party, change_password
 
 router = DefaultRouter()
 router.register(r'portfolio', PortfolioItemViewSet, basename='portfolio')
@@ -68,8 +69,13 @@ urlpatterns = [
     path('admin/event-pages/<str:event_type>/<int:page_id>/', admin_delete_event_page, name='admin-delete-event-page'),
     # Host auth
     path('host/login/', host_login, name='host-login'),
+    path('host/switch-party/', switch_party, name='host-switch-party'),
+    path('host/change-password/', change_password, name='host-change-password'),
     path('host/forgot-password/', request_magic_link, name='host-forgot-password'),
     path('host/request-access/', request_magic_link, name='host-request-access'),
     path('host/verify-token/', verify_magic_link, name='host-verify-token'),
     path('host/party/<slug:slug>/', host_party_stats, name='host-party-stats'),
+    # Admin: host account management
+    path('admin/host-accounts/', admin_host_accounts, name='admin-host-accounts'),
+    path('admin/host-accounts/<int:account_id>/reset-password/', admin_reset_host_password, name='admin-reset-host-password'),
 ]

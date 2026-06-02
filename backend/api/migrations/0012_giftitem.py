@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0011_update_birthday_theme_price'),
+        ('api', '0010_hostaccount_birthdayparty_host_account'),
     ]
 
     operations = [

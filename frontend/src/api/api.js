@@ -76,6 +76,8 @@ export const unclaimGiftItem = (slug, giftId, sessionToken) =>
   api.post(`/birthday/${slug}/gifts/${giftId}/`, { session_token: sessionToken });
 export const deleteGiftItem = (slug, giftId, sessionToken) =>
   api.delete(`/birthday/${slug}/gifts/${giftId}/?session_token=${sessionToken}`);
+export const saveGiftRegistryUrl = (url, sessionToken) =>
+  api.post('/birthday/setup/', { session_token: sessionToken, gift_registry_url: url });
 
 // Admin — Event pages (all types: birthday, wedding, etc.)
 export const getAdminEventPages = (token) => api.get('/admin/event-pages/', { headers: { Authorization: `Bearer ${token}` } });

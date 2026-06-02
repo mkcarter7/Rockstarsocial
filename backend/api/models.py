@@ -198,6 +198,7 @@ class BirthdayParty(models.Model):
     party_time = models.TimeField(null=True, blank=True)
     location_name = models.CharField(max_length=200, blank=True)
     location_address = models.TextField(blank=True)
+    gift_registry_url = models.URLField(blank=True)
     is_active = models.BooleanField(default=False)
     stripe_session_id = models.CharField(max_length=255, unique=True, blank=True, null=True)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)

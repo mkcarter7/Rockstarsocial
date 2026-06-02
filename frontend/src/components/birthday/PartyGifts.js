@@ -9,6 +9,7 @@ import {
   claimGiftItem,
   unclaimGiftItem,
   deleteGiftItem,
+  saveGiftRegistryUrl,
 } from '../../api/api';
 
 const featureInputClass =
@@ -306,11 +307,121 @@ const GiftCard = ({ gift, color, isHost, sessionToken, slug, onClaim, onUnclaim,
   );
 };
 
+// ─── External Registry Section ────────────────────────────────────────────────
+
+const ExternalRegistrySection = ({ registryUrl, color, isHost, sessionToken, onSaved }) => {
+  const [editing, setEditing] = useState(false);
+  const [url, setUrl] = useState(registryUrl || '');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setError('');
+    try {
+      await saveGiftRegistryUrl(url.trim(), sessionToken);
+      onSaved(url.trim());
+      setEditing(false);
+    } catch (err) {
+      setError(err?.response?.data?.error || 'Could not save. Please try again.');
+    }
+    setSaving(false);
+  };
+
+  if (!registryUrl && !isHost) return null;
+
+  return (
+    <div className="mb-8">
+      {registryUrl && (
+        <a
+          href={registryUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center justify-center gap-2 text-white font-semibold py-4 px-6 rounded-[12px] text-[1.05rem] hover:opacity-90 transition-opacity mb-3 no-underline"
+          style={{ background: color }}
+        >
+          🛍️ View Gift Registry →
+        </a>
+      )}
+
+      {isHost && !editing && (
+        <button
+          onClick={() => { setUrl(registryUrl || ''); setEditing(true); }}
+          className="text-[0.85rem] text-[#aaa] underline hover:text-[#666] transition-colors block mx-auto"
+        >
+          {registryUrl ? 'Edit registry link' : '+ Add external registry link (Amazon, Target, etc.)'}
+        </button>
+      )}
+
+      {isHost && editing && (
+        <div className="bg-white rounded-[12px] p-6 shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-[#eee]">
+          <p className="text-[0.9rem] text-[#666] mb-3">
+            Paste a link to your Amazon wishlist, Target registry, Babylist, or any other registry.
+          </p>
+          {error && (
+            <div className="py-2 px-4 rounded-[5px] mb-3 bg-[#fff5f5] text-[#c53030] border border-[#fed7d7] text-[0.9rem]">
+              {error}
+            </div>
+          )}
+          <form onSubmit={handleSave} className="flex flex-col gap-3">
+            <input
+              type="url"
+              placeholder="https://www.amazon.com/hz/wishlist/..."
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              autoFocus
+              className={featureInputClass}
+            />
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => { setEditing(false); setError(''); }}
+                className="flex-1 py-[10px] border-2 border-[#ddd] rounded-[6px] text-[#888] font-semibold hover:bg-[#f9f9f9] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex-1 py-[10px] text-white font-semibold rounded-[6px] disabled:opacity-60 hover:opacity-90 transition-opacity"
+                style={{ background: color }}
+              >
+                {saving ? 'Saving...' : 'Save Link'}
+              </button>
+            </div>
+            {registryUrl && (
+              <button
+                type="button"
+                onClick={async () => {
+                  setSaving(true);
+                  try {
+                    await saveGiftRegistryUrl('', sessionToken);
+                    onSaved('');
+                    setUrl('');
+                    setEditing(false);
+                  } catch { setError('Could not remove. Please try again.'); }
+                  setSaving(false);
+                }}
+                disabled={saving}
+                className="text-[0.8rem] text-[#bbb] underline hover:text-[#888] transition-colors disabled:opacity-50"
+              >
+                Remove registry link
+              </button>
+            )}
+          </form>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const PartyGifts = ({ slug }) => {
   const [party, setParty] = useState(null);
   const [gifts, setGifts] = useState([]);
+  const [registryUrl, setRegistryUrl] = useState('');
   const [loading, setLoading] = useState(true);
   const [isHost, setIsHost] = useState(false);
   const [sessionToken, setSessionToken] = useState('');
@@ -329,6 +440,7 @@ const PartyGifts = ({ slug }) => {
     ])
       .then(([partyRes, giftsRes]) => {
         setParty(partyRes.data);
+        setRegistryUrl(partyRes.data.gift_registry_url || '');
         setGifts(giftsRes.data);
         setLoading(false);
       })
@@ -372,6 +484,14 @@ const PartyGifts = ({ slug }) => {
 
       {/* Content */}
       <div className="container py-10">
+        <ExternalRegistrySection
+          registryUrl={registryUrl}
+          color={color}
+          isHost={isHost}
+          sessionToken={sessionToken}
+          onSaved={(newUrl) => setRegistryUrl(newUrl)}
+        />
+
         {isHost && (
           <AddGiftForm
             slug={slug}

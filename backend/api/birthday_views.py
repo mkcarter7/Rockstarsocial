@@ -66,6 +66,7 @@ def _serialize_party(party, request=None):
         'banner_image': banner_url,
         'expires_at': party.expires_at.isoformat(),
         'rsvp_count': party.rsvps.filter(status='yes').count(),
+        'gift_registry_url': party.gift_registry_url,
     }
 
 
@@ -157,6 +158,7 @@ def party_setup(request):
             'party_time': party.party_time.strftime('%H:%M') if party.party_time else '',
             'location_name': party.location_name,
             'location_address': party.location_address,
+            'gift_registry_url': party.gift_registry_url,
             'banner_image': request.build_absolute_uri(party.banner_image.url) if party.banner_image else None,
         })
 
@@ -190,6 +192,8 @@ def party_setup(request):
         party.location_name = request.data['location_name']
     if 'location_address' in request.data:
         party.location_address = request.data['location_address']
+    if 'gift_registry_url' in request.data:
+        party.gift_registry_url = request.data['gift_registry_url'].strip()
 
     if session_id:
         # First-time Stripe setup — activate the party

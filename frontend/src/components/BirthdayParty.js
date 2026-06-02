@@ -89,11 +89,29 @@ const WeatherWidget = ({ partyDate, locationAddress, themeColor }) => {
 
     (async () => {
       try {
-        const geoRes = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(locationAddress)}&format=json&limit=1`,
-          { headers: { 'Accept-Language': 'en' } }
-        );
-        const geoData = await geoRes.json();
+        // Nominatim chokes on newlines (from the textarea), so normalize to a single line.
+        const normalizedAddress = locationAddress.replace(/\s*\n\s*/g, ', ');
+
+        const tryGeocode = async (q) => {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`,
+            { headers: { 'Accept-Language': 'en' } }
+          );
+          return res.json();
+        };
+
+        let geoData = await tryGeocode(normalizedAddress);
+
+        // Rural addresses often aren't in OSM by street number. Fall back to the
+        // last two comma-separated chunks (e.g. "Bell Buckle, TN 37020") for a
+        // city-level approximation that still gives a useful forecast.
+        if (!geoData.length) {
+          const parts = normalizedAddress.split(',').map(s => s.trim()).filter(Boolean);
+          if (parts.length >= 2) {
+            geoData = await tryGeocode(parts.slice(-2).join(', '));
+          }
+        }
+
         if (!geoData.length) { setWStatus('error'); return; }
 
         const { lat, lon } = geoData[0];

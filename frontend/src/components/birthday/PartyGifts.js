@@ -5,15 +5,10 @@ import Link from 'next/link';
 import {
   getBirthdayParty,
   getBirthdayGifts,
-  addGiftItem,
   claimGiftItem,
   unclaimGiftItem,
   deleteGiftItem,
-  saveGiftRegistryUrl,
 } from '../../api/api';
-
-const featureInputClass =
-  'py-[10px] px-[14px] border border-[#ddd] rounded-[6px] text-[0.95rem] font-[inherit] w-full';
 
 // ─── Claim Modal ──────────────────────────────────────────────────────────────
 
@@ -85,111 +80,6 @@ const ClaimModal = ({ gift, color, slug, onClose, onClaimed }) => {
           </div>
         </form>
       </div>
-    </div>
-  );
-};
-
-// ─── Add Gift Form (host only) ────────────────────────────────────────────────
-
-const AddGiftForm = ({ slug, color, sessionToken, onAdded }) => {
-  const [form, setForm] = useState({ title: '', description: '', link_url: '', price: '' });
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [open, setOpen] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError('');
-    try {
-      const res = await addGiftItem(slug, { ...form, session_token: sessionToken });
-      onAdded(res.data);
-      setForm({ title: '', description: '', link_url: '', price: '' });
-      setOpen(false);
-    } catch (err) {
-      setError(err?.response?.data?.error || 'Could not add gift. Please try again.');
-    }
-    setSubmitting(false);
-  };
-
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        className="flex items-center gap-2 text-white font-semibold py-3 px-6 rounded-[8px] hover:opacity-90 transition-opacity mb-8"
-        style={{ background: color }}
-      >
-        + Add Gift to Registry
-      </button>
-    );
-  }
-
-  return (
-    <div className="bg-white rounded-[12px] p-[30px] shadow-[0_2px_12px_rgba(0,0,0,0.06)] mb-8">
-      <div className="flex justify-between items-center mb-5">
-        <h3 className="text-[1.2rem] m-0">Add a Gift</h3>
-        <button
-          onClick={() => setOpen(false)}
-          className="text-[#aaa] hover:text-[#666] text-[1.5rem] leading-none"
-        >
-          &times;
-        </button>
-      </div>
-      {error && (
-        <div className="py-2 px-4 rounded-[5px] mb-4 bg-[#fff5f5] text-[#c53030] border border-[#fed7d7] text-[0.9rem]">
-          {error}
-        </div>
-      )}
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <input
-          type="text"
-          placeholder="Gift title *"
-          value={form.title}
-          onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
-          required
-          className={featureInputClass}
-        />
-        <textarea
-          placeholder="Description (optional)"
-          value={form.description}
-          onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-          rows="2"
-          className={featureInputClass}
-        />
-        <input
-          type="url"
-          placeholder="Link to buy (optional, e.g. Amazon URL)"
-          value={form.link_url}
-          onChange={(e) => setForm((p) => ({ ...p, link_url: e.target.value }))}
-          className={featureInputClass}
-        />
-        <input
-          type="number"
-          placeholder="Price (optional)"
-          value={form.price}
-          min="0"
-          step="0.01"
-          onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))}
-          className={featureInputClass}
-        />
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="flex-1 py-[10px] border-2 border-[#ddd] rounded-[6px] text-[#888] font-semibold hover:bg-[#f9f9f9] transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={submitting}
-            className="flex-1 py-[10px] text-white font-semibold rounded-[6px] disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
-            style={{ background: color }}
-          >
-            {submitting ? 'Adding...' : 'Add Gift'}
-          </button>
-        </div>
-      </form>
     </div>
   );
 };
@@ -355,7 +245,6 @@ const PartyGifts = ({ slug }) => {
       .catch(() => setLoading(false));
   }, [slug]);
 
-  const handleGiftAdded = (newGift) => setGifts((prev) => [...prev, newGift]);
   const handleClaimed = (updatedGift) =>
     setGifts((prev) => prev.map((g) => (g.id === updatedGift.id ? updatedGift : g)));
   const handleUnclaimed = (updatedGift) =>
@@ -398,20 +287,9 @@ const PartyGifts = ({ slug }) => {
           color={color}
         />
 
-        {isHost && (
-          <AddGiftForm
-            slug={slug}
-            color={color}
-            sessionToken={sessionToken}
-            onAdded={handleGiftAdded}
-          />
-        )}
-
         {gifts.length === 0 ? (
           <div className="text-center py-[60px] px-5 text-[#888]">
-            {isHost
-              ? 'No gifts added yet. Add some above to get started!'
-              : 'No gifts have been added to the registry yet — check back soon!'}
+            No gifts have been added to the registry yet — check back soon!
           </div>
         ) : (
           <>

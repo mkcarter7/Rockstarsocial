@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getBirthdaySetup, saveBirthdaySetup, getBirthdayTrivia, addTriviaQuestion } from '../api/api';
+import { getBirthdaySetup, saveBirthdaySetup, getBirthdayTrivia, addTriviaQuestion, getBirthdayGifts, addGiftItem, deleteGiftItem } from '../api/api';
 
 const inputClass = "py-[10px] px-3 border border-[#ddd] rounded-[6px] text-[0.9rem] font-[inherit] outline-none focus:border-brand w-full";
 
@@ -33,6 +33,10 @@ const BirthdaySetup = () => {
   const [newQ, setNewQ] = useState(emptyQuestion);
   const [addingQ, setAddingQ] = useState(false);
   const [qError, setQError] = useState('');
+  const [gifts, setGifts] = useState([]);
+  const [giftForm, setGiftForm] = useState({ title: '', description: '', link_url: '', price: '' });
+  const [addingGift, setAddingGift] = useState(false);
+  const [giftError, setGiftError] = useState('');
 
   useEffect(() => {
     if (!sessionId && !sessionToken) {
@@ -51,7 +55,16 @@ const BirthdaySetup = () => {
         setLocationAddress(res.data.location_address || '');
         setGiftRegistryUrl(res.data.gift_registry_url || '');
         if (res.data.banner_image) setExistingBannerUrl(res.data.banner_image);
-        if (res.data.is_active) return getBirthdayTrivia(res.data.slug).then(tRes => setQuestions(tRes.data));
+        if (res.data.is_active) {
+          const token = isHostReturn ? sessionToken : null;
+          return Promise.all([
+            getBirthdayTrivia(res.data.slug),
+            getBirthdayGifts(res.data.slug, token),
+          ]).then(([tRes, gRes]) => {
+            setQuestions(tRes.data);
+            setGifts(gRes.data);
+          });
+        }
       })
       .catch(() => setError('Could not load your party. Please contact support.'))
       .finally(() => setLoading(false));
@@ -99,6 +112,29 @@ const BirthdaySetup = () => {
       setQError(err.response?.data?.error || 'Failed to add question. Please try again.');
     }
     setAddingQ(false);
+  };
+
+  const handleAddGift = async (e) => {
+    e.preventDefault();
+    setGiftError('');
+    setAddingGift(true);
+    try {
+      const res = await addGiftItem(party.slug, { ...giftForm, session_token: sessionToken });
+      setGifts(prev => [...prev, res.data]);
+      setGiftForm({ title: '', description: '', link_url: '', price: '' });
+    } catch (err) {
+      setGiftError(err.response?.data?.error || 'Failed to add gift. Please try again.');
+    }
+    setAddingGift(false);
+  };
+
+  const handleDeleteGift = async (giftId) => {
+    try {
+      await deleteGiftItem(party.slug, giftId, sessionToken);
+      setGifts(prev => prev.filter(g => g.id !== giftId));
+    } catch {
+      alert('Could not delete gift. Please try again.');
+    }
   };
 
   if (loading) return <div className="text-center py-[60px] px-5"><p>Loading your party...</p></div>;
@@ -221,6 +257,61 @@ const BirthdaySetup = () => {
             </form>
           </div>
 
+          <div className="flex flex-col gap-10">
+          <div className="bg-white rounded-[12px] p-[30px] shadow-[0_2px_15px_rgba(0,0,0,0.08)]">
+            <h2 className="mb-2">🎁 Gift Registry Items</h2>
+            <p className="text-[#666] text-[0.9rem] mb-5">
+              Add individual gifts guests can browse and claim on your gift registry page.
+            </p>
+
+            {giftError && (
+              <div className="py-[15px] px-5 rounded-[5px] mb-5 bg-[#fed7d7] text-[#742a2a] border border-[#fc8181]">{giftError}</div>
+            )}
+
+            {gifts.length > 0 && (
+              <div className="bg-[#f8f8f8] rounded-[8px] p-[15px] mb-5">
+                <h4 className="mb-[10px] text-[0.9rem] text-[#555]">{gifts.length} gift{gifts.length !== 1 ? 's' : ''} added:</h4>
+                {gifts.map(g => (
+                  <div key={g.id} className="flex items-center justify-between gap-3 py-[6px] border-b border-[#ececec] text-[0.9rem]">
+                    <div className="flex gap-2 items-baseline">
+                      <span className="text-[#444]">{g.title}</span>
+                      {g.price && <span className="text-[#ff6b9d] font-semibold">${parseFloat(g.price).toFixed(2)}</span>}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteGift(g.id)}
+                      className="text-[0.8rem] text-[#bbb] hover:text-[#c53030] underline transition-colors shrink-0"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <form onSubmit={handleAddGift} className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-black text-[0.9rem]">Gift Title *</label>
+                <input type="text" value={giftForm.title} onChange={e => setGiftForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g. Amazon Echo Dot" required className={inputClass} />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-black text-[0.9rem]">Description <span className="text-[#aaa] font-normal">(optional)</span></label>
+                <textarea value={giftForm.description} onChange={e => setGiftForm(p => ({ ...p, description: e.target.value }))} rows="2" placeholder="Any extra details..." className={inputClass} />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-black text-[0.9rem]">Link to Buy <span className="text-[#aaa] font-normal">(optional)</span></label>
+                <input type="url" value={giftForm.link_url} onChange={e => setGiftForm(p => ({ ...p, link_url: e.target.value }))} placeholder="https://amazon.com/..." className={inputClass} />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-black text-[0.9rem]">Price <span className="text-[#aaa] font-normal">(optional)</span></label>
+                <input type="number" value={giftForm.price} onChange={e => setGiftForm(p => ({ ...p, price: e.target.value }))} placeholder="0.00" min="0" step="0.01" className={inputClass} />
+              </div>
+              <button type="submit" className="btn btn-secondary disabled:opacity-60 disabled:cursor-not-allowed" disabled={addingGift}>
+                {addingGift ? 'Adding...' : '+ Add Gift'}
+              </button>
+            </form>
+          </div>
+
           <div className="bg-white rounded-[12px] p-[30px] shadow-[0_2px_15px_rgba(0,0,0,0.08)]">
             <h2 className="mb-2">🎯 Add Trivia Questions</h2>
             <p className="text-[#666] text-[0.9rem] mb-5">
@@ -276,6 +367,7 @@ const BirthdaySetup = () => {
                 {addingQ ? 'Adding...' : '+ Add Question'}
               </button>
             </form>
+          </div>
           </div>
         </div>
       </section>

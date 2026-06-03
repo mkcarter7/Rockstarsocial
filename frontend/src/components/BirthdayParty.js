@@ -358,7 +358,7 @@ const BirthdayParty = ({ slug }) => {
       <section className="relative text-white py-[80px] text-center overflow-hidden" style={heroStyle}>
         <div className="container relative z-[1]">
           {party.welcome_message && (
-            <p className="text-[1.2rem] max-w-[600px] mx-auto mb-[30px] opacity-95">{party.welcome_message}</p>
+            <p className="text-[1.2rem] max-w-[600px] mx-auto mb-[30px] opacity-95" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5)' }}>{party.welcome_message}</p>
           )}
           <Countdown partyDate={party.party_date} themeColor={color} />
         </div>

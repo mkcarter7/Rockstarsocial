@@ -360,7 +360,6 @@ const BirthdayParty = ({ slug }) => {
           <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.45)' }} />
         )}
         <div className="container relative z-[1]">
-          <h1 className="text-[1.8rem] md:text-[2.5rem] mb-5 text-white">🎂 Happy Birthday, {party.birthday_person_name}!</h1>
           {party.welcome_message && (
             <p className="text-[1.2rem] max-w-[600px] mx-auto mb-[30px] opacity-95">{party.welcome_message}</p>
           )}

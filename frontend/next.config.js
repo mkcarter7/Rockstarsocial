@@ -15,6 +15,11 @@ const nextConfig = {
         destination: '/:slug/:page',
         permanent: true,
       },
+      {
+        source: '/themes',
+        destination: '/shop',
+        permanent: true,
+      },
     ];
   },
 };

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getAdminHostAccounts, adminResetHostPassword } from '../../api/api';
+import { getAdminHostAccounts, adminResetHostPassword, adminDeleteHostAccount } from '../../api/api';
 
 const headerBtnClass = "bg-[rgba(255,255,255,0.2)] text-white border border-[rgba(255,255,255,0.3)] py-2 px-4 rounded-[5px] cursor-pointer text-[0.9rem] transition-colors duration-300 inline-block hover:bg-[rgba(255,255,255,0.3)]";
 
@@ -13,9 +13,11 @@ const ManageHostAccounts = () => {
   const router = useRouter();
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [resetTarget, setResetTarget] = useState(null); // account id being reset
+  const [resetTarget, setResetTarget] = useState(null);
   const [newPassword, setNewPassword] = useState('');
   const [resetStatus, setResetStatus] = useState({ id: null, type: '', message: '' });
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // account id awaiting confirm
+  const [deleteError, setDeleteError] = useState({ id: null, message: '' });
 
   const loadAccounts = useCallback(async () => {
     try {
@@ -35,6 +37,20 @@ const ManageHostAccounts = () => {
     setResetTarget(accountId);
     setNewPassword('');
     setResetStatus({ id: null, type: '', message: '' });
+  };
+
+  const handleDelete = async (accountId) => {
+    setDeleteError({ id: null, message: '' });
+    try {
+      const token = await getIdToken();
+      await adminDeleteHostAccount(accountId, token);
+      setDeleteConfirm(null);
+      loadAccounts();
+    } catch (err) {
+      const msg = err?.response?.data?.error || 'Failed to delete account. Please try again.';
+      setDeleteError({ id: accountId, message: msg });
+      setDeleteConfirm(null);
+    }
   };
 
   const handleResetSubmit = async (e, accountId) => {
@@ -112,12 +128,41 @@ const ManageHostAccounts = () => {
                       </div>
                     </td>
                     <td className="py-3 px-4 border-b border-[#eee] align-middle">
-                      <button
-                        onClick={() => openReset(resetTarget === account.id ? null : account.id)}
-                        className="bg-[#6c5ce7] text-white border-none py-[6px] px-[14px] rounded-[4px] cursor-pointer text-[0.85rem] transition-colors duration-200 hover:bg-[#5a4bd1] whitespace-nowrap"
-                      >
-                        {resetTarget === account.id ? 'Cancel' : 'Reset Password'}
-                      </button>
+                      <div className="flex gap-2 items-center flex-wrap">
+                        <button
+                          onClick={() => openReset(resetTarget === account.id ? null : account.id)}
+                          className="bg-[#6c5ce7] text-white border-none py-[6px] px-[14px] rounded-[4px] cursor-pointer text-[0.85rem] transition-colors duration-200 hover:bg-[#5a4bd1] whitespace-nowrap"
+                        >
+                          {resetTarget === account.id ? 'Cancel' : 'Reset Password'}
+                        </button>
+                        {deleteConfirm === account.id ? (
+                          <>
+                            <span className="text-[0.8rem] text-[#c53030] font-semibold">Delete?</span>
+                            <button
+                              onClick={() => handleDelete(account.id)}
+                              className="bg-[#e53e3e] text-white border-none py-[6px] px-[14px] rounded-[4px] cursor-pointer text-[0.85rem] transition-colors duration-200 hover:bg-[#c53030] whitespace-nowrap"
+                            >
+                              Yes, delete
+                            </button>
+                            <button
+                              onClick={() => setDeleteConfirm(null)}
+                              className="bg-[#eee] text-[#555] border-none py-[6px] px-[14px] rounded-[4px] cursor-pointer text-[0.85rem] transition-colors duration-200 hover:bg-[#ddd] whitespace-nowrap"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => { setDeleteConfirm(account.id); setDeleteError({ id: null, message: '' }); }}
+                            className="bg-[#e53e3e] text-white border-none py-[6px] px-[14px] rounded-[4px] cursor-pointer text-[0.85rem] transition-colors duration-200 hover:bg-[#c53030] whitespace-nowrap"
+                          >
+                            Delete
+                          </button>
+                        )}
+                        {deleteError.id === account.id && (
+                          <span className="text-[0.8rem] text-[#c53030]">{deleteError.message}</span>
+                        )}
+                      </div>
                     </td>
                   </tr>
 

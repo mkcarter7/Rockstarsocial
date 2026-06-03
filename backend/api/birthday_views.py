@@ -589,6 +589,23 @@ def admin_reset_host_password(request, account_id):
     return Response({'message': f'Password reset for {account.email}'})
 
 
+@api_view(['DELETE'])
+def admin_delete_host_account(request, account_id):
+    """Firebase-protected: delete a host account (parties are kept but unlinked)."""
+    from .firebase_auth import get_firebase_user
+    if not get_firebase_user(request):
+        return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        account = HostAccount.objects.get(id=account_id)
+    except HostAccount.DoesNotExist:
+        return Response({'error': 'Host account not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    email = account.email
+    account.delete()
+    return Response({'message': f'Account {email} deleted'})
+
+
 # ─── Gift Registry ─────────────────────────────────────────────────────────────
 
 def _serialize_gift(gift, is_host=False):

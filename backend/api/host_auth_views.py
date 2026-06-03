@@ -83,11 +83,24 @@ def request_magic_link(request):
     if not email:
         return Response({'error': 'email is required'}, status=status.HTTP_400_BAD_REQUEST)
 
+    # Prefer HostAccount lookup so users whose account email differs from
+    # BirthdayParty.host_email (e.g. parties created before account linking) still work.
+    party = None
     try:
-        party = BirthdayParty.objects.filter(
-            host_email__iexact=email, is_active=True
-        ).latest('created_at')
-    except BirthdayParty.DoesNotExist:
+        account = HostAccount.objects.get(email__iexact=email)
+        party = account.parties.filter(is_active=True).order_by('-created_at').first()
+    except HostAccount.DoesNotExist:
+        pass
+
+    if party is None:
+        try:
+            party = BirthdayParty.objects.filter(
+                host_email__iexact=email, is_active=True
+            ).latest('created_at')
+        except BirthdayParty.DoesNotExist:
+            pass
+
+    if party is None:
         return Response({'message': 'If a party exists for this email, a link has been sent.'})
 
     token = HostAccessToken.objects.create(

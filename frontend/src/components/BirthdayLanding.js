@@ -25,6 +25,10 @@ const BirthdayLanding = () => {
           <Link href="/birthday/purchase" className="btn btn-primary py-4 px-10 text-[1.1rem]">
             Get Started — $29
           </Link>
+          <Link href="/birthdaydemo" target="_blank" rel="noopener noreferrer"
+            className="block mt-3 text-white underline opacity-80 hover:opacity-100 text-sm transition-opacity">
+            See a live demo →
+          </Link>
           <p className="mt-[15px] text-[0.9rem] opacity-80">
             Page stays live for 60 days after the event · No subscription required
           </p>

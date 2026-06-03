@@ -100,12 +100,18 @@ const Pricing = () => {
                     ))}
                   </ul>
                   {theme.theme_type === 'birthday' ? (
-                    <button
-                      onClick={() => handleThemePurchase(theme)}
-                      className="w-full py-4 bg-brand text-white rounded-lg font-semibold text-lg hover:bg-brand-dark hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200"
-                    >
-                      Purchase
-                    </button>
+                    <>
+                      <button
+                        onClick={() => handleThemePurchase(theme)}
+                        className="w-full py-4 bg-brand text-white rounded-lg font-semibold text-lg hover:bg-brand-dark hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200"
+                      >
+                        Purchase
+                      </button>
+                      <a href="/birthdaydemo" target="_blank" rel="noopener noreferrer"
+                        className="block mt-2 text-sm text-brand underline text-center hover:opacity-75 transition-opacity">
+                        View Demo
+                      </a>
+                    </>
                   ) : (
                     <button
                       disabled

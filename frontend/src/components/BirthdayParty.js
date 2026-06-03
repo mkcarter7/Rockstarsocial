@@ -231,7 +231,7 @@ const PhotoCarousel = ({ slug, themeColor, secondaryColor }) => {
               <button
                 onClick={prev}
                 aria-label="Previous photo"
-                className="absolute top-1/2 -translate-y-1/2 left-[-18px] w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-[1.1rem] hover:scale-105 transition-transform border-2"
+                className="absolute top-1/2 -translate-y-1/2 left-1 md:left-[-18px] w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-[1.1rem] hover:scale-105 transition-transform border-2"
                 style={{ borderColor: themeColor }}
               >
                 ‹
@@ -239,7 +239,7 @@ const PhotoCarousel = ({ slug, themeColor, secondaryColor }) => {
               <button
                 onClick={next}
                 aria-label="Next photo"
-                className="absolute top-1/2 -translate-y-1/2 right-[-18px] w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-[1.1rem] hover:scale-105 transition-transform border-2"
+                className="absolute top-1/2 -translate-y-1/2 right-1 md:right-[-18px] w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-[1.1rem] hover:scale-105 transition-transform border-2"
                 style={{ borderColor: themeColor }}
               >
                 ›
@@ -353,7 +353,7 @@ const BirthdayParty = ({ slug }) => {
           <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.45)' }} />
         )}
         <div className="container relative z-[1]">
-          <h1 className="text-[2.5rem] mb-5 text-white">🎂 Happy Birthday, {party.birthday_person_name}!</h1>
+          <h1 className="text-[1.8rem] md:text-[2.5rem] mb-5 text-white">🎂 Happy Birthday, {party.birthday_person_name}!</h1>
           {party.welcome_message && (
             <p className="text-[1.2rem] max-w-[600px] mx-auto mb-[30px] opacity-95">{party.welcome_message}</p>
           )}

@@ -160,9 +160,9 @@ const BirthdaySetup = () => {
       </section>
 
       <section className="section">
-        <div className="container grid grid-cols-2 lg:grid-cols-1 gap-10 items-start">
+        <div className="container grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
           <div>
-            <form onSubmit={handleSave} className="max-w-[600px] mx-auto bg-white p-10 rounded-[12px] shadow-[0_2px_15px_rgba(0,0,0,0.08)]">
+            <form onSubmit={handleSave} className="max-w-[600px] mx-auto bg-white p-5 md:p-10 rounded-[12px] shadow-[0_2px_15px_rgba(0,0,0,0.08)]">
               {error && (
                 <div className="py-[15px] px-5 rounded-[5px] mb-5 bg-[#fed7d7] text-[#742a2a] border border-[#fc8181]">{error}</div>
               )}
@@ -340,7 +340,7 @@ const BirthdaySetup = () => {
                 <label className="font-semibold text-black text-[0.9rem]">Question *</label>
                 <input type="text" value={newQ.question} onChange={e => setNewQ(p => ({ ...p, question: e.target.value }))} placeholder="e.g. What is Kate's favorite movie?" required className={inputClass} />
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-1 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {['a', 'b', 'c', 'd'].map(opt => (
                   <div key={opt} className="flex flex-col gap-1">
                     <label className="font-semibold text-black text-[0.9rem]">Option {opt.toUpperCase()} *</label>
@@ -348,7 +348,7 @@ const BirthdaySetup = () => {
                   </div>
                 ))}
               </div>
-              <div className="grid grid-cols-[1fr_100px] sm:grid-cols-1 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_100px] gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="font-semibold text-black text-[0.9rem]">Correct Answer *</label>
                   <select value={newQ.correct_answer} onChange={e => setNewQ(p => ({ ...p, correct_answer: e.target.value }))} className={inputClass}>

@@ -42,7 +42,7 @@ const Contact = () => {
         <div className="container">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-[30px] md:gap-[50px] max-w-[1200px] mx-auto">
             <div>
-              <h2 className="text-[2rem] md:text-[1.5rem] mb-[30px] text-black">Contact Information</h2>
+              <h2 className="text-[1.5rem] md:text-[2rem] mb-[30px] text-black">Contact Information</h2>
               <div className="mb-[30px]">
                 <h3 className="text-[1.2rem] text-brand mb-[10px]">Email</h3>
                 <p className="text-[#718096] leading-[1.8] mb-[5px]">1rockstarsocial@gmail.com</p>
@@ -53,8 +53,8 @@ const Contact = () => {
               </div>
             </div>
 
-            <div className="bg-white p-10 md:p-[25px] rounded-[10px] shadow-[0_4px_6px_rgba(0,0,0,0.1)]">
-              <h2 className="text-[2rem] md:text-[1.5rem] mb-[30px] text-black">Send Us a Message</h2>
+            <div className="bg-white p-5 md:p-10 rounded-[10px] shadow-[0_4px_6px_rgba(0,0,0,0.1)]">
+              <h2 className="text-[1.5rem] md:text-[2rem] mb-[30px] text-black">Send Us a Message</h2>
               {success && (
                 <div className="py-[15px] px-5 rounded-[5px] mb-5 bg-[#c6f6d5] text-[#22543d] border border-[#9ae6b4]">
                   Thank you for your message! We will get back to you soon.

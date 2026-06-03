@@ -171,7 +171,7 @@ const HostDashboard = () => {
       <section className="section">
         <div className="container" style={{ maxWidth: 720 }}>
           <h2 className="text-center mb-6 text-[#333]">Party Stats</h2>
-          <div className="grid grid-cols-3 sm:grid-cols-1 gap-5 mb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-10">
             <StatCard icon="✅" label="RSVPs (Yes)" value={stats.rsvp_count} color={color} />
             <StatCard icon="📖" label="Guestbook" value={stats.guestbook_count} color={color} />
             <StatCard icon="📸" label="Photos" value={stats.photo_count} color={color} />

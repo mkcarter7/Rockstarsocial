@@ -65,8 +65,8 @@ const BirthdayPurchase = () => {
 
       <section className="section">
         <div className="container">
-          <div className="grid grid-cols-[1fr_320px] md:grid-cols-1 gap-[50px] max-w-[900px] mx-auto">
-            <form onSubmit={handleSubmit} className="bg-white p-10 rounded-[12px] shadow-[0_2px_15px_rgba(0,0,0,0.08)]">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-[50px] max-w-[900px] mx-auto">
+            <form onSubmit={handleSubmit} className="bg-white p-5 md:p-10 rounded-[12px] shadow-[0_2px_15px_rgba(0,0,0,0.08)]">
               {error && (
                 <div className="py-[15px] px-5 rounded-[5px] mb-5 bg-[#fed7d7] text-[#742a2a] border border-[#fc8181]">{error}</div>
               )}

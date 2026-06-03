@@ -17,7 +17,7 @@ const BirthdayLanding = () => {
     <div>
       <section className="bg-[linear-gradient(135deg,#ff6b9d_0%,#c850c0_100%)] text-white py-[80px] text-center">
         <div className="container">
-          <h1 className="text-[2.5rem] mb-5 text-white">🎂 Create a Birthday Experience They'll Never Forget</h1>
+          <h1 className="text-[1.8rem] md:text-[2.5rem] mb-5 text-white">🎂 Create a Birthday Experience They'll Never Forget</h1>
           <p className="text-[1.2rem] max-w-[600px] mx-auto mb-[30px] opacity-95">
             Give your loved one their own personal birthday party page — complete with photos,
             guest book, RSVP, and a fun trivia game about the birthday star.

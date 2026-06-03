@@ -95,7 +95,7 @@ const PartyTrivia = ({ slug }) => {
             {questions.map((q, i) => (
               <div key={q.id} className="bg-white rounded-[12px] p-[25px] shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
                 <p className="text-[1.05rem] mb-[15px] text-[#333]"><strong>Q{i + 1}.</strong> {q.question}</p>
-                <div className="grid grid-cols-2 sm:grid-cols-1 gap-[10px]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-[10px]">
                   {['a', 'b', 'c', 'd'].map(opt => (
                     <button
                       key={opt}

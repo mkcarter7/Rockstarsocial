@@ -338,6 +338,13 @@ const BirthdayParty = ({ slug }) => {
 
   const color = party.theme_color || '#ff6b9d';
   const secondaryColor = party.secondary_color || '#ffffff';
+  const getContrastText = (hex) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.5 ? '#000000' : '#ffffff';
+  };
+  const buttonText = getContrastText(color);
 
   // Hero background: full image if provided, otherwise solid theme color
   const heroStyle = party.banner_image
@@ -391,7 +398,7 @@ const BirthdayParty = ({ slug }) => {
         <section className="py-10" style={{ background: secondaryColor }}>
           <div className="container" style={{ maxWidth: 620 }}>
             <h2 className="text-center text-[1.4rem] font-bold mb-5 text-[#333]">🎉 Event Details</h2>
-            <div className="rounded-[16px] border-2 overflow-hidden" style={{ borderColor: color }}>
+            <div className="rounded-[16px] border-2 overflow-hidden" style={{ borderColor: color, backgroundColor: 'white' }}>
               {[
                 { icon: '📅', label: 'Date', value: formatDate(party.party_date) },
                 { icon: '🕐', label: 'Time', value: formatTime(party.party_time) },
@@ -443,8 +450,8 @@ const BirthdayParty = ({ slug }) => {
                 href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(party.location_address)}`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-block font-semibold py-2 px-6 rounded-full text-white text-[0.9rem] hover:opacity-90 transition-opacity"
-                style={{ background: color }}
+                className="inline-block font-semibold py-2 px-6 rounded-full text-[0.9rem] hover:opacity-90 transition-opacity"
+                style={{ background: color, color: buttonText }}
               >
                 Get Directions →
               </a>
@@ -457,7 +464,7 @@ const BirthdayParty = ({ slug }) => {
       <PhotoCarousel slug={slug} themeColor={color} secondaryColor={secondaryColor} />
 
       {/* ── Footer ── */}
-      <div className="text-center py-[30px] text-[#999] text-[0.85rem]">
+      <div className="text-center py-[30px] text-[#999] text-[0.85rem]" style={{ backgroundColor: 'white' }}>
         <p>
           Created with <a href="/" style={{ color }} className="font-semibold no-underline">RockStar Social</a>
           &nbsp;·&nbsp; Active until {new Date(party.expires_at).toLocaleDateString()}
@@ -468,8 +475,8 @@ const BirthdayParty = ({ slug }) => {
       <div className="fixed bottom-6 right-6 z-50">
         <Link
           href={isHost ? '/host/dashboard' : '/host/login'}
-          className="flex items-center gap-2 text-white font-semibold py-3 px-5 rounded-full shadow-lg hover:opacity-90 transition-opacity text-[0.9rem]"
-          style={{ background: color }}
+          className="flex items-center gap-2 font-semibold py-3 px-5 rounded-full shadow-lg hover:opacity-90 transition-opacity text-[0.9rem]"
+          style={{ background: color, color: buttonText }}
         >
           ⚙️ {isHost ? 'Manage Party' : 'Host Login'}
         </Link>

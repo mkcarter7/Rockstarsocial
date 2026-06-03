@@ -102,4 +102,7 @@ export const adminResetHostPassword = (accountId, newPassword, token) =>
 export const adminDeleteHostAccount = (accountId, token) =>
   api.delete(`/admin/host-accounts/${accountId}/delete/`, { headers: { Authorization: `Bearer ${token}` } });
 
+export const adminSendMagicLink = (accountId, token) =>
+  api.post(`/admin/host-accounts/${accountId}/send-magic-link/`, {}, { headers: { Authorization: `Bearer ${token}` } });
+
 export default api;

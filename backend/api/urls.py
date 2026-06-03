@@ -17,7 +17,7 @@ from .birthday_views import (
     party_rsvp, party_trivia, submit_trivia,
     trivia_leaderboard, admin_birthday_parties,
     admin_event_pages, admin_delete_event_page,
-    admin_host_accounts, admin_reset_host_password, admin_delete_host_account,
+    admin_host_accounts, admin_reset_host_password, admin_delete_host_account, admin_send_magic_link,
     party_gifts, claim_gift, manage_gift,
 )
 from .host_auth_views import request_magic_link, verify_magic_link, host_party_stats, host_login, switch_party, change_password
@@ -83,4 +83,5 @@ urlpatterns = [
     path('admin/host-accounts/', admin_host_accounts, name='admin-host-accounts'),
     path('admin/host-accounts/<int:account_id>/reset-password/', admin_reset_host_password, name='admin-reset-host-password'),
     path('admin/host-accounts/<int:account_id>/delete/', admin_delete_host_account, name='admin-delete-host-account'),
+    path('admin/host-accounts/<int:account_id>/send-magic-link/', admin_send_magic_link, name='admin-send-magic-link'),
 ]

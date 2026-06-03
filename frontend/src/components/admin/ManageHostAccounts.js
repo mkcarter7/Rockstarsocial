@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getAdminHostAccounts, adminResetHostPassword, adminDeleteHostAccount } from '../../api/api';
+import { getAdminHostAccounts, adminResetHostPassword, adminDeleteHostAccount, adminSendMagicLink } from '../../api/api';
 
 const headerBtnClass = "bg-[rgba(255,255,255,0.2)] text-white border border-[rgba(255,255,255,0.3)] py-2 px-4 rounded-[5px] cursor-pointer text-[0.9rem] transition-colors duration-300 inline-block hover:bg-[rgba(255,255,255,0.3)]";
 
@@ -16,8 +16,9 @@ const ManageHostAccounts = () => {
   const [resetTarget, setResetTarget] = useState(null);
   const [newPassword, setNewPassword] = useState('');
   const [resetStatus, setResetStatus] = useState({ id: null, type: '', message: '' });
-  const [deleteConfirm, setDeleteConfirm] = useState(null); // account id awaiting confirm
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [deleteError, setDeleteError] = useState({ id: null, message: '' });
+  const [linkStatus, setLinkStatus] = useState({ id: null, type: '', message: '' });
 
   const loadAccounts = useCallback(async () => {
     try {
@@ -37,6 +38,18 @@ const ManageHostAccounts = () => {
     setResetTarget(accountId);
     setNewPassword('');
     setResetStatus({ id: null, type: '', message: '' });
+  };
+
+  const handleSendLink = async (accountId) => {
+    setLinkStatus({ id: accountId, type: 'loading', message: 'Sending...' });
+    try {
+      const token = await getIdToken();
+      await adminSendMagicLink(accountId, token);
+      setLinkStatus({ id: accountId, type: 'success', message: 'Link sent!' });
+    } catch (err) {
+      const msg = err?.response?.data?.error || 'Failed to send link.';
+      setLinkStatus({ id: accountId, type: 'error', message: msg });
+    }
   };
 
   const handleDelete = async (accountId) => {
@@ -129,6 +142,18 @@ const ManageHostAccounts = () => {
                     </td>
                     <td className="py-3 px-4 border-b border-[#eee] align-middle">
                       <div className="flex gap-2 items-center flex-wrap">
+                        <button
+                          onClick={() => handleSendLink(account.id)}
+                          disabled={linkStatus.id === account.id && linkStatus.type === 'loading'}
+                          className="bg-[#276749] text-white border-none py-[6px] px-[14px] rounded-[4px] cursor-pointer text-[0.85rem] transition-colors duration-200 hover:bg-[#1f4f37] whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          {linkStatus.id === account.id && linkStatus.type === 'loading' ? 'Sending...' : 'Send Login Link'}
+                        </button>
+                        {linkStatus.id === account.id && linkStatus.type !== 'loading' && (
+                          <span className={`text-[0.8rem] ${linkStatus.type === 'error' ? 'text-[#c53030]' : 'text-[#276749]'}`}>
+                            {linkStatus.message}
+                          </span>
+                        )}
                         <button
                           onClick={() => openReset(resetTarget === account.id ? null : account.id)}
                           className="bg-[#6c5ce7] text-white border-none py-[6px] px-[14px] rounded-[4px] cursor-pointer text-[0.85rem] transition-colors duration-200 hover:bg-[#5a4bd1] whitespace-nowrap"

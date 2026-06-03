@@ -325,7 +325,7 @@ class GiftItem(models.Model):
 
 class HostAccessToken(models.Model):
     TOKEN_TYPES = [('magic_link', 'Magic Link'), ('session', 'Session')]
-    party = models.ForeignKey(BirthdayParty, on_delete=models.CASCADE, related_name='access_tokens')
+    party = models.ForeignKey(BirthdayParty, on_delete=models.SET_NULL, null=True, blank=True, related_name='access_tokens')
     token = models.UUIDField(default=uuid.uuid4, unique=True)
     token_type = models.CharField(max_length=20, choices=TOKEN_TYPES)
     expires_at = models.DateTimeField()
@@ -336,7 +336,8 @@ class HostAccessToken(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.token_type} token for {self.party.slug}"
+        party_label = self.party.slug if self.party else 'no party'
+        return f"{self.token_type} token for {party_label}"
 
 
 class SiteSettings(models.Model):

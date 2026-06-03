@@ -38,7 +38,8 @@ def _verify_host_session(request, slug):
     if token_obj.expires_at < timezone.now():
         return None, Response({'error': 'Token expired'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    if token_obj.party.slug != slug:
+    # party may be None for account-level sessions; require a party for party-specific endpoints
+    if token_obj.party is None or token_obj.party.slug != slug:
         return None, Response({'error': 'Token does not match this party'}, status=status.HTTP_403_FORBIDDEN)
 
     return token_obj.party, None
@@ -64,7 +65,7 @@ def verify_host_session_by_token_str(token_str, slug=None):
     if token_obj.expires_at < timezone.now():
         return None, {'error': 'Token expired'}
 
-    if slug and token_obj.party.slug != slug:
+    if slug and (token_obj.party is None or token_obj.party.slug != slug):
         return None, {'error': 'Token does not match this party'}
 
     return token_obj.party, None
@@ -77,14 +78,14 @@ def request_magic_link(request):
     POST /api/host/request-access/
     Body: { email }
     Sends a magic login link to the host. Always returns 200 to avoid
-    leaking whether a party exists for a given email.
+    leaking whether an account exists for a given email.
     """
     email = request.data.get('email', '').strip().lower()
     if not email:
         return Response({'error': 'email is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Prefer HostAccount lookup so users whose account email differs from
-    # BirthdayParty.host_email (e.g. parties created before account linking) still work.
+    # Try HostAccount first so the link works even when host_email on the party differs.
+    account = None
     party = None
     try:
         account = HostAccount.objects.get(email__iexact=email)
@@ -100,8 +101,9 @@ def request_magic_link(request):
         except BirthdayParty.DoesNotExist:
             pass
 
-    if party is None:
-        return Response({'message': 'If a party exists for this email, a link has been sent.'})
+    # No account at all — nothing to send
+    if account is None and party is None:
+        return Response({'message': 'If an account exists for this email, a link has been sent.'})
 
     token = HostAccessToken.objects.create(
         party=party,
@@ -112,16 +114,29 @@ def request_magic_link(request):
     frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
     magic_link = f"{frontend_url}/host/verify?token={token.token}"
 
+    if party:
+        subject = f"Your party management link — {party.birthday_person_name}'s Birthday"
+        body = (
+            f"Hi {party.host_name or 'there'},\n\n"
+            f"Here is your link to manage {party.birthday_person_name}'s birthday party page:\n\n"
+            f"{magic_link}\n\n"
+            f"This link expires in 24 hours and can only be used once.\n\n"
+            f"— RockStar Social"
+        )
+    else:
+        subject = "Your RockStar Social login link"
+        body = (
+            f"Hi there,\n\n"
+            f"Here is your link to access your RockStar Social account:\n\n"
+            f"{magic_link}\n\n"
+            f"This link expires in 24 hours and can only be used once.\n\n"
+            f"— RockStar Social"
+        )
+
     try:
         send_mail(
-            subject=f"Your party management link — {party.birthday_person_name}'s Birthday",
-            message=(
-                f"Hi {party.host_name or 'there'},\n\n"
-                f"Here is your link to manage {party.birthday_person_name}'s birthday party page:\n\n"
-                f"{magic_link}\n\n"
-                f"This link expires in 24 hours and can only be used once.\n\n"
-                f"— RockStar Social"
-            ),
+            subject=subject,
+            message=body,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[email],
             fail_silently=False,
@@ -133,7 +148,7 @@ def request_magic_link(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
-    return Response({'message': 'If a party exists for this email, a link has been sent.'})
+    return Response({'message': 'If an account exists for this email, a link has been sent.'})
 
 
 @api_view(['GET'])
@@ -142,7 +157,7 @@ def verify_magic_link(request):
     """
     GET /api/host/verify-token/?token=xxx
     Validates a magic link token, marks it used, and creates a 30-day session token.
-    Returns { session_token, party_slug }.
+    Returns { session_token, party_slug } — party_slug is null for account-only sessions.
     """
     token_str = request.query_params.get('token', '').strip()
     if not token_str:
@@ -179,7 +194,7 @@ def verify_magic_link(request):
 
     return Response({
         'session_token': str(session_token.token),
-        'party_slug': token_obj.party.slug,
+        'party_slug': token_obj.party.slug if token_obj.party else None,
     })
 
 
@@ -190,6 +205,7 @@ def host_login(request):
     POST /api/host/login/
     Body: { email, password }
     Validates credentials and returns a 30-day session token.
+    party_slug is null if the account has no active party.
     """
     email = request.data.get('email', '').strip().lower()
     password = request.data.get('password', '')
@@ -210,8 +226,6 @@ def host_login(request):
         account.parties.filter(is_active=True).order_by('-created_at').first()
         or BirthdayParty.objects.filter(host_email=email, is_active=True).order_by('-created_at').first()
     )
-    if not party:
-        return Response({'error': 'No active party found for this account.'}, status=status.HTTP_404_NOT_FOUND)
 
     all_parties = list(
         account.parties.filter(is_active=True).order_by('-created_at')
@@ -226,7 +240,7 @@ def host_login(request):
 
     return Response({
         'session_token': str(session_token.token),
-        'party_slug': party.slug,
+        'party_slug': party.slug if party else None,
         'all_parties': all_parties,
     })
 

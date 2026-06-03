@@ -48,8 +48,13 @@ const HostDashboard = () => {
     const token = localStorage.getItem('hostToken');
     const slug = localStorage.getItem('hostPartySlug');
 
-    if (!token || !slug) {
+    if (!token) {
       router.push('/host/login');
+      return;
+    }
+
+    if (!slug) {
+      setLoading(false);
       return;
     }
 
@@ -127,6 +132,38 @@ const HostDashboard = () => {
               >
                 + Create Another Party
               </Link>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  if (!hostSlug && !loading) {
+    return (
+      <div className="min-h-screen bg-[#fafafa]">
+        <section className="py-[80px] text-center text-white" style={{ background: 'linear-gradient(135deg, #ff6b9d 0%, #c850c0 100%)' }}>
+          <div className="container">
+            <h1 className="text-[2.2rem] text-white mb-3">Welcome to RockStar Social</h1>
+            <p className="opacity-90">You're logged in, but you don't have an active party yet.</p>
+          </div>
+        </section>
+        <section className="section">
+          <div className="container" style={{ maxWidth: 480 }}>
+            <div className="flex flex-col gap-4 text-center">
+              <Link
+                href="/birthday/purchase"
+                className="flex items-center justify-center gap-2 text-white rounded-[10px] py-4 px-6 font-semibold hover:opacity-90 transition-opacity"
+                style={{ background: '#ff6b9d' }}
+              >
+                🎂 Create a Party Page
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="text-[#999] text-[0.9rem] underline hover:text-[#666] transition-colors"
+              >
+                Log out
+              </button>
             </div>
           </div>
         </section>

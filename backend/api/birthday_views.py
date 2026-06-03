@@ -591,7 +591,7 @@ def admin_reset_host_password(request, account_id):
 
 @api_view(['DELETE'])
 def admin_delete_host_account(request, account_id):
-    """Firebase-protected: delete a host account (parties are kept but unlinked)."""
+    """Admin-only: delete a host account (parties are kept but unlinked)."""
     from .firebase_auth import get_firebase_user
     if not get_firebase_user(request):
         return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -604,6 +604,66 @@ def admin_delete_host_account(request, account_id):
     email = account.email
     account.delete()
     return Response({'message': f'Account {email} deleted'})
+
+
+@api_view(['POST'])
+def admin_send_magic_link(request, account_id):
+    """Admin-only: send a magic login link directly to a host account."""
+    from .firebase_auth import get_firebase_user
+    from django.core.mail import send_mail
+    from django.conf import settings
+    from datetime import timedelta
+    from django.utils import timezone
+    from .models import HostAccessToken
+
+    if not get_firebase_user(request):
+        return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        account = HostAccount.objects.get(id=account_id)
+    except HostAccount.DoesNotExist:
+        return Response({'error': 'Host account not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Use most recent party regardless of is_active; fall back to no party
+    party = account.parties.order_by('-created_at').first()
+
+    token = HostAccessToken.objects.create(
+        party=party,
+        token_type='magic_link',
+        expires_at=timezone.now() + timedelta(hours=24),
+    )
+
+    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+    magic_link = f"{frontend_url}/host/verify?token={token.token}"
+
+    if party:
+        subject = f"Your party management link — {party.birthday_person_name}'s Birthday"
+        body = (
+            f"Hi {party.host_name or 'there'},\n\n"
+            f"Here is your link to manage {party.birthday_person_name}'s birthday party page:\n\n"
+            f"{magic_link}\n\n"
+            f"This link expires in 24 hours and can only be used once.\n\n"
+            f"— RockStar Social"
+        )
+    else:
+        subject = "Your RockStar Social login link"
+        body = (
+            f"Hi there,\n\n"
+            f"Here is your link to access your RockStar Social account:\n\n"
+            f"{magic_link}\n\n"
+            f"This link expires in 24 hours and can only be used once.\n\n"
+            f"— RockStar Social"
+        )
+
+    send_mail(
+        subject=subject,
+        message=body,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[account.email],
+        fail_silently=False,
+    )
+
+    return Response({'message': f'Login link sent to {account.email}'})
 
 
 # ─── Gift Registry ─────────────────────────────────────────────────────────────

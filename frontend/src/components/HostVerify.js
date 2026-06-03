@@ -22,7 +22,11 @@ const HostVerify = () => {
     verifyHostToken(token)
       .then(res => {
         localStorage.setItem('hostToken', res.data.session_token);
-        localStorage.setItem('hostPartySlug', res.data.party_slug);
+        if (res.data.party_slug) {
+          localStorage.setItem('hostPartySlug', res.data.party_slug);
+        } else {
+          localStorage.removeItem('hostPartySlug');
+        }
         router.push('/host/dashboard');
       })
       .catch(err => {

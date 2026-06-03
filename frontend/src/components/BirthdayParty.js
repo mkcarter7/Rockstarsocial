@@ -30,9 +30,9 @@ const Countdown = ({ partyDate, themeColor }) => {
   return (
     <div className="flex justify-center gap-5 flex-wrap mt-5">
       {['days', 'hours', 'minutes', 'seconds'].map(unit => (
-        <div key={unit} className="bg-[rgba(255,255,255,0.2)] border-2 rounded-[12px] py-[15px] px-5 min-w-[80px] text-center" style={{ borderColor: themeColor }}>
-          <span className="block text-[2rem] font-bold text-white" style={{ color: themeColor }}>{timeLeft[unit]}</span>
-          <span className="text-[0.75rem] uppercase tracking-[1px] text-[rgba(255,255,255,0.8)]">{unit}</span>
+        <div key={unit} className="border-2 rounded-[12px] py-[15px] px-5 min-w-[80px] text-center" style={{ borderColor: themeColor, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)' }}>
+          <span className="block text-[2rem] font-bold text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>{timeLeft[unit]}</span>
+          <span className="text-[0.75rem] uppercase tracking-[1px] text-[rgba(255,255,255,0.9)]">{unit}</span>
         </div>
       ))}
     </div>

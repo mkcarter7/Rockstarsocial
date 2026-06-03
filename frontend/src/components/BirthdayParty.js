@@ -356,9 +356,6 @@ const BirthdayParty = ({ slug }) => {
 
       {/* ── Hero ── */}
       <section className="relative text-white py-[80px] text-center overflow-hidden" style={heroStyle}>
-        {party.banner_image && (
-          <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.45)' }} />
-        )}
         <div className="container relative z-[1]">
           {party.welcome_message && (
             <p className="text-[1.2rem] max-w-[600px] mx-auto mb-[30px] opacity-95">{party.welcome_message}</p>

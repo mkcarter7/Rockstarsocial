@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { checkBirthdaySlug, createBirthdayCheckout } from '../api/api';
 
@@ -14,6 +15,16 @@ const BirthdayPurchase = () => {
   const [slugStatus, setSlugStatus] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isExistingHost, setIsExistingHost] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('hostToken');
+    const email = localStorage.getItem('hostEmail');
+    if (token && email) {
+      setIsExistingHost(true);
+      setForm(prev => ({ ...prev, host_email: email }));
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -67,6 +78,18 @@ const BirthdayPurchase = () => {
         <div className="container">
           <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-[50px] max-w-[900px] mx-auto">
             <form onSubmit={handleSubmit} className="bg-white p-5 md:p-10 rounded-[12px] shadow-[0_2px_15px_rgba(0,0,0,0.08)]">
+              {isExistingHost ? (
+                <div className="py-3 px-4 rounded-[8px] mb-5 bg-[#fff0f7] border border-[#ff6b9d] text-[#333] text-[0.9rem]">
+                  You're adding a new party to your existing account. Use your account password below.{' '}
+                  <Link href="/host/dashboard" className="text-[#ff6b9d] underline">Back to dashboard</Link>
+                </div>
+              ) : (
+                <p className="text-center mb-5 text-[0.875rem] text-[#666]">
+                  Already have an account?{' '}
+                  <Link href="/host/login" className="text-[#ff6b9d] underline font-semibold">Log in</Link>
+                </p>
+              )}
+
               {error && (
                 <div className="py-[15px] px-5 rounded-[5px] mb-5 bg-[#fed7d7] text-[#742a2a] border border-[#fc8181]">{error}</div>
               )}

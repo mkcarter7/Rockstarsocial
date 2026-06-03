@@ -35,6 +35,7 @@ const HostDashboard = () => {
           localStorage.removeItem('hostToken');
           localStorage.removeItem('hostPartySlug');
           localStorage.removeItem('hostAllParties');
+          localStorage.removeItem('hostEmail');
           router.push('/host/login');
         } else {
           setError(err?.response?.data?.error || 'Could not load your party. Please try again.');
@@ -89,6 +90,7 @@ const HostDashboard = () => {
     localStorage.removeItem('hostToken');
     localStorage.removeItem('hostPartySlug');
     localStorage.removeItem('hostAllParties');
+    localStorage.removeItem('hostEmail');
     router.push('/host/login');
   };
 
@@ -119,6 +121,12 @@ const HostDashboard = () => {
                   <div className="text-[#ff6b9d] text-[0.85rem] mt-1">1rockstarsocial.com/{p.slug}</div>
                 </button>
               ))}
+              <Link
+                href="/birthday/purchase"
+                className="flex items-center justify-center gap-2 border-2 border-dashed border-[#ff6b9d] rounded-[12px] p-5 text-[#ff6b9d] font-semibold hover:bg-[#fff0f7] transition-colors"
+              >
+                + Create Another Party
+              </Link>
             </div>
           </div>
         </section>
@@ -192,6 +200,14 @@ const HostDashboard = () => {
               style={{ background: color }}
             >
               ✏️ Edit Party (colors, message, trivia)
+            </Link>
+
+            <Link
+              href="/birthday/purchase"
+              className="flex items-center justify-center gap-2 bg-white border-2 border-dashed rounded-[10px] py-4 px-6 font-semibold hover:bg-[#fff0f7] transition-colors"
+              style={{ borderColor: color, color }}
+            >
+              + Create Another Party
             </Link>
 
             <div className="mt-2">

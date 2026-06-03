@@ -21,6 +21,7 @@ const HostLogin = () => {
       localStorage.setItem('hostToken', res.data.session_token);
       localStorage.setItem('hostPartySlug', res.data.party_slug);
       localStorage.setItem('hostAllParties', JSON.stringify(res.data.all_parties || []));
+      localStorage.setItem('hostEmail', email.trim().toLowerCase());
       router.push('/host/dashboard');
     } catch (err) {
       setError(err?.response?.data?.error || 'Invalid email or password.');

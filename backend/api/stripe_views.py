@@ -42,7 +42,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Theme, ThemePurchase, ThemePackage, ThemeOrder, BirthdayParty, HostAccount
+from django.utils import timezone
+from .models import Theme, ThemePurchase, ThemePackage, ThemeOrder, BirthdayParty, HostAccount, HostAccessToken
 from django.contrib.auth.hashers import make_password, check_password
 
 logger = logging.getLogger(__name__)
@@ -447,18 +448,32 @@ def create_birthday_checkout(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    if not password or len(password) < 8:
-        return Response({'error': 'Password must be at least 8 characters'}, status=status.HTTP_400_BAD_REQUEST)
+    session_token = request.data.get('session_token', '').strip()
 
-    host_account, created = HostAccount.objects.get_or_create(
-        email=host_email.lower(),
-        defaults={'password': make_password(password)},
-    )
-    if not created and not check_password(password, host_account.password):
-        return Response(
-            {'error': 'An account already exists for this email. Please use your existing password.'},
-            status=status.HTTP_400_BAD_REQUEST,
+    if session_token:
+        try:
+            token_obj = HostAccessToken.objects.get(token=session_token, token_type='session')
+        except (HostAccessToken.DoesNotExist, ValueError):
+            return Response({'error': 'Invalid session. Please log in again.'}, status=status.HTTP_401_UNAUTHORIZED)
+        if token_obj.expires_at < timezone.now():
+            return Response({'error': 'Session expired. Please log in again.'}, status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            host_account = HostAccount.objects.get(email=host_email.lower())
+        except HostAccount.DoesNotExist:
+            return Response({'error': 'No account found for this email.'}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        if not password or len(password) < 8:
+            return Response({'error': 'Password must be at least 8 characters'}, status=status.HTTP_400_BAD_REQUEST)
+
+        host_account, created = HostAccount.objects.get_or_create(
+            email=host_email.lower(),
+            defaults={'password': make_password(password)},
         )
+        if not created and not check_password(password, host_account.password):
+            return Response(
+                {'error': 'An account already exists for this email. Please use your existing password.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     if BirthdayParty.objects.filter(slug=slug).exists():
         return Response({'error': 'That URL is already taken. Please choose a different one.'}, status=status.HTTP_400_BAD_REQUEST)

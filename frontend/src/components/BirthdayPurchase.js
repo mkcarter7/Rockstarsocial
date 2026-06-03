@@ -51,11 +51,20 @@ const BirthdayPurchase = () => {
     e.preventDefault();
     setError('');
     if (slugStatus === 'taken') { setError('That URL is already taken. Please choose a different one.'); return; }
-    if (form.password.length < 8) { setError('Password must be at least 8 characters.'); return; }
-    if (form.password !== form.confirm_password) { setError('Passwords do not match.'); return; }
+    if (!isExistingHost) {
+      if (form.password.length < 8) { setError('Password must be at least 8 characters.'); return; }
+      if (form.password !== form.confirm_password) { setError('Passwords do not match.'); return; }
+    }
     setLoading(true);
     try {
-      const { confirm_password, ...payload } = { ...form, slug: formatSlug(form.slug) };
+      let payload;
+      if (isExistingHost) {
+        const { password, confirm_password, ...rest } = { ...form, slug: formatSlug(form.slug) };
+        payload = { ...rest, session_token: localStorage.getItem('hostToken') };
+      } else {
+        const { confirm_password, ...rest } = { ...form, slug: formatSlug(form.slug) };
+        payload = rest;
+      }
       if (themeId) payload.theme_id = themeId;
       const res = await createBirthdayCheckout(payload);
       window.location.href = res.data.checkout_url;
@@ -80,7 +89,7 @@ const BirthdayPurchase = () => {
             <form onSubmit={handleSubmit} className="bg-white p-5 md:p-10 rounded-[12px] shadow-[0_2px_15px_rgba(0,0,0,0.08)]">
               {isExistingHost ? (
                 <div className="py-3 px-4 rounded-[8px] mb-5 bg-[#fff0f7] border border-[#ff6b9d] text-[#333] text-[0.9rem]">
-                  You're adding a new party to your existing account. Use your account password below.{' '}
+                  You're adding a new party to your existing account.{' '}
                   <Link href="/host/dashboard" className="text-[#ff6b9d] underline">Back to dashboard</Link>
                 </div>
               ) : (
@@ -140,16 +149,20 @@ const BirthdayPurchase = () => {
                 <small className="text-[#666] text-[0.85rem]">Your receipt and party link will be sent here.</small>
               </div>
 
-              <div className="flex flex-col gap-2 mb-5">
-                <label htmlFor="password" className="font-semibold text-black text-[0.95rem]">Create a Password *</label>
-                <input type="password" id="password" name="password" value={form.password} onChange={handleChange} required placeholder="At least 8 characters" className={inputClass} />
-                <small className="text-[#666] text-[0.85rem]">You'll use this to log into your party dashboard later.</small>
-              </div>
+              {!isExistingHost && (
+                <>
+                  <div className="flex flex-col gap-2 mb-5">
+                    <label htmlFor="password" className="font-semibold text-black text-[0.95rem]">Create a Password *</label>
+                    <input type="password" id="password" name="password" value={form.password} onChange={handleChange} required placeholder="At least 8 characters" className={inputClass} />
+                    <small className="text-[#666] text-[0.85rem]">You'll use this to log into your party dashboard later.</small>
+                  </div>
 
-              <div className="flex flex-col gap-2 mb-5">
-                <label htmlFor="confirm_password" className="font-semibold text-black text-[0.95rem]">Confirm Password *</label>
-                <input type="password" id="confirm_password" name="confirm_password" value={form.confirm_password} onChange={handleChange} required placeholder="Re-enter your password" className={inputClass} />
-              </div>
+                  <div className="flex flex-col gap-2 mb-5">
+                    <label htmlFor="confirm_password" className="font-semibold text-black text-[0.95rem]">Confirm Password *</label>
+                    <input type="password" id="confirm_password" name="confirm_password" value={form.confirm_password} onChange={handleChange} required placeholder="Re-enter your password" className={inputClass} />
+                  </div>
+                </>
+              )}
 
               <button
                 type="submit"

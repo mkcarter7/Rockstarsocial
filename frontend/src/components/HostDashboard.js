@@ -108,29 +108,45 @@ const HostDashboard = () => {
       <div className="min-h-screen bg-[#fafafa]">
         <section className="py-[80px] text-center text-white" style={{ background: 'linear-gradient(135deg, #ff6b9d 0%, #c850c0 100%)' }}>
           <div className="container">
-            <h1 className="text-[2.2rem] text-white mb-3">🎂 Your Parties</h1>
-            <p className="opacity-90">Select a party to manage.</p>
+            <h1 className="text-[2.2rem] text-white mb-3">Your Events</h1>
+            <p className="opacity-90">Select an event to manage.</p>
           </div>
         </section>
         <section className="section">
           <div className="container" style={{ maxWidth: 480 }}>
             <div className="flex flex-col gap-4">
-              {allParties.map(p => (
-                <button
-                  key={p.slug}
-                  onClick={() => pickParty(p.slug)}
-                  className="bg-white border-2 border-[#ff6b9d] rounded-[12px] p-6 text-left hover:-translate-y-[2px] hover:shadow-md transition-[transform,box-shadow] cursor-pointer"
-                >
-                  <div className="font-bold text-[1.1rem] text-[#333]">🎂 {p.birthday_person_name}</div>
-                  <div className="text-[#888] text-[0.9rem] mt-1">{formatDate(p.party_date)}</div>
-                  <div className="text-[#ff6b9d] text-[0.85rem] mt-1">1rockstarsocial.com/{p.slug}</div>
-                </button>
-              ))}
+              {allParties.map(p => {
+                const isWedding = p.party_type === 'wedding';
+                const accentColor = isWedding ? '#c9a96e' : '#ff6b9d';
+                const eventName = isWedding ? (p.couple_name || 'Wedding') : (p.birthday_person_name || 'Birthday');
+                const eventDate = p.wedding_date || p.party_date;
+                return (
+                  <button
+                    key={p.slug}
+                    onClick={() => pickParty(p.slug)}
+                    className="bg-white rounded-[12px] p-6 text-left hover:-translate-y-[2px] hover:shadow-md transition-[transform,box-shadow] cursor-pointer"
+                    style={{ border: `2px solid ${accentColor}` }}
+                  >
+                    <div className="font-bold text-[1.1rem] text-[#333]">
+                      {isWedding ? '♡' : '🎂'} {eventName}
+                    </div>
+                    {eventDate && <div className="text-[#888] text-[0.9rem] mt-1">{formatDate(eventDate)}</div>}
+                    <div className="text-[0.85rem] mt-1" style={{ color: accentColor }}>1rockstarsocial.com/{p.slug}</div>
+                  </button>
+                );
+              })}
               <Link
                 href="/birthday/purchase"
                 className="flex items-center justify-center gap-2 border-2 border-dashed border-[#ff6b9d] rounded-[12px] p-5 text-[#ff6b9d] font-semibold hover:bg-[#fff0f7] transition-colors"
               >
-                + Create Another Party
+                + Create a Birthday Page
+              </Link>
+              <Link
+                href="/wedding/purchase"
+                className="flex items-center justify-center gap-2 border-2 border-dashed rounded-[12px] p-5 font-semibold hover:opacity-80 transition-opacity"
+                style={{ borderColor: '#c9a96e', color: '#c9a96e' }}
+              >
+                + Create a Wedding Page
               </Link>
             </div>
           </div>
@@ -145,7 +161,7 @@ const HostDashboard = () => {
         <section className="py-[80px] text-center text-white" style={{ background: 'linear-gradient(135deg, #ff6b9d 0%, #c850c0 100%)' }}>
           <div className="container">
             <h1 className="text-[2.2rem] text-white mb-3">Welcome to RockStar Social</h1>
-            <p className="opacity-90">You're logged in, but you don't have an active party yet.</p>
+            <p className="opacity-90">You're logged in, but you don't have an active event yet.</p>
           </div>
         </section>
         <section className="section">
@@ -156,7 +172,14 @@ const HostDashboard = () => {
                 className="flex items-center justify-center gap-2 text-white rounded-[10px] py-4 px-6 font-semibold hover:opacity-90 transition-opacity"
                 style={{ background: '#ff6b9d' }}
               >
-                🎂 Create a Party Page
+                🎂 Create a Birthday Page
+              </Link>
+              <Link
+                href="/wedding/purchase"
+                className="flex items-center justify-center gap-2 text-white rounded-[10px] py-4 px-6 font-semibold hover:opacity-90 transition-opacity"
+                style={{ background: '#c9a96e' }}
+              >
+                ♡ Create a Wedding Page
               </Link>
               <button
                 onClick={handleLogout}
@@ -190,7 +213,22 @@ const HostDashboard = () => {
     );
   }
 
-  const color = '#ff6b9d';
+  const isWedding = stats.party_type === 'wedding';
+  const color = isWedding ? '#c9a96e' : '#ff6b9d';
+  const heroGradient = isWedding
+    ? 'linear-gradient(135deg, #f9f4ef 0%, #e8c4b8 100%)'
+    : `linear-gradient(135deg, ${color} 0%, #c850c0 100%)`;
+  const heroTextColor = isWedding ? '#3d2c1e' : 'white';
+  const eventName = isWedding
+    ? (stats.couple_name || 'Your Wedding')
+    : `${stats.birthday_person_name}'s Party`;
+  const eventDate = stats.wedding_date || stats.party_date;
+  const editUrl = isWedding
+    ? `/wedding/setup?session_token=${hostToken}`
+    : `/birthday/setup?session_token=${hostToken}`;
+  const createAnotherUrl = isWedding ? '/wedding/purchase' : '/birthday/purchase';
+  const createAnotherLabel = isWedding ? '+ Create Another Wedding Page' : '+ Create Another Party';
+
   const formatDate = (d) => {
     const [y, m, day] = d.split('-').map(Number);
     return new Date(y, m - 1, day).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -198,53 +236,58 @@ const HostDashboard = () => {
 
   return (
     <div className="min-h-screen bg-[#fafafa]">
-      <section
-        className="py-[70px] text-center text-white"
-        style={{ background: `linear-gradient(135deg, ${color} 0%, #c850c0 100%)` }}
-      >
+      <section className="py-[70px] text-center" style={{ background: heroGradient }}>
         <div className="container">
-          <h1 className="text-[2.2rem] text-white mb-2">
-            🎂 {stats.birthday_person_name}'s Party
+          <h1 className="text-[2.2rem] mb-2" style={{ color: heroTextColor }}>
+            {isWedding ? '♡' : '🎂'} {eventName}
           </h1>
-          <p className="opacity-90 text-[1rem]">{formatDate(stats.party_date)}</p>
+          {eventDate && <p className="text-[1rem]" style={{ color: isWedding ? '#7a6050' : 'rgba(255,255,255,0.9)' }}>{formatDate(eventDate)}</p>}
           {stats.host_name && (
-            <p className="opacity-75 text-[0.9rem] mt-1">Hosted by {stats.host_name}</p>
+            <p className="text-[0.9rem] mt-1" style={{ color: isWedding ? '#9a8070' : 'rgba(255,255,255,0.75)' }}>Hosted by {stats.host_name}</p>
           )}
         </div>
       </section>
 
       <section className="section">
         <div className="container" style={{ maxWidth: 720 }}>
-          <h2 className="text-center mb-6 text-[#333]">Party Stats</h2>
+          <h2 className="text-center mb-6 text-[#333]">{isWedding ? 'Wedding Stats' : 'Party Stats'}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-10">
             <StatCard icon="✅" label="RSVPs (Yes)" value={stats.rsvp_count} color={color} />
-            <StatCard icon="📖" label="Guestbook" value={stats.guestbook_count} color={color} />
+            <StatCard icon="📖" label={isWedding ? 'Guest Wishes' : 'Guestbook'} value={stats.guestbook_count} color={color} />
             <StatCard icon="📸" label="Photos" value={stats.photo_count} color={color} />
           </div>
+          {isWedding && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-10">
+              {stats.story_count != null && <StatCard icon="∞" label="Story Moments" value={stats.story_count} color={color} />}
+              {stats.song_request_count != null && <StatCard icon="♪" label="Song Requests" value={stats.song_request_count} color={color} />}
+            </div>
+          )}
 
           <div className="flex flex-col gap-4">
             <Link
-              href={`/${hostSlug}`}
+              href={isWedding ? `/w/${hostSlug}` : `/${hostSlug}`}
               className="flex items-center justify-center gap-2 bg-white border-2 rounded-[10px] py-4 px-6 font-semibold text-[#333] hover:-translate-y-[2px] hover:shadow-md transition-[transform,box-shadow]"
               style={{ borderColor: color }}
             >
-              🎉 View Party Page
+              {isWedding ? '♡ View Wedding Page' : '🎉 View Party Page'}
             </Link>
 
             <Link
-              href={`/birthday/setup?session_token=${hostToken}`}
+              href={editUrl}
               className="flex items-center justify-center gap-2 text-white rounded-[10px] py-4 px-6 font-semibold hover:opacity-90 transition-opacity"
               style={{ background: color }}
             >
-              ✏️ Edit Party (colors, message, trivia)
+              {isWedding ? '✦ Manage Wedding (colors, story, schedule, FAQ…)' : '✏️ Edit Party (colors, message, trivia)'}
             </Link>
 
             <Link
-              href="/birthday/purchase"
-              className="flex items-center justify-center gap-2 bg-white border-2 border-dashed rounded-[10px] py-4 px-6 font-semibold hover:bg-[#fff0f7] transition-colors"
+              href={createAnotherUrl}
+              className="flex items-center justify-center gap-2 bg-white border-2 border-dashed rounded-[10px] py-4 px-6 font-semibold transition-colors"
               style={{ borderColor: color, color }}
+              onMouseEnter={e => { e.currentTarget.style.background = isWedding ? '#fdf6ec' : '#fff0f7'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'white'; }}
             >
-              + Create Another Party
+              {createAnotherLabel}
             </Link>
 
             <div className="mt-2">

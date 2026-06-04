@@ -9,7 +9,7 @@ from .admin_views import (
     AdminThemeViewSet, AdminThemeCategoryViewSet, AdminContactSubmissionViewSet,
     VerifyTokenView, SiteSettingsView
 )
-from .stripe_views import create_checkout_session, stripe_webhook, check_purchase_status, create_birthday_checkout, create_theme_checkout
+from .stripe_views import create_checkout_session, stripe_webhook, check_purchase_status, create_birthday_checkout, create_theme_checkout, create_wedding_checkout
 from .theme_setup_views import theme_setup_view
 from .birthday_views import (
     check_slug, party_detail, party_setup,
@@ -21,6 +21,17 @@ from .birthday_views import (
     party_gifts, claim_gift, manage_gift,
 )
 from .host_auth_views import request_magic_link, verify_magic_link, host_party_stats, host_login, switch_party, change_password
+from .wedding_views import (
+    check_slug as wedding_check_slug,
+    event_detail, event_setup,
+    event_photos, event_guestbook, event_rsvp,
+    event_story, delete_story_entry,
+    event_gifts, claim_gift as wedding_claim_gift, manage_gift as wedding_manage_gift,
+    event_party_members, manage_party_member,
+    event_schedule, manage_schedule_item,
+    event_faq, manage_faq_item,
+    event_song_requests, manage_song_request,
+)
 
 router = DefaultRouter()
 router.register(r'portfolio', PortfolioItemViewSet, basename='portfolio')
@@ -49,6 +60,7 @@ urlpatterns = [
     # Stripe endpoints
     path('stripe/create-checkout-session/', create_checkout_session, name='create-checkout-session'),
     path('stripe/create-birthday-checkout/', create_birthday_checkout, name='create-birthday-checkout'),
+    path('stripe/create-wedding-checkout/', create_wedding_checkout, name='create-wedding-checkout'),
     path('stripe/create-theme-checkout/', create_theme_checkout, name='create-theme-checkout'),
     path('stripe/webhook/', stripe_webhook, name='stripe-webhook'),
     path('stripe/check-purchase-status/', check_purchase_status, name='check-purchase-status'),
@@ -68,6 +80,26 @@ urlpatterns = [
     path('birthday/<slug:slug>/gifts/', party_gifts, name='birthday-gifts'),
     path('birthday/<slug:slug>/gifts/<int:gift_id>/claim/', claim_gift, name='birthday-gift-claim'),
     path('birthday/<slug:slug>/gifts/<int:gift_id>/', manage_gift, name='birthday-gift-manage'),
+    # Wedding app endpoints
+    path('wedding/check-slug/', wedding_check_slug, name='wedding-check-slug'),
+    path('wedding/setup/', event_setup, name='wedding-setup'),
+    path('wedding/<slug:slug>/', event_detail, name='wedding-detail'),
+    path('wedding/<slug:slug>/photos/', event_photos, name='wedding-photos'),
+    path('wedding/<slug:slug>/guestbook/', event_guestbook, name='wedding-guestbook'),
+    path('wedding/<slug:slug>/rsvp/', event_rsvp, name='wedding-rsvp'),
+    path('wedding/<slug:slug>/story/', event_story, name='wedding-story'),
+    path('wedding/<slug:slug>/story/<int:entry_id>/', delete_story_entry, name='wedding-story-delete'),
+    path('wedding/<slug:slug>/gifts/', event_gifts, name='wedding-gifts'),
+    path('wedding/<slug:slug>/gifts/<int:gift_id>/claim/', wedding_claim_gift, name='wedding-gift-claim'),
+    path('wedding/<slug:slug>/gifts/<int:gift_id>/', wedding_manage_gift, name='wedding-gift-manage'),
+    path('wedding/<slug:slug>/party-members/', event_party_members, name='wedding-party-members'),
+    path('wedding/<slug:slug>/party-members/<int:member_id>/', manage_party_member, name='wedding-party-member-manage'),
+    path('wedding/<slug:slug>/schedule/', event_schedule, name='wedding-schedule'),
+    path('wedding/<slug:slug>/schedule/<int:item_id>/', manage_schedule_item, name='wedding-schedule-manage'),
+    path('wedding/<slug:slug>/faq/', event_faq, name='wedding-faq'),
+    path('wedding/<slug:slug>/faq/<int:item_id>/', manage_faq_item, name='wedding-faq-manage'),
+    path('wedding/<slug:slug>/song-requests/', event_song_requests, name='wedding-song-requests'),
+    path('wedding/<slug:slug>/song-requests/<int:req_id>/', manage_song_request, name='wedding-song-request-manage'),
     path('admin/birthday-parties/', admin_birthday_parties, name='admin-birthday-parties'),
     path('admin/event-pages/', admin_event_pages, name='admin-event-pages'),
     path('admin/event-pages/<str:event_type>/<int:page_id>/', admin_delete_event_page, name='admin-delete-event-page'),

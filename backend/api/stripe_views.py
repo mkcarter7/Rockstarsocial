@@ -43,7 +43,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
-from .models import Theme, ThemePurchase, ThemePackage, ThemeOrder, BirthdayParty, HostAccount, HostAccessToken
+from .models import Theme, ThemePurchase, ThemePackage, ThemeOrder, BirthdayParty, WeddingEvent, HostAccount, HostAccessToken
 from django.contrib.auth.hashers import make_password, check_password
 
 logger = logging.getLogger(__name__)
@@ -312,6 +312,25 @@ def stripe_webhook(request):
                 return HttpResponse(status=404)
             except Exception as e:
                 logger.error(f"Error activating birthday party: {str(e)}", exc_info=True)
+                return HttpResponse(status=500)
+        elif purchase_type == 'wedding':
+            # Activate the WeddingEvent
+            try:
+                with transaction.atomic():
+                    event = WeddingEvent.objects.select_for_update().get(
+                        stripe_session_id=session['id']
+                    )
+                    if not event.is_active:
+                        event.is_active = True
+                        event.save()
+                        logger.info(f"Wedding event activated: {event.slug}")
+                        from .wedding_views import _send_welcome_email as _send_wedding_email
+                        _send_wedding_email(event)
+            except WeddingEvent.DoesNotExist:
+                logger.error(f"WeddingEvent not found for session {session['id']}")
+                return HttpResponse(status=404)
+            except Exception as e:
+                logger.error(f"Error activating wedding event: {str(e)}", exc_info=True)
                 return HttpResponse(status=500)
         elif purchase_type == 'theme_order':
             # Complete a website theme package order
@@ -619,5 +638,124 @@ def create_theme_checkout(request):
         except Exception:
             pass
         return Response({'error': 'Failed to reserve order'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return Response({'checkout_url': session.url, 'session_id': session.id})
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def create_wedding_checkout(request):
+    """Create a Stripe Checkout session for a wedding page purchase."""
+    if not stripe.api_key:
+        return Response({'error': 'Stripe is not configured'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    checkout_module = getattr(stripe, 'checkout', None) or stripe_checkout
+    if not checkout_module:
+        return Response({'error': 'Stripe checkout not available'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    slug = request.data.get('slug', '').strip().lower()
+    couple_name = request.data.get('couple_name', '').strip()
+    wedding_date = request.data.get('wedding_date', '')
+    host_email = request.data.get('host_email', '').strip()
+    host_name = request.data.get('host_name', '').strip()
+    theme_id = request.data.get('theme_id')
+    password = request.data.get('password', '').strip()
+
+    if not all([slug, couple_name, wedding_date, host_email]):
+        return Response(
+            {'error': 'slug, couple_name, wedding_date, and host_email are required'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    session_token = request.data.get('session_token', '').strip()
+
+    if session_token:
+        try:
+            token_obj = HostAccessToken.objects.get(token=session_token, token_type='session')
+        except (HostAccessToken.DoesNotExist, ValueError):
+            return Response({'error': 'Invalid session. Please log in again.'}, status=status.HTTP_401_UNAUTHORIZED)
+        if token_obj.expires_at < timezone.now():
+            return Response({'error': 'Session expired. Please log in again.'}, status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            host_account = HostAccount.objects.get(email=host_email.lower())
+        except HostAccount.DoesNotExist:
+            return Response({'error': 'No account found for this email.'}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        if not password or len(password) < 8:
+            return Response({'error': 'Password must be at least 8 characters'}, status=status.HTTP_400_BAD_REQUEST)
+        host_account, created = HostAccount.objects.get_or_create(
+            email=host_email.lower(),
+            defaults={'password': make_password(password)},
+        )
+        if not created and not check_password(password, host_account.password):
+            return Response(
+                {'error': 'An account already exists for this email. Please use your existing password.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    if WeddingEvent.objects.filter(slug=slug).exists():
+        return Response({'error': 'That URL is already taken. Please choose a different one.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if theme_id:
+        try:
+            theme_package = ThemePackage.objects.get(id=theme_id)
+            price_cents = int(Decimal(str(theme_package.price)) * 100)
+        except ThemePackage.DoesNotExist:
+            return Response({'error': 'Theme not found'}, status=status.HTTP_404_NOT_FOUND)
+    else:
+        price_cents = int(os.environ.get('WEDDING_APP_PRICE', '2900'))
+
+    frontend_url = os.environ.get('FRONTEND_URL', 'https://1rockstarsocial.com')
+
+    try:
+        session = checkout_module.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {
+                        'name': f"Wedding Page — {couple_name}",
+                        'description': f"Your custom wedding page at 1rockstarsocial.com/w/{slug}",
+                    },
+                    'unit_amount': price_cents,
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            customer_email=host_email,
+            success_url=f'{frontend_url}/wedding/setup?session_id={{CHECKOUT_SESSION_ID}}',
+            cancel_url=f'{frontend_url}/wedding/purchase',
+            metadata={
+                'type': 'wedding',
+                'slug': slug,
+                'couple_name': couple_name,
+                'wedding_date': wedding_date,
+                'host_email': host_email,
+                'host_name': host_name,
+            },
+        )
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe error creating wedding checkout: {str(e)}")
+        return Response({'error': f'Payment error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    try:
+        from datetime import datetime
+        WeddingEvent.objects.create(
+            slug=slug,
+            couple_name=couple_name,
+            wedding_date=datetime.strptime(wedding_date, '%Y-%m-%d').date(),
+            host_email=host_email.lower(),
+            host_name=host_name,
+            stripe_session_id=session.id,
+            is_active=False,
+            host_account=host_account,
+        )
+    except Exception as e:
+        logger.error(f"Failed to create pending wedding event: {str(e)}")
+        try:
+            checkout_module.Session.expire(session.id)
+        except Exception:
+            pass
+        return Response({'error': 'Failed to reserve wedding slot'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return Response({'checkout_url': session.url, 'session_id': session.id})

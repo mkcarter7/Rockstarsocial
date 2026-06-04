@@ -29,6 +29,8 @@ const BirthdaySetup = () => {
   const [locationName, setLocationName] = useState('');
   const [locationAddress, setLocationAddress] = useState('');
   const [giftRegistryUrl, setGiftRegistryUrl] = useState('');
+  const [venmoHandle, setVenmoHandle] = useState('');
+  const [cashappHandle, setCashappHandle] = useState('');
   const [questions, setQuestions] = useState([]);
   const [newQ, setNewQ] = useState(emptyQuestion);
   const [addingQ, setAddingQ] = useState(false);
@@ -54,6 +56,8 @@ const BirthdaySetup = () => {
         setLocationName(res.data.location_name || '');
         setLocationAddress(res.data.location_address || '');
         setGiftRegistryUrl(res.data.gift_registry_url || '');
+        setVenmoHandle(res.data.venmo_handle || '');
+        setCashappHandle(res.data.cashapp_handle || '');
         if (res.data.banner_image) setExistingBannerUrl(res.data.banner_image);
         if (res.data.is_active) {
           const token = isHostReturn ? sessionToken : null;
@@ -88,6 +92,8 @@ const BirthdaySetup = () => {
     formData.append('location_name', locationName);
     formData.append('location_address', locationAddress);
     formData.append('gift_registry_url', giftRegistryUrl);
+    formData.append('venmo_handle', venmoHandle);
+    formData.append('cashapp_handle', cashappHandle);
     try {
       await saveBirthdaySetup(formData);
       router.push(`/${party.slug}`);
@@ -249,6 +255,18 @@ const BirthdaySetup = () => {
                 <label htmlFor="gift_registry_url" className="font-semibold text-black">Gift Registry Link (optional)</label>
                 <p className="text-[0.8rem] text-[#888] -mt-1">Paste a link to your Amazon wishlist, Target registry, Babylist, etc. Guests will see a button to view it.</p>
                 <input type="url" id="gift_registry_url" value={giftRegistryUrl} onChange={e => setGiftRegistryUrl(e.target.value)} placeholder="https://www.amazon.com/hz/wishlist/..." className={inputClass} />
+              </div>
+
+              <div className="flex flex-col gap-2 mb-5">
+                <label className="font-semibold text-black">Venmo Handle (optional)</label>
+                <p className="text-[0.8rem] text-[#888] -mt-1">Guests can tap to send a gift directly via Venmo. Enter your handle without the @.</p>
+                <input type="text" value={venmoHandle} onChange={e => setVenmoHandle(e.target.value.replace(/^@/, ''))} placeholder="yourhandle" className={inputClass} />
+              </div>
+
+              <div className="flex flex-col gap-2 mb-5">
+                <label className="font-semibold text-black">Cash App Handle (optional)</label>
+                <p className="text-[0.8rem] text-[#888] -mt-1">Guests can tap to send a gift directly via Cash App. Enter your $cashtag without the $.</p>
+                <input type="text" value={cashappHandle} onChange={e => setCashappHandle(e.target.value.replace(/^\$/, ''))} placeholder="yourcashtag" className={inputClass} />
               </div>
 
               <button type="submit" className="btn btn-primary py-4 px-10 text-[1.1rem] disabled:opacity-60 disabled:cursor-not-allowed" disabled={saving}>

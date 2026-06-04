@@ -30,6 +30,10 @@ const Pricing = () => {
       router.push(`/birthday/purchase?theme_id=${theme.id}`);
       return;
     }
+    if (theme.theme_type === 'wedding') {
+      router.push(`/wedding/purchase?theme_id=${theme.id}`);
+      return;
+    }
 
     const customerEmail = prompt('Please enter your email address to get started:');
     if (!customerEmail) return;
@@ -108,6 +112,19 @@ const Pricing = () => {
                         Purchase
                       </button>
                       <a href="/birthdaydemo" target="_blank" rel="noopener noreferrer"
+                        className="block mt-2 text-sm text-brand underline text-center hover:opacity-75 transition-opacity">
+                        View Demo
+                      </a>
+                    </>
+                  ) : theme.theme_type === 'wedding' ? (
+                    <>
+                      <button
+                        onClick={() => handleThemePurchase(theme)}
+                        className="w-full py-4 bg-brand text-white rounded-lg font-semibold text-lg hover:bg-brand-dark hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200"
+                      >
+                        Purchase
+                      </button>
+                      <a href="/weddingdemo" target="_blank" rel="noopener noreferrer"
                         className="block mt-2 text-sm text-brand underline text-center hover:opacity-75 transition-opacity">
                         View Demo
                       </a>

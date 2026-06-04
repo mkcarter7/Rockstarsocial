@@ -200,6 +200,8 @@ class BirthdayParty(models.Model):
     location_name = models.CharField(max_length=200, blank=True)
     location_address = models.TextField(blank=True)
     gift_registry_url = models.URLField(blank=True)
+    venmo_handle = models.CharField(max_length=100, blank=True)
+    cashapp_handle = models.CharField(max_length=100, blank=True)
     is_active = models.BooleanField(default=False)
     stripe_session_id = models.CharField(max_length=255, unique=True, blank=True, null=True)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -326,6 +328,7 @@ class GiftItem(models.Model):
 class HostAccessToken(models.Model):
     TOKEN_TYPES = [('magic_link', 'Magic Link'), ('session', 'Session')]
     party = models.ForeignKey(BirthdayParty, on_delete=models.SET_NULL, null=True, blank=True, related_name='access_tokens')
+    wedding_event = models.ForeignKey('WeddingEvent', on_delete=models.SET_NULL, null=True, blank=True, related_name='access_tokens')
     token = models.UUIDField(default=uuid.uuid4, unique=True)
     token_type = models.CharField(max_length=20, choices=TOKEN_TYPES)
     expires_at = models.DateTimeField()
@@ -336,8 +339,13 @@ class HostAccessToken(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        party_label = self.party.slug if self.party else 'no party'
-        return f"{self.token_type} token for {party_label}"
+        if self.party:
+            label = self.party.slug
+        elif self.wedding_event:
+            label = self.wedding_event.slug
+        else:
+            label = 'no event'
+        return f"{self.token_type} token for {label}"
 
 
 class SiteSettings(models.Model):
@@ -370,3 +378,182 @@ class SiteSettings(models.Model):
     
     def __str__(self):
         return 'Site Settings'
+
+
+# ─── Wedding models ────────────────────────────────────────────────────────────
+
+class WeddingEvent(models.Model):
+    slug = models.SlugField(unique=True, max_length=100)
+    couple_name = models.CharField(max_length=200)
+    wedding_date = models.DateField()
+    welcome_message = models.TextField(blank=True)
+    host_email = models.EmailField()
+    host_name = models.CharField(max_length=200, blank=True)
+    theme_color = models.CharField(max_length=7, default='#c9a96e')
+    secondary_color = models.CharField(max_length=7, default='#fdfaf7', blank=True)
+    banner_image = models.ImageField(upload_to='wedding/banners/', blank=True, null=True)
+    party_time = models.TimeField(null=True, blank=True)
+    location_name = models.CharField(max_length=200, blank=True)
+    location_address = models.TextField(blank=True)
+    gift_registry_url = models.URLField(blank=True)
+    venmo_handle = models.CharField(max_length=100, blank=True)
+    cashapp_handle = models.CharField(max_length=100, blank=True)
+    is_active = models.BooleanField(default=False)
+    stripe_session_id = models.CharField(max_length=255, unique=True, blank=True, null=True)
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    host_account = models.ForeignKey(
+        'HostAccount', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='wedding_events',
+    )
+
+    class Meta:
+        ordering = ['-created_at']
+
+    @property
+    def expires_at(self):
+        from datetime import timedelta
+        return self.wedding_date + timedelta(days=365)
+
+    @property
+    def is_expired(self):
+        from datetime import date
+        return date.today() > self.expires_at
+
+    def __str__(self):
+        return f"{self.couple_name}'s Wedding ({self.slug})"
+
+
+class WeddingPhoto(models.Model):
+    event = models.ForeignKey(WeddingEvent, on_delete=models.CASCADE, related_name='photos')
+    image = models.ImageField(upload_to='wedding/photos/')
+    caption = models.CharField(max_length=200, blank=True)
+    uploaded_by_name = models.CharField(max_length=100, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-uploaded_at']
+
+    def __str__(self):
+        return f"Photo for {self.event.slug}"
+
+
+class WeddingGuestBookEntry(models.Model):
+    event = models.ForeignKey(WeddingEvent, on_delete=models.CASCADE, related_name='guestbook_entries')
+    author_name = models.CharField(max_length=100)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.author_name} on {self.event.slug}"
+
+
+class WeddingRSVP(models.Model):
+    STATUS_CHOICES = [('yes', 'Yes'), ('no', 'No'), ('maybe', 'Maybe')]
+    event = models.ForeignKey(WeddingEvent, on_delete=models.CASCADE, related_name='rsvps')
+    name = models.CharField(max_length=100)
+    email = models.EmailField(blank=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
+    guest_count = models.IntegerField(default=1)
+    message = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} - {self.status} ({self.event.slug})"
+
+
+class WeddingStoryEntry(models.Model):
+    event = models.ForeignKey(WeddingEvent, on_delete=models.CASCADE, related_name='story_entries')
+    date_label = models.CharField(max_length=100)
+    title = models.CharField(max_length=300)
+    description = models.TextField(blank=True)
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', 'created_at']
+
+    def __str__(self):
+        return f"{self.date_label}: {self.title[:50]} ({self.event.slug})"
+
+
+class WeddingGiftItem(models.Model):
+    event = models.ForeignKey(WeddingEvent, on_delete=models.CASCADE, related_name='gift_items')
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    link_url = models.URLField(blank=True)
+    price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    claimed_by = models.CharField(max_length=100, blank=True)
+    claimed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'created_at']
+
+    def __str__(self):
+        return f"{self.title} ({self.event.slug})"
+
+
+class WeddingPartyMember(models.Model):
+    event = models.ForeignKey(WeddingEvent, on_delete=models.CASCADE, related_name='party_members')
+    name = models.CharField(max_length=100)
+    role = models.CharField(max_length=100)
+    photo = models.ImageField(upload_to='wedding/party/', blank=True, null=True)
+    bio = models.TextField(blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return f"{self.name} ({self.role}) — {self.event.slug}"
+
+
+class WeddingScheduleItem(models.Model):
+    event = models.ForeignKey(WeddingEvent, on_delete=models.CASCADE, related_name='schedule_items')
+    name = models.CharField(max_length=200)
+    event_date = models.DateField(blank=True, null=True)
+    event_time = models.TimeField(blank=True, null=True)
+    location_name = models.CharField(max_length=200, blank=True)
+    description = models.TextField(blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'event_date', 'event_time']
+
+    def __str__(self):
+        return f"{self.name} — {self.event.slug}"
+
+
+class WeddingFAQItem(models.Model):
+    event = models.ForeignKey(WeddingEvent, on_delete=models.CASCADE, related_name='faq_items')
+    question = models.CharField(max_length=300)
+    answer = models.TextField()
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return f"FAQ: {self.question[:60]} — {self.event.slug}"
+
+
+class WeddingSongRequest(models.Model):
+    event = models.ForeignKey(WeddingEvent, on_delete=models.CASCADE, related_name='song_requests')
+    song_title = models.CharField(max_length=200)
+    artist = models.CharField(max_length=200, blank=True)
+    requested_by = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'"{self.song_title}" by {self.artist or "unknown"} — {self.event.slug}'

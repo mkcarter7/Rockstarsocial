@@ -79,6 +79,49 @@ export const deleteGiftItem = (slug, giftId, sessionToken) =>
 export const saveGiftRegistryUrl = (url, sessionToken) =>
   api.post('/birthday/setup/', { session_token: sessionToken, gift_registry_url: url });
 
+// Wedding app
+export const checkWeddingSlug = (slug) => api.get(`/wedding/check-slug/?slug=${slug}`);
+export const getWeddingParty = (slug) => api.get(`/wedding/${slug}/`);
+export const getWeddingSetup = (sessionId, sessionToken = null) =>
+  sessionToken
+    ? api.get(`/wedding/setup/?session_token=${sessionToken}`)
+    : api.get(`/wedding/setup/?session_id=${sessionId}`);
+export const saveWeddingSetup = (data) => api.post('/wedding/setup/', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const getWeddingPhotos = (slug) => api.get(`/wedding/${slug}/photos/`);
+export const uploadWeddingPhoto = (slug, formData) => api.post(`/wedding/${slug}/photos/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const getWeddingGuestbook = (slug) => api.get(`/wedding/${slug}/guestbook/`);
+export const addWeddingGuestbookEntry = (slug, data) => api.post(`/wedding/${slug}/guestbook/`, data);
+export const getWeddingRSVP = (slug) => api.get(`/wedding/${slug}/rsvp/`);
+export const submitWeddingRSVP = (slug, data) => api.post(`/wedding/${slug}/rsvp/`, data);
+export const getWeddingStory = (slug) => api.get(`/wedding/${slug}/story/`);
+export const addStoryEntry = (slug, data) => api.post(`/wedding/${slug}/story/`, data);
+export const deleteStoryEntry = (slug, entryId, sessionToken) =>
+  api.delete(`/wedding/${slug}/story/${entryId}/?session_token=${sessionToken}`);
+export const getWeddingGifts = (slug, sessionToken = null) =>
+  sessionToken
+    ? api.get(`/wedding/${slug}/gifts/?session_token=${sessionToken}`)
+    : api.get(`/wedding/${slug}/gifts/`);
+export const addWeddingGiftItem = (slug, data) => api.post(`/wedding/${slug}/gifts/`, data);
+export const claimWeddingGiftItem = (slug, giftId, claimerName) =>
+  api.post(`/wedding/${slug}/gifts/${giftId}/claim/`, { claimer_name: claimerName });
+export const unclaimWeddingGiftItem = (slug, giftId, sessionToken) =>
+  api.post(`/wedding/${slug}/gifts/${giftId}/`, { session_token: sessionToken });
+export const deleteWeddingGiftItem = (slug, giftId, sessionToken) =>
+  api.delete(`/wedding/${slug}/gifts/${giftId}/?session_token=${sessionToken}`);
+export const createWeddingCheckout = (data) => api.post('/stripe/create-wedding-checkout/', data);
+export const getWeddingPartyMembers = (slug) => api.get(`/wedding/${slug}/party-members/`);
+export const addWeddingPartyMember = (slug, formData) => api.post(`/wedding/${slug}/party-members/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const deleteWeddingPartyMember = (slug, id, token) => api.delete(`/wedding/${slug}/party-members/${id}/?session_token=${token}`);
+export const getWeddingSchedule = (slug) => api.get(`/wedding/${slug}/schedule/`);
+export const addWeddingScheduleItem = (slug, data) => api.post(`/wedding/${slug}/schedule/`, data);
+export const deleteWeddingScheduleItem = (slug, id, token) => api.delete(`/wedding/${slug}/schedule/${id}/?session_token=${token}`);
+export const getWeddingFAQ = (slug) => api.get(`/wedding/${slug}/faq/`);
+export const addWeddingFAQItem = (slug, data) => api.post(`/wedding/${slug}/faq/`, data);
+export const deleteWeddingFAQItem = (slug, id, token) => api.delete(`/wedding/${slug}/faq/${id}/?session_token=${token}`);
+export const getWeddingSongRequests = (slug) => api.get(`/wedding/${slug}/song-requests/`);
+export const submitSongRequest = (slug, data) => api.post(`/wedding/${slug}/song-requests/`, data);
+export const deleteWeddingSongRequest = (slug, id, token) => api.delete(`/wedding/${slug}/song-requests/${id}/?session_token=${token}`);
+
 // Admin — Event pages (all types: birthday, wedding, etc.)
 export const getAdminEventPages = (token) => api.get('/admin/event-pages/', { headers: { Authorization: `Bearer ${token}` } });
 export const deleteAdminEventPage = (eventType, id, token) => api.delete(`/admin/event-pages/${eventType}/${id}/`, { headers: { Authorization: `Bearer ${token}` } });

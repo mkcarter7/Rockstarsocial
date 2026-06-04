@@ -220,6 +220,8 @@ const PartyGifts = ({ slug }) => {
   const [party, setParty] = useState(null);
   const [gifts, setGifts] = useState([]);
   const [registryUrl, setRegistryUrl] = useState('');
+  const [venmoHandle, setVenmoHandle] = useState('');
+  const [cashappHandle, setCashappHandle] = useState('');
   const [loading, setLoading] = useState(true);
   const [isHost, setIsHost] = useState(false);
   const [sessionToken, setSessionToken] = useState('');
@@ -239,6 +241,8 @@ const PartyGifts = ({ slug }) => {
       .then(([partyRes, giftsRes]) => {
         setParty(partyRes.data);
         setRegistryUrl(partyRes.data.gift_registry_url || '');
+        setVenmoHandle(partyRes.data.venmo_handle || '');
+        setCashappHandle(partyRes.data.cashapp_handle || '');
         setGifts(giftsRes.data);
         setLoading(false);
       })
@@ -288,10 +292,75 @@ const PartyGifts = ({ slug }) => {
 
       {/* Content */}
       <div className="container py-10">
-        <ExternalRegistrySection
-          registryUrl={registryUrl}
-          color={color}
-        />
+        <ExternalRegistrySection registryUrl={registryUrl} color={color} />
+
+        {(venmoHandle || cashappHandle) && (
+          <div
+            className="rounded-[12px] p-8 mb-8 text-center"
+            style={{ border: `2px solid ${color}30`, background: '#fff', boxShadow: '0 2px 16px rgba(0,0,0,0.05)' }}
+          >
+            <p className="text-[0.75rem] uppercase tracking-widest font-semibold mb-1" style={{ color }}>Send a Gift Directly</p>
+            <h3 className="text-[1.1rem] font-bold mb-2 text-[#333]">Venmo or Cash App</h3>
+            <p className="text-[0.9rem] text-[#888] mb-6">Send your gift directly — no account needed on their end.</p>
+            <div className="flex flex-wrap justify-center gap-4">
+              {venmoHandle && (
+                <a href={`https://venmo.com/${venmoHandle}`} target="_blank" rel="noreferrer"
+                  className="flex items-center gap-2 py-3 px-7 font-semibold text-[0.9rem] rounded-[8px] hover:opacity-90 transition-opacity"
+                  style={{ background: '#3D95CE', color: '#fff' }}>
+                  <span>Venmo</span>
+                  <span className="font-normal opacity-80">@{venmoHandle}</span>
+                </a>
+              )}
+              {cashappHandle && (
+                <a href={`https://cash.app/$${cashappHandle}`} target="_blank" rel="noreferrer"
+                  className="flex items-center gap-2 py-3 px-7 font-semibold text-[0.9rem] rounded-[8px] hover:opacity-90 transition-opacity"
+                  style={{ background: '#00D632', color: '#fff' }}>
+                  <span>Cash App</span>
+                  <span className="font-normal opacity-80">${cashappHandle}</span>
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
+        {(venmoHandle || cashappHandle) && (
+          <div
+            className="rounded-[12px] p-8 mb-8 text-center"
+            style={{ border: `2px solid ${color}30`, background: '#fff', boxShadow: '0 2px 16px rgba(0,0,0,0.05)' }}
+          >
+            <p className="text-[0.75rem] uppercase tracking-widest font-semibold mb-1" style={{ color }}>Send a Gift Directly</p>
+            <h3 className="text-[1.1rem] font-bold mb-2 text-[#333]">Venmo or Cash App</h3>
+            <p className="text-[0.9rem] text-[#888] mb-6">
+              Send your gift directly — no account needed on their end.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              {venmoHandle && (
+                <a
+                  href={`https://venmo.com/${venmoHandle}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 py-3 px-7 font-semibold text-[0.9rem] rounded-[8px] hover:opacity-90 transition-opacity"
+                  style={{ background: '#3D95CE', color: '#fff' }}
+                >
+                  <span>Venmo</span>
+                  <span className="font-normal opacity-80">@{venmoHandle}</span>
+                </a>
+              )}
+              {cashappHandle && (
+                <a
+                  href={`https://cash.app/$${cashappHandle}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 py-3 px-7 font-semibold text-[0.9rem] rounded-[8px] hover:opacity-90 transition-opacity"
+                  style={{ background: '#00D632', color: '#fff' }}
+                >
+                  <span>Cash App</span>
+                  <span className="font-normal opacity-80">${cashappHandle}</span>
+                </a>
+              )}
+            </div>
+          </div>
+        )}
 
         {gifts.length === 0 ? (
           <div className="text-center py-[60px] px-5 text-[#888]">

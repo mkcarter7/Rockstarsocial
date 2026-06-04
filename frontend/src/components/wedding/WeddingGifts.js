@@ -1,0 +1,307 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { getWeddingParty, getWeddingGifts, claimWeddingGiftItem, unclaimWeddingGiftItem, deleteWeddingGiftItem } from '../../api/api';
+
+const featureInputClass = "py-[10px] px-[14px] border border-[#e0d5c8] rounded-[4px] text-[0.95rem] font-[inherit] w-full outline-none focus:border-[#c9a96e]";
+
+// ─── Claim Modal ──────────────────────────────────────────────────────────────
+
+const ClaimModal = ({ gift, color, slug, onClose, onClaimed }) => {
+  const [name, setName] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      const res = await claimWeddingGiftItem(slug, gift.id, trimmed);
+      onClaimed(res.data);
+      onClose();
+    } catch (err) {
+      setError(err?.response?.data?.error || 'Could not claim this gift. Please try again.');
+    }
+    setSubmitting(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(61,44,30,0.5)' }} onClick={onClose}>
+      <div className="bg-white rounded-[4px] p-8 w-full max-w-[400px]" style={{ boxShadow: '0 8px 40px rgba(201,169,110,0.2)', border: `1px solid ${color}40` }} onClick={e => e.stopPropagation()}>
+        <p className="text-[0.65rem] uppercase tracking-[0.25em] font-light mb-1" style={{ color }}>Registry</p>
+        <h3 className="text-[1.1rem] font-light mb-2" style={{ color: '#3d2c1e' }}>Claim "{gift.title}"</h3>
+        <p className="font-light text-[0.9rem] mb-5" style={{ color: '#7a6050' }}>
+          Enter your name so the couple knows you're gifting this.
+        </p>
+        {error && (
+          <div className="py-2 px-4 rounded-[4px] mb-4 text-[0.9rem] font-light" style={{ background: '#fff5f5', color: '#c53030', border: '1px solid #fed7d7' }}>
+            {error}
+          </div>
+        )}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <input type="text" placeholder="Your name *" value={name} onChange={e => setName(e.target.value)} required autoFocus className={featureInputClass} />
+          <div className="flex gap-3">
+            <button type="button" onClick={onClose}
+              className="flex-1 py-[10px] font-light text-[0.85rem] uppercase tracking-[0.1em] hover:opacity-70 transition-opacity"
+              style={{ border: '1px solid #e0d5c8', color: '#9a8070' }}>
+              Cancel
+            </button>
+            <button type="submit" disabled={submitting || !name.trim()}
+              className="flex-1 py-[10px] font-semibold text-[0.85rem] uppercase tracking-[0.1em] disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+              style={{ background: color, color: '#fff' }}>
+              {submitting ? 'Claiming...' : 'Claim Gift'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// ─── Gift Card ────────────────────────────────────────────────────────────────
+
+const GiftCard = ({ gift, color, isHost, sessionToken, slug, onClaim, onUnclaim, onDelete }) => {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [working, setWorking] = useState(false);
+
+  const handleUnclaim = async () => {
+    setWorking(true);
+    try {
+      const res = await unclaimWeddingGiftItem(slug, gift.id, sessionToken);
+      onUnclaim(res.data);
+    } catch { alert('Could not unclaim. Please try again.'); }
+    setWorking(false);
+  };
+
+  const handleDelete = async () => {
+    if (!confirmDelete) { setConfirmDelete(true); return; }
+    setWorking(true);
+    try {
+      await deleteWeddingGiftItem(slug, gift.id, sessionToken);
+      onDelete(gift.id);
+    } catch { alert('Could not delete. Please try again.'); }
+    setWorking(false);
+    setConfirmDelete(false);
+  };
+
+  return (
+    <div
+      className={`bg-white rounded-[4px] p-5 flex flex-col gap-2 ${gift.claimed ? 'opacity-70' : ''}`}
+      style={{ border: `1px solid ${gift.claimed ? '#e0d5c8' : color + '50'}`, boxShadow: '0 2px 8px rgba(201,169,110,0.06)' }}
+    >
+      <div className="flex justify-between items-start gap-2">
+        <div className="flex-1">
+          <h4 className="text-[1rem] font-light m-0" style={{ color: '#3d2c1e' }}>{gift.title}</h4>
+          {gift.description && <p className="text-[0.9rem] font-light mt-1 mb-0" style={{ color: '#7a6050' }}>{gift.description}</p>}
+        </div>
+        {gift.price && <span className="text-[0.95rem] font-semibold shrink-0" style={{ color }}>${parseFloat(gift.price).toFixed(2)}</span>}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 mt-1">
+        {gift.link_url && (
+          <a href={gift.link_url} target="_blank" rel="noreferrer"
+            className="text-[0.85rem] font-light no-underline hover:underline" style={{ color }}>
+            View / Buy →
+          </a>
+        )}
+
+        {gift.claimed ? (
+          <span className="text-[0.8rem] font-light px-3 py-1 rounded-full uppercase tracking-[0.1em]"
+            style={{ background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' }}>
+            {isHost && gift.claimed_by ? `Claimed by ${gift.claimed_by}` : 'Claimed'}
+          </span>
+        ) : (
+          <button onClick={() => onClaim(gift)}
+            className="text-[0.8rem] font-semibold py-1 px-4 rounded-none uppercase tracking-[0.1em] hover:opacity-90 transition-opacity"
+            style={{ background: color, color: '#fff' }}>
+            Claim this gift
+          </button>
+        )}
+
+        {isHost && gift.claimed && (
+          <button onClick={handleUnclaim} disabled={working}
+            className="text-[0.8rem] font-light underline hover:opacity-70 disabled:opacity-50 transition-opacity"
+            style={{ color: '#b0a090' }}>
+            {working ? '...' : 'Unclaim'}
+          </button>
+        )}
+
+        {isHost && (
+          <button onClick={handleDelete} disabled={working}
+            className={`text-[0.8rem] font-light underline disabled:opacity-50 transition-opacity ml-auto ${confirmDelete ? 'font-semibold' : ''}`}
+            style={{ color: confirmDelete ? '#c53030' : '#b0a090' }}>
+            {working ? '...' : confirmDelete ? 'Tap again to confirm' : 'Remove'}
+          </button>
+        )}
+        {isHost && confirmDelete && (
+          <button onClick={() => setConfirmDelete(false)}
+            className="text-[0.8rem] font-light underline hover:opacity-70 transition-opacity"
+            style={{ color: '#b0a090' }}>
+            Cancel
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ─── External Registry ────────────────────────────────────────────────────────
+
+const ExternalRegistrySection = ({ registryUrl, color }) => {
+  if (!registryUrl) return null;
+  return (
+    <a href={registryUrl} target="_blank" rel="noreferrer"
+      className="flex items-center justify-center gap-2 font-semibold py-4 px-6 mb-8 no-underline text-[0.9rem] uppercase tracking-[0.12em] hover:opacity-90 transition-opacity"
+      style={{ background: color, color: '#fff' }}>
+      ◇ View Full Registry →
+    </a>
+  );
+};
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
+
+const WeddingGifts = ({ slug }) => {
+  const [party, setParty] = useState(null);
+  const [gifts, setGifts] = useState([]);
+  const [registryUrl, setRegistryUrl] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [isHost, setIsHost] = useState(false);
+  const [sessionToken, setSessionToken] = useState('');
+  const [claimTarget, setClaimTarget] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('hostToken');
+    const hostSlug = localStorage.getItem('hostPartySlug');
+    const hostIsOwner = !!(token && hostSlug === slug);
+    setIsHost(hostIsOwner);
+    setSessionToken(hostIsOwner ? token : '');
+
+    Promise.all([getWeddingParty(slug), getWeddingGifts(slug, hostIsOwner ? token : null)])
+      .then(([partyRes, giftsRes]) => {
+        setParty(partyRes.data);
+        setRegistryUrl(partyRes.data.gift_registry_url || '');
+        setGifts(giftsRes.data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [slug]);
+
+  const handleClaimed = (updated) => setGifts(prev => prev.map(g => g.id === updated.id ? updated : g));
+  const handleUnclaimed = (updated) => setGifts(prev => prev.map(g => g.id === updated.id ? updated : g));
+  const handleDeleted = (giftId) => setGifts(prev => prev.filter(g => g.id !== giftId));
+
+  const color = party?.theme_color || '#c9a96e';
+  const secondaryColor = party?.secondary_color || '#fdfaf7';
+  const heroStyle = party?.banner_image
+    ? { backgroundImage: `url(${party.banner_image})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+    : { background: 'linear-gradient(135deg, #f9f4ef 0%, #e8c4b8 100%)' };
+  const hasBanner = !!party?.banner_image;
+
+  if (loading) return <div className="text-center py-[60px] px-5 font-light" style={{ color: '#7a6050' }}>Loading...</div>;
+
+  const unclaimed = gifts.filter(g => !g.claimed);
+  const claimed = gifts.filter(g => g.claimed);
+
+  return (
+    <div className="min-h-screen" style={{ background: secondaryColor }}>
+      <div className="py-[60px] pb-10 relative overflow-hidden" style={heroStyle}>
+        {hasBanner && <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.4)' }} />}
+        <div className="container relative z-[1]">
+          <Link href={`/w/${slug}`} className="no-underline text-[0.8rem] uppercase tracking-[0.15em] font-light inline-block mb-3 hover:opacity-80 transition-opacity"
+            style={{ color: hasBanner ? 'rgba(255,255,255,0.8)' : '#c9a96e' }}>
+            ← Back to Wedding
+          </Link>
+          <h1 className="text-[1.8rem] my-2 font-light tracking-[0.05em]"
+            style={{ color: hasBanner ? '#fff' : '#3d2c1e' }}>
+            Gift Registry
+          </h1>
+          <p className="font-light m-0" style={{ color: hasBanner ? 'rgba(255,255,255,0.8)' : '#7a6050' }}>
+            Help celebrate {party?.couple_name || 'the couple'} with a thoughtful gift
+          </p>
+        </div>
+      </div>
+
+      <div className="container py-10">
+        {(party.venmo_handle || party.cashapp_handle) && (
+          <div
+            className="rounded-[4px] p-8 mb-8 text-center"
+            style={{ border: `1px solid ${color}30`, background: '#fff', boxShadow: '0 2px 16px rgba(201,169,110,0.07)' }}
+          >
+            <p className="text-[0.65rem] uppercase tracking-[0.25em] font-light mb-1" style={{ color }}>Send a Gift Directly</p>
+            <h3 className="text-[1.1rem] font-light mb-2" style={{ color: '#3d2c1e' }}>Venmo or Cash App</h3>
+            <p className="font-light text-[0.85rem] mb-6" style={{ color: '#7a6050' }}>
+              Send your gift directly to the couple — no account needed on their end.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              {party.venmo_handle && (
+                <a
+                  href={`https://venmo.com/${party.venmo_handle}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 py-3 px-7 font-semibold text-[0.9rem] hover:opacity-90 transition-opacity"
+                  style={{ background: '#3D95CE', color: '#fff', borderRadius: 4 }}
+                >
+                  <span>Venmo</span>
+                  <span className="font-light opacity-80">@{party.venmo_handle}</span>
+                </a>
+              )}
+              {party.cashapp_handle && (
+                <a
+                  href={`https://cash.app/$${party.cashapp_handle}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 py-3 px-7 font-semibold text-[0.9rem] hover:opacity-90 transition-opacity"
+                  style={{ background: '#00D632', color: '#fff', borderRadius: 4 }}
+                >
+                  <span>Cash App</span>
+                  <span className="font-light opacity-80">${party.cashapp_handle}</span>
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
+        <ExternalRegistrySection registryUrl={registryUrl} color={color} />
+
+        {gifts.length === 0 ? (
+          <div className="text-center py-[60px] px-5 font-light" style={{ color: '#b0a090' }}>
+            No gifts have been added yet — check back soon!
+          </div>
+        ) : (
+          <>
+            {unclaimed.length > 0 && (
+              <div className="flex flex-col gap-4 mb-8">
+                <p className="text-[0.7rem] uppercase tracking-[0.25em] font-light m-0" style={{ color: '#b0a090' }}>Available ({unclaimed.length})</p>
+                {unclaimed.map(gift => (
+                  <GiftCard key={gift.id} gift={gift} color={color} isHost={isHost} sessionToken={sessionToken}
+                    slug={slug} onClaim={g => setClaimTarget(g)} onUnclaim={handleUnclaimed} onDelete={handleDeleted} />
+                ))}
+              </div>
+            )}
+            {claimed.length > 0 && (
+              <div className="flex flex-col gap-4">
+                <p className="text-[0.7rem] uppercase tracking-[0.25em] font-light m-0" style={{ color: '#b0a090' }}>Claimed ({claimed.length})</p>
+                {claimed.map(gift => (
+                  <GiftCard key={gift.id} gift={gift} color={color} isHost={isHost} sessionToken={sessionToken}
+                    slug={slug} onClaim={() => {}} onUnclaim={handleUnclaimed} onDelete={handleDeleted} />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {claimTarget && (
+        <ClaimModal gift={claimTarget} color={color} slug={slug}
+          onClose={() => setClaimTarget(null)}
+          onClaimed={updated => { handleClaimed(updated); setClaimTarget(null); }} />
+      )}
+    </div>
+  );
+};
+
+export default WeddingGifts;

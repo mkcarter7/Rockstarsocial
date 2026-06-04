@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth.hashers import make_password
 from .models import (
-    BirthdayParty, HostAccount, PartyPhoto, GuestBookEntry,
+    BirthdayParty, WeddingEvent, HostAccount, PartyPhoto, GuestBookEntry,
     PartyRSVP, TriviaQuestion, TriviaScore, GiftItem
 )
 from .host_auth_views import verify_host_session_by_token_str
@@ -68,6 +68,8 @@ def _serialize_party(party, request=None):
         'expires_at': party.expires_at.isoformat(),
         'rsvp_count': party.rsvps.filter(status='yes').count(),
         'gift_registry_url': party.gift_registry_url,
+        'venmo_handle': party.venmo_handle,
+        'cashapp_handle': party.cashapp_handle,
     }
 
 
@@ -161,6 +163,8 @@ def party_setup(request):
             'location_name': party.location_name,
             'location_address': party.location_address,
             'gift_registry_url': party.gift_registry_url,
+            'venmo_handle': party.venmo_handle,
+            'cashapp_handle': party.cashapp_handle,
             'banner_image': request.build_absolute_uri(party.banner_image.url) if party.banner_image else None,
         })
 
@@ -198,6 +202,10 @@ def party_setup(request):
         party.location_address = request.data['location_address']
     if 'gift_registry_url' in request.data:
         party.gift_registry_url = request.data['gift_registry_url'].strip()
+    if 'venmo_handle' in request.data:
+        party.venmo_handle = request.data['venmo_handle'].strip().lstrip('@')
+    if 'cashapp_handle' in request.data:
+        party.cashapp_handle = request.data['cashapp_handle'].strip().lstrip('$')
 
     if session_id:
         # First-time Stripe setup — activate the party
@@ -458,12 +466,13 @@ def trivia_leaderboard(request, slug):
 # ─── Admin ────────────────────────────────────────────────────────────────────
 
 def _serialize_event_page(p, event_type):
+    is_wedding = isinstance(p, WeddingEvent)
     return {
         'id': p.id,
         'event_type': event_type,
         'slug': p.slug,
-        'name': p.birthday_person_name,
-        'party_date': p.party_date.isoformat(),
+        'name': p.couple_name if is_wedding else p.birthday_person_name,
+        'party_date': (p.wedding_date if is_wedding else p.party_date).isoformat(),
         'host_email': p.host_email,
         'is_active': p.is_active,
         'is_expired': p.is_expired,
@@ -472,9 +481,10 @@ def _serialize_event_page(p, event_type):
     }
 
 
-# Event type registry — add new models here as they are created
+# Event type registry — add new event models here as they are created
 EVENT_TYPE_MODELS = {
     'birthday': BirthdayParty,
+    'wedding': WeddingEvent,
 }
 
 
@@ -507,12 +517,15 @@ def admin_delete_event_page(request, event_type, page_id):
         return Response({'error': f'Unknown event type: {event_type}'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        page = Model.objects.select_related('host_account').get(id=page_id) if Model is BirthdayParty else Model.objects.get(id=page_id)
+        page = Model.objects.select_related('host_account').get(id=page_id)
     except Model.DoesNotExist:
         return Response({'error': 'Event page not found'}, status=status.HTTP_404_NOT_FOUND)
 
     if Model is BirthdayParty:
         _delete_party_and_maybe_account(page)
+    elif Model is WeddingEvent:
+        from .wedding_views import _delete_wedding_and_maybe_account
+        _delete_wedding_and_maybe_account(page)
     else:
         page.delete()
     return Response({'message': 'Event page deleted'}, status=status.HTTP_200_OK)

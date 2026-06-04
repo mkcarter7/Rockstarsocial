@@ -51,7 +51,7 @@ const WeddingGuestbook = ({ slug }) => {
       <div className="py-[60px] pb-10 relative overflow-hidden" style={heroStyle}>
         {hasBanner && <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.4)' }} />}
         <div className="container relative z-[1]">
-          <Link href={`/w/${slug}`} className="no-underline text-[0.8rem] uppercase tracking-[0.15em] font-light inline-block mb-3 hover:opacity-80 transition-opacity"
+          <Link href={`/${slug}`} className="no-underline text-[0.8rem] uppercase tracking-[0.15em] font-light inline-block mb-3 hover:opacity-80 transition-opacity"
             style={{ color: hasBanner ? 'rgba(255,255,255,0.8)' : '#c9a96e' }}>
             ← Back to Wedding
           </Link>

@@ -58,7 +58,7 @@ const WeddingSongRequests = ({ slug }) => {
         {hasBanner && <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.4)' }} />}
         <div className="container relative z-[1]">
           <Link
-            href={`/w/${slug}`}
+            href={`/${slug}`}
             className="no-underline text-[0.8rem] uppercase tracking-[0.15em] font-light inline-block mb-3 hover:opacity-80 transition-opacity"
             style={{ color: hasBanner ? 'rgba(255,255,255,0.8)' : color }}
           >

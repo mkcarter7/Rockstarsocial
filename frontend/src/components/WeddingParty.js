@@ -563,13 +563,13 @@ const WeddingParty = ({ slug }) => {
         <div className="container">
           <div className="grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-4">
             {[
-              { href: `/w/${slug}/photos`, symbol: '📷', label: 'Photos' },
-              { href: `/w/${slug}/guestbook`, symbol: '♡', label: 'Guest Book' },
-              { href: `/w/${slug}/rsvp`, symbol: '✉', label: 'RSVP' },
-              { href: `/w/${slug}/story`, symbol: '∞', label: 'Our Story' },
-              { href: `/w/${slug}/gifts`, symbol: '◇', label: 'Registry' },
-              { href: `/w/${slug}/party`, symbol: '♛', label: 'Wedding Party' },
-              { href: `/w/${slug}/songs`, symbol: '♪', label: 'Song Requests' },
+              { href: `/${slug}/photos`, symbol: '📷', label: 'Photos' },
+              { href: `/${slug}/guestbook`, symbol: '♡', label: 'Guest Book' },
+              { href: `/${slug}/rsvp`, symbol: '✉', label: 'RSVP' },
+              { href: `/${slug}/story`, symbol: '∞', label: 'Our Story' },
+              { href: `/${slug}/gifts`, symbol: '◇', label: 'Registry' },
+              { href: `/${slug}/party`, symbol: '♛', label: 'Wedding Party' },
+              { href: `/${slug}/songs`, symbol: '♪', label: 'Song Requests' },
             ].map(({ href, symbol, label }) => (
               <Link
                 key={label}

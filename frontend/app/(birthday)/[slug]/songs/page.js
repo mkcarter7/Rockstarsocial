@@ -1,5 +1,5 @@
 import WeddingSongRequests from '@/components/wedding/WeddingSongRequests';
 
-export default function WeddingSongRequestsPage({ params }) {
+export default function SongsPage({ params }) {
   return <WeddingSongRequests slug={params.slug} />;
 }

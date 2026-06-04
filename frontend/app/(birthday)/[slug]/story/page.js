@@ -1,5 +1,5 @@
 import WeddingStory from '@/components/wedding/WeddingStory';
 
-export default function WeddingStoryPage({ params }) {
+export default function StoryPage({ params }) {
   return <WeddingStory slug={params.slug} />;
 }

@@ -676,19 +676,88 @@ def admin_host_accounts(request):
     if not get_firebase_user(request):
         return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    accounts = HostAccount.objects.prefetch_related('parties').order_by('-created_at')
+    accounts = HostAccount.objects.prefetch_related(
+        'parties', 'wedding_events', 'baby_shower_events'
+    ).order_by('-created_at')
     data = []
     for account in accounts:
-        parties = list(
+        birthday_parties = list(
             account.parties.values('id', 'slug', 'birthday_person_name', 'party_date', 'is_active', 'created_at')
         )
+        for p in birthday_parties:
+            p['event_type'] = 'birthday'
+            p['display_name'] = p.pop('birthday_person_name', '') + "'s Birthday"
+
+        wedding_events = list(
+            account.wedding_events.values('id', 'slug', 'couple_name', 'wedding_date', 'is_active', 'created_at')
+        )
+        for w in wedding_events:
+            w['event_type'] = 'wedding'
+            w['display_name'] = w.pop('couple_name', '') + "'s Wedding"
+            w['party_date'] = w.pop('wedding_date', None)
+
+        baby_shower_events = list(
+            account.baby_shower_events.values('id', 'slug', 'parent_names', 'shower_date', 'is_active', 'created_at')
+        )
+        for b in baby_shower_events:
+            b['event_type'] = 'baby_shower'
+            b['display_name'] = b.pop('parent_names', '') + "'s Baby Shower"
+            b['party_date'] = b.pop('shower_date', None)
+
+        all_events = birthday_parties + wedding_events + baby_shower_events
+        all_events.sort(key=lambda e: e.get('created_at') or '', reverse=True)
+        for e in all_events:
+            e.pop('created_at', None)
+
         data.append({
             'id': account.id,
             'email': account.email,
             'created_at': account.created_at.isoformat(),
-            'party_count': len(parties),
-            'parties': parties,
+            'party_count': len(all_events),
+            'parties': all_events,
+            'orphaned': False,
         })
+
+    # Append orphaned rows: host_email on events with no linked HostAccount
+    known_emails = {entry['email'] for entry in data}
+    orphaned_emails = set()
+    for Model in [BirthdayParty, WeddingEvent, BabyShowerEvent]:
+        orphaned_emails.update(
+            Model.objects.filter(is_active=True, host_account__isnull=True)
+            .values_list('host_email', flat=True)
+        )
+    orphaned_emails -= known_emails
+
+    for email in sorted(orphaned_emails):
+        orphaned_events = []
+        for Model, type_label, name_field, date_field in [
+            (BirthdayParty, 'birthday', 'birthday_person_name', 'party_date'),
+            (WeddingEvent, 'wedding', 'couple_name', 'wedding_date'),
+            (BabyShowerEvent, 'baby_shower', 'parent_names', 'shower_date'),
+        ]:
+            for e in Model.objects.filter(
+                host_email__iexact=email, host_account__isnull=True, is_active=True
+            ).values('slug', name_field, date_field, 'is_active'):
+                orphaned_events.append({
+                    'slug': e['slug'],
+                    'event_type': type_label,
+                    'display_name': (e.get(name_field) or '') + (
+                        "'s Birthday" if type_label == 'birthday'
+                        else "'s Wedding" if type_label == 'wedding'
+                        else "'s Baby Shower"
+                    ),
+                    'party_date': str(e.get(date_field) or ''),
+                    'is_active': e['is_active'],
+                })
+        data.append({
+            'id': None,
+            'email': email,
+            'created_at': None,
+            'party_count': len(orphaned_events),
+            'parties': orphaned_events,
+            'orphaned': True,
+        })
+
     return Response(data)
 
 
@@ -748,11 +817,25 @@ def admin_send_magic_link(request, account_id):
     except HostAccount.DoesNotExist:
         return Response({'error': 'Host account not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    # Use most recent party regardless of is_active; fall back to no party
-    party = account.parties.order_by('-created_at').first()
+    # Pick most recently created active event across all types
+    candidates = (
+        list(account.parties.filter(is_active=True)) +
+        list(account.wedding_events.filter(is_active=True)) +
+        list(account.baby_shower_events.filter(is_active=True))
+    )
+    if not candidates:
+        # Fall back to most recent regardless of is_active
+        candidates = list(account.parties.order_by('-created_at')[:1])
+    default_event = max(candidates, key=lambda e: e.created_at) if candidates else None
+
+    party = default_event if isinstance(default_event, BirthdayParty) else None
+    wedding_evt = default_event if isinstance(default_event, WeddingEvent) else None
+    baby_shower_evt = default_event if isinstance(default_event, BabyShowerEvent) else None
 
     token = HostAccessToken.objects.create(
         party=party,
+        wedding_event=wedding_evt,
+        baby_shower_event=baby_shower_evt,
         token_type='magic_link',
         expires_at=timezone.now() + timedelta(hours=24),
     )
@@ -765,6 +848,24 @@ def admin_send_magic_link(request, account_id):
         body = (
             f"Hi {party.host_name or 'there'},\n\n"
             f"Here is your link to manage {party.birthday_person_name}'s birthday party page:\n\n"
+            f"{magic_link}\n\n"
+            f"This link expires in 24 hours and can only be used once.\n\n"
+            f"— RockStar Social"
+        )
+    elif wedding_evt:
+        subject = f"Your wedding page management link — {wedding_evt.couple_name}"
+        body = (
+            f"Hi {wedding_evt.host_name or 'there'},\n\n"
+            f"Here is your link to manage {wedding_evt.couple_name}'s wedding page:\n\n"
+            f"{magic_link}\n\n"
+            f"This link expires in 24 hours and can only be used once.\n\n"
+            f"— RockStar Social"
+        )
+    elif baby_shower_evt:
+        subject = f"Your baby shower page management link — {baby_shower_evt.parent_names}"
+        body = (
+            f"Hi {baby_shower_evt.host_name or 'there'},\n\n"
+            f"Here is your link to manage {baby_shower_evt.parent_names}'s baby shower page:\n\n"
             f"{magic_link}\n\n"
             f"This link expires in 24 hours and can only be used once.\n\n"
             f"— RockStar Social"
@@ -788,6 +889,115 @@ def admin_send_magic_link(request, account_id):
     )
 
     return Response({'message': f'Login link sent to {account.email}'})
+
+
+@api_view(['POST'])
+def admin_send_magic_link_by_email(request):
+    """Firebase-protected: send a magic login link to any host email (including orphaned events)."""
+    from .firebase_auth import get_firebase_user
+    from django.core.mail import send_mail
+    from django.conf import settings
+    from datetime import timedelta
+    from django.utils import timezone
+    from .models import HostAccessToken
+
+    if not get_firebase_user(request):
+        return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    email = request.data.get('email', '').strip().lower()
+    if not email:
+        return Response({'error': 'email is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Find the most recently created active event across all types for this email
+    account = None
+    try:
+        account = HostAccount.objects.get(email__iexact=email)
+    except HostAccount.DoesNotExist:
+        pass
+
+    candidates = []
+    if account:
+        candidates += list(account.parties.filter(is_active=True))
+        candidates += list(account.wedding_events.filter(is_active=True))
+        candidates += list(account.baby_shower_events.filter(is_active=True))
+
+    if not candidates:
+        for Model in [BirthdayParty, WeddingEvent, BabyShowerEvent]:
+            try:
+                candidates.append(Model.objects.filter(
+                    host_email__iexact=email, is_active=True
+                ).latest('created_at'))
+            except Model.DoesNotExist:
+                pass
+
+    if not candidates:
+        return Response(
+            {'error': f'No active events found for {email}'},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    default_event = max(candidates, key=lambda e: e.created_at)
+    party = default_event if isinstance(default_event, BirthdayParty) else None
+    wedding_evt = default_event if isinstance(default_event, WeddingEvent) else None
+    baby_shower_evt = default_event if isinstance(default_event, BabyShowerEvent) else None
+
+    token = HostAccessToken.objects.create(
+        party=party,
+        wedding_event=wedding_evt,
+        baby_shower_event=baby_shower_evt,
+        token_type='magic_link',
+        expires_at=timezone.now() + timedelta(hours=24),
+    )
+
+    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+    magic_link = f"{frontend_url}/host/verify?token={token.token}"
+
+    if party:
+        subject = f"Your party management link — {party.birthday_person_name}'s Birthday"
+        body = (
+            f"Hi {party.host_name or 'there'},\n\n"
+            f"Here is your link to manage {party.birthday_person_name}'s birthday party page:\n\n"
+            f"{magic_link}\n\n"
+            f"This link expires in 24 hours and can only be used once.\n\n"
+            f"— RockStar Social"
+        )
+    elif wedding_evt:
+        subject = f"Your wedding page management link — {wedding_evt.couple_name}"
+        body = (
+            f"Hi {wedding_evt.host_name or 'there'},\n\n"
+            f"Here is your link to manage {wedding_evt.couple_name}'s wedding page:\n\n"
+            f"{magic_link}\n\n"
+            f"This link expires in 24 hours and can only be used once.\n\n"
+            f"— RockStar Social"
+        )
+    elif baby_shower_evt:
+        subject = f"Your baby shower page management link — {baby_shower_evt.parent_names}"
+        body = (
+            f"Hi {baby_shower_evt.host_name or 'there'},\n\n"
+            f"Here is your link to manage {baby_shower_evt.parent_names}'s baby shower page:\n\n"
+            f"{magic_link}\n\n"
+            f"This link expires in 24 hours and can only be used once.\n\n"
+            f"— RockStar Social"
+        )
+    else:
+        subject = "Your RockStar Social login link"
+        body = (
+            f"Hi there,\n\n"
+            f"Here is your link to access your RockStar Social account:\n\n"
+            f"{magic_link}\n\n"
+            f"This link expires in 24 hours and can only be used once.\n\n"
+            f"— RockStar Social"
+        )
+
+    send_mail(
+        subject=subject,
+        message=body,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[email],
+        fail_silently=False,
+    )
+
+    return Response({'message': f'Login link sent to {email}'})
 
 
 # ─── Gift Registry ─────────────────────────────────────────────────────────────

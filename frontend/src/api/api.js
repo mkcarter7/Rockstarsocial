@@ -178,6 +178,9 @@ export const getHostPartyStats = (slug, hostToken) =>
 export const changeHostPassword = (newPassword, hostToken) =>
   api.post('/host/change-password/', { new_password: newPassword }, { headers: { 'X-Host-Token': hostToken } });
 
+export const switchHostParty = (partySlug, hostToken) =>
+  api.post('/host/switch-party/', { party_slug: partySlug }, { headers: { 'X-Host-Token': hostToken } });
+
 export const getAdminHostAccounts = (token) =>
   api.get('/admin/host-accounts/', { headers: { Authorization: `Bearer ${token}` } });
 
@@ -189,5 +192,8 @@ export const adminDeleteHostAccount = (accountId, token) =>
 
 export const adminSendMagicLink = (accountId, token) =>
   api.post(`/admin/host-accounts/${accountId}/send-magic-link/`, {}, { headers: { Authorization: `Bearer ${token}` } });
+
+export const adminSendMagicLinkByEmail = (email, token) =>
+  api.post('/admin/host-accounts/send-magic-link-by-email/', { email }, { headers: { Authorization: `Bearer ${token}` } });
 
 export default api;

@@ -27,6 +27,14 @@ const HostVerify = () => {
         } else {
           localStorage.removeItem('hostPartySlug');
         }
+        if (res.data.all_parties && res.data.all_parties.length > 0) {
+          localStorage.setItem('hostAllParties', JSON.stringify(res.data.all_parties));
+        } else {
+          localStorage.removeItem('hostAllParties');
+        }
+        if (res.data.host_email) {
+          localStorage.setItem('hostEmail', res.data.host_email);
+        }
         router.push('/host/dashboard');
       })
       .catch(err => {

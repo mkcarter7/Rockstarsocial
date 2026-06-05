@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getHostPartyStats, changeHostPassword } from '../api/api';
+import { getHostPartyStats, changeHostPassword, switchHostParty } from '../api/api';
 
 const StatCard = ({ icon, label, value, color }) => (
   <div className="bg-white rounded-[12px] border-2 p-6 text-center" style={{ borderColor: color }}>
@@ -67,11 +67,20 @@ const HostDashboard = () => {
     loadParty(slug, token);
   }, [router]);
 
-  const pickParty = (slug) => {
-    localStorage.setItem('hostPartySlug', slug);
-    setHostSlug(slug);
-    setAllParties(null);
-    loadParty(slug, hostToken);
+  const pickParty = async (slug) => {
+    try {
+      const res = await switchHostParty(slug, hostToken);
+      const newToken = res.data.session_token;
+      localStorage.setItem('hostToken', newToken);
+      localStorage.setItem('hostPartySlug', slug);
+      setHostToken(newToken);
+      setHostSlug(slug);
+      setAllParties(null);
+      loadParty(slug, newToken);
+    } catch (err) {
+      setError(err?.response?.data?.error || 'Could not switch to that event. Please try again.');
+      setLoading(false);
+    }
   };
 
   const handleChangePassword = async (e) => {
@@ -297,7 +306,7 @@ const HostDashboard = () => {
 
           <div className="flex flex-col gap-4">
             <Link
-              href={isWedding ? `/w/${hostSlug}` : `/${hostSlug}`}
+              href={`/${hostSlug}`}
               className="flex items-center justify-center gap-2 bg-white border-2 rounded-[4px] py-4 px-6 font-semibold text-[#333] hover:-translate-y-[2px] hover:shadow-md transition-[transform,box-shadow]"
               style={{ borderColor: color }}
             >

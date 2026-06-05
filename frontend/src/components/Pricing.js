@@ -67,8 +67,8 @@ const Pricing = () => {
       {/* Hero */}
       <section className="bg-gradient-to-br from-black to-brand py-20 text-center text-white">
         <div className="max-w-5xl mx-auto px-5">
-          <h1 className="text-5xl font-bold mb-4">Themes</h1>
-          <p className="text-lg opacity-90">Choose the perfect theme to launch your website today</p>
+          <h1 className="text-5xl font-bold mb-4">Designs</h1>
+          <p className="text-lg opacity-90">Choose the perfect design to launch your party</p>
         </div>
       </section>
 

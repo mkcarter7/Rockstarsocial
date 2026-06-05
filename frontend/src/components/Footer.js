@@ -16,8 +16,8 @@ const Footer = () => {
             <ul className="list-none">
               <li className="mb-[10px]"><Link href="/" className="text-[#a0aec0] transition-colors duration-300 ease hover:text-brand">Home</Link></li>
               <li className="mb-[10px]"><Link href="/portfolio" className="text-[#a0aec0] transition-colors duration-300 ease hover:text-brand">Portfolio</Link></li>
-              <li className="mb-[10px]"><Link href="/themes" className="text-[#a0aec0] transition-colors duration-300 ease hover:text-brand">Themes</Link></li>
-              <li className="mb-[10px]"><Link href="/pricing" className="text-[#a0aec0] transition-colors duration-300 ease hover:text-brand">Pricing</Link></li>
+              <li className="mb-[10px]"><Link href="/shop" className="text-[#a0aec0] transition-colors duration-300 ease hover:text-brand">Shop</Link></li>
+
             </ul>
           </div>
 

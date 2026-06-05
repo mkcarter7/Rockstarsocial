@@ -8,6 +8,7 @@ const Home = () => {
   const [portfolio, setPortfolio] = useState([]);
   const [carouselItems, setCarouselItems] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
+  const [themes, setThemes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [carouselIndex, setCarouselIndex] = useState(0);
 
@@ -31,6 +32,7 @@ const Home = () => {
           .map(theme => ({ id: `theme-${theme.id}`, image: theme.preview_image, url: theme.demo_url, title: theme.name, type: 'theme' }));
 
         setCarouselItems([...portfolioItems, ...themeItems]);
+        setThemes(themesRes.data.filter(theme => theme.preview_image));
         setTestimonials(testimonialsRes.data.slice(0, 3));
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -54,7 +56,7 @@ const Home = () => {
       <section className="hero">
         <div className="container">
           <h1>Transform Your Online Presence</h1>
-          <p>Professional web design services and premium themes to elevate your business</p>
+          <p>Professional web design services and premium designs to elevate your business</p>
 
           {carouselItems.length > 0 && (
             /* hero-carousel class kept for ::before arc pseudo-element defined in App.css */
@@ -83,6 +85,7 @@ const Home = () => {
 
           <div className="flex gap-5 justify-center flex-wrap md:flex-col md:items-center">
             <Link href="/contact" className="btn btn-secondary md:w-full md:max-w-[300px]">Get Started</Link>
+            <Link href="/portfolio" className="btn btn-primary md:w-full md:max-w-[300px]">View Portfolio</Link>
           </div>
         </div>
       </section>
@@ -121,6 +124,36 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Designs / Demos */}
+      {themes.length > 0 && (
+        <section className="section bg-gray-50">
+          <div className="container">
+            <h2 className="section-title">Explore Our Designs</h2>
+            <p className="section-subtitle">See the designs live — click any demo to experience it yourself</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[30px]">
+              {themes.map((theme) => (
+                <div key={theme.id} className="card text-center flex flex-col">
+                  <div className="w-full h-[200px] overflow-hidden rounded-[8px] mb-5 bg-[#e2e8f0] relative">
+                    <img src={theme.preview_image} alt={theme.name} className="w-full h-full object-cover" />
+                  </div>
+                  <h3 className="text-[1.3rem] mb-3 text-black">{theme.name}</h3>
+                  <p className="text-[#555] mb-5 leading-relaxed flex-1">{theme.description}</p>
+                  <div className="flex gap-3 justify-center flex-wrap">
+                    {theme.demo_url && (
+                      <a href={theme.demo_url} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">View Demo</a>
+                    )}
+                    <Link href="/shop" className="btn btn-primary">Get This Design</Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="text-center mt-[30px]">
+              <Link href="/shop" className="btn btn-secondary">Browse All Designs</Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* About / Features */}
       <section className="section bg-gradient-to-b from-[#e8e8e8] to-[#d8d8d8]">

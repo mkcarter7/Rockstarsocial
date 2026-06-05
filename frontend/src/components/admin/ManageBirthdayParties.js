@@ -4,15 +4,32 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getAdminEventPages, deleteAdminEventPage } from '../../api/api';
+import { getAdminEventPages, deleteAdminEventPage, adminCreateEventPage } from '../../api/api';
 
 const headerBtnClass = "bg-[rgba(255,255,255,0.2)] text-white border border-[rgba(255,255,255,0.3)] py-2 px-4 rounded-[5px] cursor-pointer text-[0.9rem] transition-colors duration-300 inline-block hover:bg-[rgba(255,255,255,0.3)]";
+const inputClass = "w-full border border-[#ddd] rounded-[5px] py-2 px-3 text-[0.95rem] outline-none focus:border-brand";
+
+const EVENT_TYPE_LABELS = {
+  birthday: { name: "Birthday Person's Name", date: 'Party Date', nameKey: 'birthday_person_name', dateKey: 'party_date' },
+  wedding: { name: "Couple's Names (e.g. Sarah & James)", date: 'Wedding Date', nameKey: 'couple_name', dateKey: 'wedding_date' },
+  baby_shower: { name: "Parent(s) Names (e.g. Emma & Jake)", date: 'Shower Date', nameKey: 'parent_names', dateKey: 'shower_date' },
+};
+
+const EMPTY_FORM = {
+  event_type: 'birthday', slug: '', event_name: '', event_date: '',
+  host_name: '', host_email: '', host_password: '', send_welcome_email: false,
+};
 
 const ManageEventPages = () => {
   const { currentUser, logout, getIdToken } = useAuth();
   const router = useRouter();
   const [pages, setPages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [createForm, setCreateForm] = useState(EMPTY_FORM);
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState('');
+  const [createSuccess, setCreateSuccess] = useState('');
 
   const loadPages = useCallback(async () => {
     try {
@@ -40,12 +57,43 @@ const ManageEventPages = () => {
     }
   };
 
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    setCreating(true);
+    setCreateError('');
+    setCreateSuccess('');
+    try {
+      const token = await getIdToken();
+      const meta = EVENT_TYPE_LABELS[createForm.event_type];
+      const payload = {
+        event_type: createForm.event_type,
+        slug: createForm.slug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, ''),
+        host_email: createForm.host_email,
+        host_name: createForm.host_name,
+        send_welcome_email: createForm.send_welcome_email,
+        [meta.nameKey]: createForm.event_name,
+        [meta.dateKey]: createForm.event_date,
+      };
+      if (createForm.host_password) payload.host_password = createForm.host_password;
+
+      const res = await adminCreateEventPage(payload, token);
+      setCreateSuccess(`Created! Page is live at /${res.data.slug}`);
+      setCreateForm(EMPTY_FORM);
+      loadPages();
+    } catch (err) {
+      setCreateError(err.response?.data?.error || 'Failed to create event page. Please try again.');
+    }
+    setCreating(false);
+  };
+
   const handleLogout = async () => {
     try { await logout(); router.push('/admin/login'); }
     catch (err) { console.error('Error logging out:', err); }
   };
 
   const formatDate = (dateString) => new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+  const meta = EVENT_TYPE_LABELS[createForm.event_type];
 
   if (loading) return <div className="p-10 text-center text-[1.1rem] text-[#666]">Loading...</div>;
 
@@ -64,6 +112,106 @@ const ManageEventPages = () => {
       </header>
 
       <div className="py-[30px] px-10">
+
+        {/* Create Event toggle button */}
+        <div className="mb-6 flex justify-end">
+          <button
+            onClick={() => { setShowCreateForm(f => !f); setCreateError(''); setCreateSuccess(''); }}
+            className="bg-brand text-white border-none py-3 px-6 rounded-[5px] text-base font-semibold cursor-pointer transition-colors duration-300 hover:bg-brand-dark"
+          >
+            {showCreateForm ? '✕ Cancel' : '+ Create Event Page'}
+          </button>
+        </div>
+
+        {/* Create Event form */}
+        {showCreateForm && (
+          <div className="bg-white rounded-[10px] shadow-[0_2px_8px_rgba(0,0,0,0.1)] p-8 mb-8">
+            <h2 className="text-[1.3rem] font-semibold text-[#333] mb-6">Create Event Page (no Stripe)</h2>
+
+            {createError && (
+              <div className="py-3 px-4 rounded-[5px] mb-5 bg-[#fed7d7] text-[#742a2a] border border-[#fc8181] text-[0.9rem]">{createError}</div>
+            )}
+            {createSuccess && (
+              <div className="py-3 px-4 rounded-[5px] mb-5 bg-[#d4edda] text-[#155724] border border-[#c3e6cb] text-[0.9rem]">✓ {createSuccess}</div>
+            )}
+
+            <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-[0.85rem] text-[#444]">Event Type *</label>
+                <select value={createForm.event_type} onChange={e => setCreateForm(p => ({ ...p, event_type: e.target.value }))} className={inputClass}>
+                  <option value="birthday">Birthday Party</option>
+                  <option value="wedding">Wedding</option>
+                  <option value="baby_shower">Baby Shower</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-[0.85rem] text-[#444]">Page URL Slug *</label>
+                <div className="flex items-center border border-[#ddd] rounded-[5px] overflow-hidden focus-within:border-brand">
+                  <span className="bg-[#f5f5f5] px-3 py-2 text-[0.85rem] text-[#888] border-r border-[#ddd] whitespace-nowrap">rockstarsocial.com/</span>
+                  <input type="text" value={createForm.slug}
+                    onChange={e => setCreateForm(p => ({ ...p, slug: e.target.value }))}
+                    placeholder="kims-party" required
+                    className="flex-1 py-2 px-3 text-[0.95rem] outline-none border-none" />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-[0.85rem] text-[#444]">{meta.name} *</label>
+                <input type="text" value={createForm.event_name}
+                  onChange={e => setCreateForm(p => ({ ...p, event_name: e.target.value }))}
+                  placeholder={meta.name} required className={inputClass} />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-[0.85rem] text-[#444]">{meta.date} *</label>
+                <input type="date" value={createForm.event_date}
+                  onChange={e => setCreateForm(p => ({ ...p, event_date: e.target.value }))}
+                  required className={inputClass} />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-[0.85rem] text-[#444]">Host Name</label>
+                <input type="text" value={createForm.host_name}
+                  onChange={e => setCreateForm(p => ({ ...p, host_name: e.target.value }))}
+                  placeholder="Full name" className={inputClass} />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-[0.85rem] text-[#444]">Host Email *</label>
+                <input type="email" value={createForm.host_email}
+                  onChange={e => setCreateForm(p => ({ ...p, host_email: e.target.value }))}
+                  placeholder="host@email.com" required className={inputClass} />
+              </div>
+
+              <div className="flex flex-col gap-1 md:col-span-2">
+                <label className="font-semibold text-[0.85rem] text-[#444]">Host Password <span className="font-normal text-[#888]">(optional)</span></label>
+                <input type="text" value={createForm.host_password}
+                  onChange={e => setCreateForm(p => ({ ...p, host_password: e.target.value }))}
+                  placeholder="Leave blank to auto-generate. Host can reset via magic link." className={inputClass} />
+              </div>
+
+              <div className="flex items-center gap-3 md:col-span-2">
+                <input type="checkbox" id="sendEmail" checked={createForm.send_welcome_email}
+                  onChange={e => setCreateForm(p => ({ ...p, send_welcome_email: e.target.checked }))}
+                  className="w-4 h-4 cursor-pointer" />
+                <label htmlFor="sendEmail" className="text-[0.9rem] text-[#444] cursor-pointer">
+                  Send welcome email to host with their page link
+                </label>
+              </div>
+
+              <div className="md:col-span-2">
+                <button type="submit"
+                  className="bg-brand text-white border-none py-3 px-8 rounded-[5px] text-base font-semibold cursor-pointer transition-colors duration-300 hover:bg-brand-dark disabled:opacity-60 disabled:cursor-not-allowed"
+                  disabled={creating}>
+                  {creating ? 'Creating...' : 'Create Event Page'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Event pages table */}
         {pages.length === 0 ? (
           <p className="text-center text-[#888] text-[1.1rem] mt-[60px]">No event pages yet.</p>
         ) : (

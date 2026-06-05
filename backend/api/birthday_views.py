@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth.hashers import make_password
 from .models import (
-    BirthdayParty, WeddingEvent, HostAccount, PartyPhoto, GuestBookEntry,
+    BirthdayParty, WeddingEvent, BabyShowerEvent, HostAccount, PartyPhoto, GuestBookEntry,
     PartyRSVP, TriviaQuestion, TriviaScore, GiftItem
 )
 from .host_auth_views import verify_host_session_by_token_str
@@ -467,12 +467,22 @@ def trivia_leaderboard(request, slug):
 
 def _serialize_event_page(p, event_type):
     is_wedding = isinstance(p, WeddingEvent)
+    is_baby_shower = isinstance(p, BabyShowerEvent)
+    if is_wedding:
+        name = p.couple_name
+        party_date = p.wedding_date
+    elif is_baby_shower:
+        name = p.parent_names
+        party_date = p.shower_date
+    else:
+        name = p.birthday_person_name
+        party_date = p.party_date
     return {
         'id': p.id,
         'event_type': event_type,
         'slug': p.slug,
-        'name': p.couple_name if is_wedding else p.birthday_person_name,
-        'party_date': (p.wedding_date if is_wedding else p.party_date).isoformat(),
+        'name': name,
+        'party_date': party_date.isoformat(),
         'host_email': p.host_email,
         'is_active': p.is_active,
         'is_expired': p.is_expired,
@@ -485,6 +495,7 @@ def _serialize_event_page(p, event_type):
 EVENT_TYPE_MODELS = {
     'birthday': BirthdayParty,
     'wedding': WeddingEvent,
+    'baby_shower': BabyShowerEvent,
 }
 
 
@@ -526,6 +537,9 @@ def admin_delete_event_page(request, event_type, page_id):
     elif Model is WeddingEvent:
         from .wedding_views import _delete_wedding_and_maybe_account
         _delete_wedding_and_maybe_account(page)
+    elif Model is BabyShowerEvent:
+        from .baby_shower_views import _delete_baby_shower_and_maybe_account
+        _delete_baby_shower_and_maybe_account(page)
     else:
         page.delete()
     return Response({'message': 'Event page deleted'}, status=status.HTTP_200_OK)
@@ -535,6 +549,103 @@ def admin_delete_event_page(request, event_type, page_id):
 def admin_birthday_parties(request):
     """Legacy alias — kept for backwards compatibility."""
     return admin_event_pages(request)
+
+
+def _random_password():
+    import secrets, string
+    return ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
+
+
+@api_view(['POST'])
+def admin_create_event_page(request):
+    """Firebase-protected: create a birthday, wedding, or baby shower page without Stripe."""
+    from .firebase_auth import get_firebase_user
+    if not get_firebase_user(request):
+        return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    event_type = request.data.get('event_type', '').strip()
+    slug = request.data.get('slug', '').strip().lower()
+    host_email = request.data.get('host_email', '').strip().lower()
+    host_name = request.data.get('host_name', '').strip()
+    host_password = request.data.get('host_password', '').strip() or _random_password()
+    send_email = request.data.get('send_welcome_email', False)
+
+    if not slug or not host_email:
+        return Response({'error': 'slug and host_email are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    from django.contrib.auth.hashers import make_password as _make_password
+    host_account, _ = HostAccount.objects.get_or_create(
+        email=host_email,
+        defaults={'password': _make_password(host_password)},
+    )
+
+    from datetime import datetime as _dt
+
+    if event_type == 'birthday':
+        birthday_person_name = request.data.get('birthday_person_name', '').strip()
+        party_date = request.data.get('party_date', '')
+        if not birthday_person_name or not party_date:
+            return Response({'error': 'birthday_person_name and party_date are required'}, status=status.HTTP_400_BAD_REQUEST)
+        if BirthdayParty.objects.filter(slug=slug).exists():
+            return Response({'error': 'That URL is already taken'}, status=status.HTTP_400_BAD_REQUEST)
+        event = BirthdayParty.objects.create(
+            slug=slug,
+            birthday_person_name=birthday_person_name,
+            party_date=_dt.strptime(party_date, '%Y-%m-%d').date(),
+            host_email=host_email,
+            host_name=host_name,
+            is_active=True,
+            host_account=host_account,
+        )
+        if send_email:
+            _send_welcome_email(event)
+
+    elif event_type == 'wedding':
+        couple_name = request.data.get('couple_name', '').strip()
+        wedding_date = request.data.get('wedding_date', '')
+        if not couple_name or not wedding_date:
+            return Response({'error': 'couple_name and wedding_date are required'}, status=status.HTTP_400_BAD_REQUEST)
+        if WeddingEvent.objects.filter(slug=slug).exists():
+            return Response({'error': 'That URL is already taken'}, status=status.HTTP_400_BAD_REQUEST)
+        from .models import WeddingEvent as _WE
+        event = _WE.objects.create(
+            slug=slug,
+            couple_name=couple_name,
+            wedding_date=_dt.strptime(wedding_date, '%Y-%m-%d').date(),
+            host_email=host_email,
+            host_name=host_name,
+            is_active=True,
+            host_account=host_account,
+        )
+        if send_email:
+            from .wedding_views import _send_welcome_email as _wedding_email
+            _wedding_email(event)
+
+    elif event_type == 'baby_shower':
+        parent_names = request.data.get('parent_names', '').strip()
+        shower_date = request.data.get('shower_date', '')
+        if not parent_names or not shower_date:
+            return Response({'error': 'parent_names and shower_date are required'}, status=status.HTTP_400_BAD_REQUEST)
+        if BabyShowerEvent.objects.filter(slug=slug).exists():
+            return Response({'error': 'That URL is already taken'}, status=status.HTTP_400_BAD_REQUEST)
+        from .models import BabyShowerEvent as _BSE
+        event = _BSE.objects.create(
+            slug=slug,
+            parent_names=parent_names,
+            shower_date=_dt.strptime(shower_date, '%Y-%m-%d').date(),
+            host_email=host_email,
+            host_name=host_name,
+            is_active=True,
+            host_account=host_account,
+        )
+        if send_email:
+            from .baby_shower_views import _send_welcome_email as _bs_email
+            _bs_email(event)
+
+    else:
+        return Response({'error': 'event_type must be birthday, wedding, or baby_shower'}, status=status.HTTP_400_BAD_REQUEST)
+
+    return Response({'slug': event.slug, 'message': f'{event_type} page created'}, status=status.HTTP_201_CREATED)
 
 
 # ─── Cleanup management command helper ────────────────────────────────────────

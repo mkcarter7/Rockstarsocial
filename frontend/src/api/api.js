@@ -122,9 +122,51 @@ export const getWeddingSongRequests = (slug) => api.get(`/wedding/${slug}/song-r
 export const submitSongRequest = (slug, data) => api.post(`/wedding/${slug}/song-requests/`, data);
 export const deleteWeddingSongRequest = (slug, id, token) => api.delete(`/wedding/${slug}/song-requests/${id}/?session_token=${token}`);
 
+// Baby shower app
+export const checkBabyShowerSlug = (slug) => api.get(`/baby-shower/check-slug/?slug=${slug}`);
+export const getBabyShower = (slug) => api.get(`/baby-shower/${slug}/`);
+export const getBabyShowerSetup = (sessionId, sessionToken = null) =>
+  sessionToken
+    ? api.get(`/baby-shower/setup/?session_token=${sessionToken}`)
+    : api.get(`/baby-shower/setup/?session_id=${sessionId}`);
+export const saveBabyShowerSetup = (data) => api.post('/baby-shower/setup/', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const createBabyShowerCheckout = (data) => api.post('/stripe/create-baby-shower-checkout/', data);
+export const getBabyShowerPhotos = (slug) => api.get(`/baby-shower/${slug}/photos/`);
+export const uploadBabyShowerPhoto = (slug, formData) => api.post(`/baby-shower/${slug}/photos/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const getBabyShowerGuestbook = (slug) => api.get(`/baby-shower/${slug}/guestbook/`);
+export const addBabyShowerGuestbookEntry = (slug, data) => api.post(`/baby-shower/${slug}/guestbook/`, data);
+export const getBabyShowerRSVP = (slug) => api.get(`/baby-shower/${slug}/rsvp/`);
+export const submitBabyShowerRSVP = (slug, data) => api.post(`/baby-shower/${slug}/rsvp/`, data);
+export const getBabyShowerStory = (slug) => api.get(`/baby-shower/${slug}/story/`);
+export const addBabyShowerStoryEntry = (slug, data) => api.post(`/baby-shower/${slug}/story/`, data);
+export const deleteBabyShowerStoryEntry = (slug, entryId, sessionToken) =>
+  api.delete(`/baby-shower/${slug}/story/${entryId}/?session_token=${sessionToken}`);
+export const getBabyShowerGifts = (slug, sessionToken = null) =>
+  sessionToken
+    ? api.get(`/baby-shower/${slug}/gifts/?session_token=${sessionToken}`)
+    : api.get(`/baby-shower/${slug}/gifts/`);
+export const addBabyShowerGiftItem = (slug, data) => api.post(`/baby-shower/${slug}/gifts/`, data);
+export const claimBabyShowerGiftItem = (slug, giftId, claimerName) =>
+  api.post(`/baby-shower/${slug}/gifts/${giftId}/claim/`, { claimer_name: claimerName });
+export const unclaimBabyShowerGiftItem = (slug, giftId, sessionToken) =>
+  api.post(`/baby-shower/${slug}/gifts/${giftId}/`, { session_token: sessionToken });
+export const deleteBabyShowerGiftItem = (slug, giftId, sessionToken) =>
+  api.delete(`/baby-shower/${slug}/gifts/${giftId}/?session_token=${sessionToken}`);
+export const getBabyShowerFAQ = (slug) => api.get(`/baby-shower/${slug}/faq/`);
+export const addBabyShowerFAQItem = (slug, data) => api.post(`/baby-shower/${slug}/faq/`, data);
+export const deleteBabyShowerFAQItem = (slug, id, token) => api.delete(`/baby-shower/${slug}/faq/${id}/?session_token=${token}`);
+export const getBabyShowerTrivia = (slug) => api.get(`/baby-shower/${slug}/trivia/`);
+export const addBabyShowerTriviaQuestion = (slug, data) => api.post(`/baby-shower/${slug}/trivia/`, data);
+export const submitBabyShowerTrivia = (slug, data) => api.post(`/baby-shower/${slug}/trivia/submit/`, data);
+export const getBabyShowerTriviaLeaderboard = (slug) => api.get(`/baby-shower/${slug}/trivia/leaderboard/`);
+export const getBabyShowerNames = (slug) => api.get(`/baby-shower/${slug}/names/`);
+export const addBabyShowerName = (slug, data) => api.post(`/baby-shower/${slug}/names/`, data);
+export const deleteBabyShowerName = (slug, id, token) => api.delete(`/baby-shower/${slug}/names/${id}/?session_token=${token}`);
+
 // Admin — Event pages (all types: birthday, wedding, etc.)
 export const getAdminEventPages = (token) => api.get('/admin/event-pages/', { headers: { Authorization: `Bearer ${token}` } });
 export const deleteAdminEventPage = (eventType, id, token) => api.delete(`/admin/event-pages/${eventType}/${id}/`, { headers: { Authorization: `Bearer ${token}` } });
+export const adminCreateEventPage = (data, token) => api.post('/admin/event-pages/create/', data, { headers: { Authorization: `Bearer ${token}` } });
 
 // Host auth
 export const hostLogin = (email, password) => api.post('/host/login/', { email, password });

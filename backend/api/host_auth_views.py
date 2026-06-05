@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from django.contrib.auth.hashers import check_password
-from .models import BirthdayParty, WeddingEvent, HostAccessToken, HostAccount
+from .models import BirthdayParty, WeddingEvent, BabyShowerEvent, HostAccessToken, HostAccount
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ def _verify_host_session(request, slug):
         return None, Response({'error': 'Host token required'}, status=status.HTTP_401_UNAUTHORIZED)
 
     try:
-        token_obj = HostAccessToken.objects.select_related('party', 'wedding_event').get(
+        token_obj = HostAccessToken.objects.select_related('party', 'wedding_event', 'baby_shower_event').get(
             token=token_str,
             token_type='session',
         )
@@ -42,6 +42,8 @@ def _verify_host_session(request, slug):
         return token_obj.party, None
     if token_obj.wedding_event and token_obj.wedding_event.slug == slug:
         return token_obj.wedding_event, None
+    if token_obj.baby_shower_event and token_obj.baby_shower_event.slug == slug:
+        return token_obj.baby_shower_event, None
 
     return None, Response({'error': 'Token does not match this event'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -57,7 +59,7 @@ def verify_host_session_by_token_str(token_str, slug=None):
         return None, {'error': 'session_token required'}
 
     try:
-        token_obj = HostAccessToken.objects.select_related('party', 'wedding_event').get(
+        token_obj = HostAccessToken.objects.select_related('party', 'wedding_event', 'baby_shower_event').get(
             token=token_str,
             token_type='session',
         )
@@ -72,10 +74,12 @@ def verify_host_session_by_token_str(token_str, slug=None):
             return token_obj.party, None
         if token_obj.wedding_event and token_obj.wedding_event.slug == slug:
             return token_obj.wedding_event, None
+        if token_obj.baby_shower_event and token_obj.baby_shower_event.slug == slug:
+            return token_obj.baby_shower_event, None
         return None, {'error': 'Token does not match this event'}
 
     # No slug constraint — return whichever event is attached
-    event = token_obj.party or token_obj.wedding_event
+    event = token_obj.party or token_obj.wedding_event or token_obj.baby_shower_event
     return event, None
 
 
@@ -96,15 +100,18 @@ def request_magic_link(request):
     account = None
     party = None
     wedding_evt = None
+    baby_shower_evt = None
     try:
         account = HostAccount.objects.get(email__iexact=email)
         party = account.parties.filter(is_active=True).order_by('-created_at').first()
         if not party:
             wedding_evt = account.wedding_events.filter(is_active=True).order_by('-created_at').first()
+        if not party and not wedding_evt:
+            baby_shower_evt = account.baby_shower_events.filter(is_active=True).order_by('-created_at').first()
     except HostAccount.DoesNotExist:
         pass
 
-    if party is None and wedding_evt is None:
+    if party is None and wedding_evt is None and baby_shower_evt is None:
         try:
             party = BirthdayParty.objects.filter(
                 host_email__iexact=email, is_active=True
@@ -112,7 +119,7 @@ def request_magic_link(request):
         except BirthdayParty.DoesNotExist:
             pass
 
-    if party is None and wedding_evt is None:
+    if party is None and wedding_evt is None and baby_shower_evt is None:
         try:
             wedding_evt = WeddingEvent.objects.filter(
                 host_email__iexact=email, is_active=True
@@ -120,13 +127,22 @@ def request_magic_link(request):
         except WeddingEvent.DoesNotExist:
             pass
 
+    if party is None and wedding_evt is None and baby_shower_evt is None:
+        try:
+            baby_shower_evt = BabyShowerEvent.objects.filter(
+                host_email__iexact=email, is_active=True
+            ).latest('created_at')
+        except BabyShowerEvent.DoesNotExist:
+            pass
+
     # No account at all — nothing to send
-    if account is None and party is None and wedding_evt is None:
+    if account is None and party is None and wedding_evt is None and baby_shower_evt is None:
         return Response({'message': 'If an account exists for this email, a link has been sent.'})
 
     token = HostAccessToken.objects.create(
         party=party,
         wedding_event=wedding_evt,
+        baby_shower_event=baby_shower_evt,
         token_type='magic_link',
         expires_at=timezone.now() + timedelta(hours=24),
     )
@@ -148,6 +164,15 @@ def request_magic_link(request):
         body = (
             f"Hi {wedding_evt.host_name or 'there'},\n\n"
             f"Here is your link to manage {wedding_evt.couple_name}'s wedding page:\n\n"
+            f"{magic_link}\n\n"
+            f"This link expires in 24 hours and can only be used once.\n\n"
+            f"— RockStar Social"
+        )
+    elif baby_shower_evt:
+        subject = f"Your baby shower page management link — {baby_shower_evt.parent_names}"
+        body = (
+            f"Hi {baby_shower_evt.host_name or 'there'},\n\n"
+            f"Here is your link to manage {baby_shower_evt.parent_names}'s baby shower page:\n\n"
             f"{magic_link}\n\n"
             f"This link expires in 24 hours and can only be used once.\n\n"
             f"— RockStar Social"
@@ -217,6 +242,8 @@ def verify_magic_link(request):
 
     session_token = HostAccessToken.objects.create(
         party=token_obj.party,
+        wedding_event=token_obj.wedding_event,
+        baby_shower_event=token_obj.baby_shower_event,
         token_type='session',
         expires_at=timezone.now() + timedelta(days=30),
     )
@@ -226,6 +253,8 @@ def verify_magic_link(request):
         slug_val = token_obj.party.slug
     elif token_obj.wedding_event:
         slug_val = token_obj.wedding_event.slug
+    elif token_obj.baby_shower_event:
+        slug_val = token_obj.baby_shower_event.slug
 
     return Response({
         'session_token': str(session_token.token),
@@ -256,20 +285,21 @@ def host_login(request):
     if not check_password(password, account.password):
         return Response({'error': 'Invalid email or password'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    # Most recent active event (birthday or wedding); fall back to host_email match
+    # Most recent active event (birthday, wedding, or baby shower)
     birthday = (
         account.parties.filter(is_active=True).order_by('-created_at').first()
         or BirthdayParty.objects.filter(host_email=email, is_active=True).order_by('-created_at').first()
     )
     wedding = account.wedding_events.filter(is_active=True).order_by('-created_at').first()
-    # Use the most recently created event as the default session party
-    if birthday and wedding:
-        party = birthday if birthday.created_at >= wedding.created_at else None
-        wedding_evt = None if party else wedding
-    elif birthday:
-        party, wedding_evt = birthday, None
-    else:
-        party, wedding_evt = None, wedding
+    baby_shower = account.baby_shower_events.filter(is_active=True).order_by('-created_at').first()
+
+    # Pick default scoped event (most recently created)
+    candidates = [(e, e.created_at) for e in [birthday, wedding, baby_shower] if e]
+    candidates.sort(key=lambda x: x[1], reverse=True)
+    default_event = candidates[0][0] if candidates else None
+    party = default_event if isinstance(default_event, BirthdayParty) else None
+    wedding_evt = default_event if isinstance(default_event, WeddingEvent) else None
+    baby_shower_evt = default_event if isinstance(default_event, BabyShowerEvent) else None
 
     # Build unified all_parties list for the dashboard party-picker
     birthday_list = list(
@@ -288,12 +318,21 @@ def host_login(request):
         w['party_type'] = 'wedding'
         w.pop('created_at', None)
 
-    all_parties = birthday_list + wedding_list
-    default_slug = (party or wedding_evt).slug if (party or wedding_evt) else None
+    baby_shower_list = list(
+        account.baby_shower_events.filter(is_active=True).order_by('-created_at')
+        .values('slug', 'parent_names', 'shower_date', 'created_at')
+    )
+    for b in baby_shower_list:
+        b['party_type'] = 'baby_shower'
+        b.pop('created_at', None)
+
+    all_parties = birthday_list + wedding_list + baby_shower_list
+    default_slug = default_event.slug if default_event else None
 
     session_token = HostAccessToken.objects.create(
         party=party,
         wedding_event=wedding_evt,
+        baby_shower_event=baby_shower_evt,
         token_type='session',
         expires_at=timezone.now() + timedelta(days=30),
     )
@@ -386,8 +425,7 @@ def host_party_stats(request, slug):
     if err:
         return err
 
-    is_wedding = isinstance(party, WeddingEvent)
-    if is_wedding:
+    if isinstance(party, WeddingEvent):
         return Response({
             'slug': party.slug,
             'party_type': 'wedding',
@@ -399,6 +437,19 @@ def host_party_stats(request, slug):
             'photo_count': party.photos.count(),
             'story_count': party.story_entries.count(),
             'song_request_count': party.song_requests.count(),
+        })
+    if isinstance(party, BabyShowerEvent):
+        return Response({
+            'slug': party.slug,
+            'party_type': 'baby_shower',
+            'parent_names': party.parent_names,
+            'shower_date': party.shower_date.isoformat(),
+            'host_name': party.host_name,
+            'rsvp_count': party.rsvps.filter(status='yes').count(),
+            'guestbook_count': party.guestbook_entries.count(),
+            'photo_count': party.photos.count(),
+            'story_count': party.story_entries.count(),
+            'name_suggestion_count': party.name_suggestions.count(),
         })
     return Response({
         'slug': party.slug,

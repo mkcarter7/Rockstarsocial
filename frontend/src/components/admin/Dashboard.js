@@ -22,7 +22,7 @@ const Dashboard = () => {
     try {
       const token = await getIdToken();
 
-      const [portfolioRes, testimonialRes, pricingRes, themeRes, contactRes, birthdayRes] = await Promise.all([
+      const [portfolioRes, testimonialRes, pricingRes, themeRes, contactRes, birthdayRes] = await Promise.allSettled([
         api.get('/admin/portfolio/', { headers: { Authorization: `Bearer ${token}` } }),
         api.get('/admin/testimonials/', { headers: { Authorization: `Bearer ${token}` } }),
         api.get('/admin/pricing/', { headers: { Authorization: `Bearer ${token}` } }),
@@ -31,13 +31,14 @@ const Dashboard = () => {
         api.get('/admin/event-pages/', { headers: { Authorization: `Bearer ${token}` } }),
       ]);
 
-      setPortfolioCount(portfolioRes.data.length);
-      setTestimonialCount(testimonialRes.data.length);
-      setPricingCount(pricingRes.data.length);
-      setThemeCount(themeRes.data.length);
-      setContactCount(contactRes.data.length);
-      setUnreadContactCount(contactRes.data.filter(s => !s.read).length);
-      setBirthdayCount(birthdayRes.data.length);
+      setPortfolioCount(portfolioRes.value?.data?.length ?? 0);
+      setTestimonialCount(testimonialRes.value?.data?.length ?? 0);
+      setPricingCount(pricingRes.value?.data?.length ?? 0);
+      setThemeCount(themeRes.value?.data?.length ?? 0);
+      const contacts = contactRes.value?.data ?? [];
+      setContactCount(contacts.length);
+      setUnreadContactCount(contacts.filter(s => !s.read).length);
+      setBirthdayCount(birthdayRes.value?.data?.length ?? 0);
     } catch (err) {
       console.error('Error loading dashboard data:', err);
     } finally {

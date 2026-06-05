@@ -117,36 +117,48 @@ const HostDashboard = () => {
             <div className="flex flex-col gap-4">
               {allParties.map(p => {
                 const isWedding = p.party_type === 'wedding';
-                const accentColor = isWedding ? '#c9a96e' : '#ff6b9d';
-                const eventName = isWedding ? (p.couple_name || 'Wedding') : (p.birthday_person_name || 'Birthday');
-                const eventDate = p.wedding_date || p.party_date;
+                const isBabyShower = p.party_type === 'baby_shower';
+                const accentColor = isWedding ? '#c9a96e' : isBabyShower ? '#c17c5a' : '#ff6b9d';
+                const icon = isWedding ? '♡' : isBabyShower ? '🍼' : '🎂';
+                const eventName = isWedding ? (p.couple_name || 'Wedding')
+                  : isBabyShower ? (p.parent_names || 'Baby Shower')
+                  : (p.birthday_person_name || 'Birthday');
+                const eventDate = p.wedding_date || p.shower_date || p.party_date;
+                const urlPrefix = `1rockstarsocial.com/${p.slug}`;
                 return (
                   <button
                     key={p.slug}
                     onClick={() => pickParty(p.slug)}
-                    className="bg-white rounded-[12px] p-6 text-left hover:-translate-y-[2px] hover:shadow-md transition-[transform,box-shadow] cursor-pointer"
+                    className="bg-white rounded-[4px] p-6 text-left hover:-translate-y-[2px] hover:shadow-md transition-[transform,box-shadow] cursor-pointer"
                     style={{ border: `2px solid ${accentColor}` }}
                   >
                     <div className="font-bold text-[1.1rem] text-[#333]">
-                      {isWedding ? '♡' : '🎂'} {eventName}
+                      {icon} {eventName}
                     </div>
                     {eventDate && <div className="text-[#888] text-[0.9rem] mt-1">{formatDate(eventDate)}</div>}
-                    <div className="text-[0.85rem] mt-1" style={{ color: accentColor }}>1rockstarsocial.com/{p.slug}</div>
+                    <div className="text-[0.85rem] mt-1" style={{ color: accentColor }}>{urlPrefix}</div>
                   </button>
                 );
               })}
               <Link
                 href="/birthday/purchase"
-                className="flex items-center justify-center gap-2 border-2 border-dashed border-[#ff6b9d] rounded-[12px] p-5 text-[#ff6b9d] font-semibold hover:bg-[#fff0f7] transition-colors"
+                className="flex items-center justify-center gap-2 border-2 border-dashed border-[#ff6b9d] rounded-[4px] p-5 text-[#ff6b9d] font-semibold hover:bg-[#fff0f7] transition-colors"
               >
                 + Create a Birthday Page
               </Link>
               <Link
                 href="/wedding/purchase"
-                className="flex items-center justify-center gap-2 border-2 border-dashed rounded-[12px] p-5 font-semibold hover:opacity-80 transition-opacity"
+                className="flex items-center justify-center gap-2 border-2 border-dashed rounded-[4px] p-5 font-semibold hover:opacity-80 transition-opacity"
                 style={{ borderColor: '#c9a96e', color: '#c9a96e' }}
               >
                 + Create a Wedding Page
+              </Link>
+              <Link
+                href="/baby-shower/purchase"
+                className="flex items-center justify-center gap-2 border-2 border-dashed rounded-[4px] p-5 font-semibold hover:opacity-80 transition-opacity"
+                style={{ borderColor: '#c17c5a', color: '#c17c5a' }}
+              >
+                + Create a Baby Shower Page
               </Link>
             </div>
           </div>
@@ -169,17 +181,24 @@ const HostDashboard = () => {
             <div className="flex flex-col gap-4 text-center">
               <Link
                 href="/birthday/purchase"
-                className="flex items-center justify-center gap-2 text-white rounded-[10px] py-4 px-6 font-semibold hover:opacity-90 transition-opacity"
+                className="flex items-center justify-center gap-2 text-white rounded-[4px] py-4 px-6 font-semibold hover:opacity-90 transition-opacity"
                 style={{ background: '#ff6b9d' }}
               >
                 🎂 Create a Birthday Page
               </Link>
               <Link
                 href="/wedding/purchase"
-                className="flex items-center justify-center gap-2 text-white rounded-[10px] py-4 px-6 font-semibold hover:opacity-90 transition-opacity"
+                className="flex items-center justify-center gap-2 text-white rounded-[4px] py-4 px-6 font-semibold hover:opacity-90 transition-opacity"
                 style={{ background: '#c9a96e' }}
               >
                 ♡ Create a Wedding Page
+              </Link>
+              <Link
+                href="/baby-shower/purchase"
+                className="flex items-center justify-center gap-2 text-white rounded-[4px] py-4 px-6 font-semibold hover:opacity-90 transition-opacity"
+                style={{ background: '#c17c5a' }}
+              >
+                🍼 Create a Baby Shower Page
               </Link>
               <button
                 onClick={handleLogout}
@@ -214,20 +233,27 @@ const HostDashboard = () => {
   }
 
   const isWedding = stats.party_type === 'wedding';
-  const color = isWedding ? '#c9a96e' : '#ff6b9d';
+  const isBabyShower = stats.party_type === 'baby_shower';
+  const color = isWedding ? '#c9a96e' : isBabyShower ? '#c17c5a' : '#ff6b9d';
   const heroGradient = isWedding
     ? 'linear-gradient(135deg, #f9f4ef 0%, #e8c4b8 100%)'
+    : isBabyShower
+    ? 'linear-gradient(135deg, #f7ede4 0%, #f0e6d6 100%)'
     : `linear-gradient(135deg, ${color} 0%, #c850c0 100%)`;
-  const heroTextColor = isWedding ? '#3d2c1e' : 'white';
+  const heroTextColor = (isWedding || isBabyShower) ? '#3d1f0e' : 'white';
   const eventName = isWedding
     ? (stats.couple_name || 'Your Wedding')
+    : isBabyShower
+    ? (stats.parent_names ? `${stats.parent_names}'s Baby Shower` : 'Your Baby Shower')
     : `${stats.birthday_person_name}'s Party`;
-  const eventDate = stats.wedding_date || stats.party_date;
+  const eventDate = stats.wedding_date || stats.shower_date || stats.party_date;
   const editUrl = isWedding
     ? `/wedding/setup?session_token=${hostToken}`
+    : isBabyShower
+    ? `/baby-shower/setup?session_token=${hostToken}`
     : `/birthday/setup?session_token=${hostToken}`;
-  const createAnotherUrl = isWedding ? '/wedding/purchase' : '/birthday/purchase';
-  const createAnotherLabel = isWedding ? '+ Create Another Wedding Page' : '+ Create Another Party';
+  const createAnotherUrl = isWedding ? '/wedding/purchase' : isBabyShower ? '/baby-shower/purchase' : '/birthday/purchase';
+  const createAnotherLabel = isWedding ? '+ Create Another Wedding Page' : isBabyShower ? '+ Create Another Baby Shower Page' : '+ Create Another Party';
 
   const formatDate = (d) => {
     const [y, m, day] = d.split('-').map(Number);
@@ -239,21 +265,21 @@ const HostDashboard = () => {
       <section className="py-[70px] text-center" style={{ background: heroGradient }}>
         <div className="container">
           <h1 className="text-[2.2rem] mb-2" style={{ color: heroTextColor }}>
-            {isWedding ? '♡' : '🎂'} {eventName}
+            {isWedding ? '♡' : isBabyShower ? '🍼' : '🎂'} {eventName}
           </h1>
-          {eventDate && <p className="text-[1rem]" style={{ color: isWedding ? '#7a6050' : 'rgba(255,255,255,0.9)' }}>{formatDate(eventDate)}</p>}
+          {eventDate && <p className="text-[1rem]" style={{ color: (isWedding || isBabyShower) ? '#7a5a46' : 'rgba(255,255,255,0.9)' }}>{formatDate(eventDate)}</p>}
           {stats.host_name && (
-            <p className="text-[0.9rem] mt-1" style={{ color: isWedding ? '#9a8070' : 'rgba(255,255,255,0.75)' }}>Hosted by {stats.host_name}</p>
+            <p className="text-[0.9rem] mt-1" style={{ color: (isWedding || isBabyShower) ? '#9a7060' : 'rgba(255,255,255,0.75)' }}>Hosted by {stats.host_name}</p>
           )}
         </div>
       </section>
 
       <section className="section">
         <div className="container" style={{ maxWidth: 720 }}>
-          <h2 className="text-center mb-6 text-[#333]">{isWedding ? 'Wedding Stats' : 'Party Stats'}</h2>
+          <h2 className="text-center mb-6 text-[#333]">{isWedding ? 'Wedding Stats' : isBabyShower ? 'Baby Shower Stats' : 'Party Stats'}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-10">
             <StatCard icon="✅" label="RSVPs (Yes)" value={stats.rsvp_count} color={color} />
-            <StatCard icon="📖" label={isWedding ? 'Guest Wishes' : 'Guestbook'} value={stats.guestbook_count} color={color} />
+            <StatCard icon="📖" label="Guestbook" value={stats.guestbook_count} color={color} />
             <StatCard icon="📸" label="Photos" value={stats.photo_count} color={color} />
           </div>
           {isWedding && (
@@ -262,29 +288,35 @@ const HostDashboard = () => {
               {stats.song_request_count != null && <StatCard icon="♪" label="Song Requests" value={stats.song_request_count} color={color} />}
             </div>
           )}
+          {isBabyShower && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-10">
+              {stats.story_count != null && <StatCard icon="🍼" label="Journey Moments" value={stats.story_count} color={color} />}
+              {stats.name_suggestion_count != null && <StatCard icon="💝" label="Name Ideas" value={stats.name_suggestion_count} color={color} />}
+            </div>
+          )}
 
           <div className="flex flex-col gap-4">
             <Link
               href={isWedding ? `/w/${hostSlug}` : `/${hostSlug}`}
-              className="flex items-center justify-center gap-2 bg-white border-2 rounded-[10px] py-4 px-6 font-semibold text-[#333] hover:-translate-y-[2px] hover:shadow-md transition-[transform,box-shadow]"
+              className="flex items-center justify-center gap-2 bg-white border-2 rounded-[4px] py-4 px-6 font-semibold text-[#333] hover:-translate-y-[2px] hover:shadow-md transition-[transform,box-shadow]"
               style={{ borderColor: color }}
             >
-              {isWedding ? '♡ View Wedding Page' : '🎉 View Party Page'}
+              {isWedding ? '♡ View Wedding Page' : isBabyShower ? '🍼 View Baby Shower Page' : '🎉 View Party Page'}
             </Link>
 
             <Link
               href={editUrl}
-              className="flex items-center justify-center gap-2 text-white rounded-[10px] py-4 px-6 font-semibold hover:opacity-90 transition-opacity"
+              className="flex items-center justify-center gap-2 text-white rounded-[4px] py-4 px-6 font-semibold hover:opacity-90 transition-opacity"
               style={{ background: color }}
             >
-              {isWedding ? '✦ Manage Wedding (colors, story, schedule, FAQ…)' : '✏️ Edit Party (colors, message, trivia)'}
+              {isWedding ? '✦ Manage Wedding (colors, story, FAQ…)' : isBabyShower ? '✦ Manage Baby Shower (colors, journey, trivia…)' : '✏️ Edit Party (colors, message, trivia)'}
             </Link>
 
             <Link
               href={createAnotherUrl}
-              className="flex items-center justify-center gap-2 bg-white border-2 border-dashed rounded-[10px] py-4 px-6 font-semibold transition-colors"
+              className="flex items-center justify-center gap-2 bg-white border-2 border-dashed rounded-[4px] py-4 px-6 font-semibold transition-colors"
               style={{ borderColor: color, color }}
-              onMouseEnter={e => { e.currentTarget.style.background = isWedding ? '#fdf6ec' : '#fff0f7'; }}
+              onMouseEnter={e => { e.currentTarget.style.background = isBabyShower ? '#fdf3ed' : isWedding ? '#fdf6ec' : '#fff0f7'; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'white'; }}
             >
               {createAnotherLabel}

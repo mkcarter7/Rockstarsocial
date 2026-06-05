@@ -9,18 +9,38 @@ from .admin_views import (
     AdminThemeViewSet, AdminThemeCategoryViewSet, AdminContactSubmissionViewSet,
     VerifyTokenView, SiteSettingsView
 )
-from .stripe_views import create_checkout_session, stripe_webhook, check_purchase_status, create_birthday_checkout, create_theme_checkout, create_wedding_checkout
+from .stripe_views import create_checkout_session, stripe_webhook, check_purchase_status, create_birthday_checkout, create_theme_checkout, create_wedding_checkout, create_baby_shower_checkout
 from .theme_setup_views import theme_setup_view
 from .birthday_views import (
     check_slug, party_detail, party_setup,
     party_photos, delete_photo, party_guestbook,
     party_rsvp, party_trivia, submit_trivia,
     trivia_leaderboard, admin_birthday_parties,
-    admin_event_pages, admin_delete_event_page,
+    admin_event_pages, admin_delete_event_page, admin_create_event_page,
     admin_host_accounts, admin_reset_host_password, admin_delete_host_account, admin_send_magic_link,
     party_gifts, claim_gift, manage_gift,
 )
 from .host_auth_views import request_magic_link, verify_magic_link, host_party_stats, host_login, switch_party, change_password
+from .baby_shower_views import (
+    check_slug as bs_check_slug,
+    event_detail as bs_event_detail,
+    event_setup as bs_event_setup,
+    event_photos as bs_event_photos,
+    event_guestbook as bs_event_guestbook,
+    event_rsvp as bs_event_rsvp,
+    event_story as bs_event_story,
+    delete_story_entry as bs_delete_story_entry,
+    event_gifts as bs_event_gifts,
+    claim_gift as bs_claim_gift,
+    manage_gift as bs_manage_gift,
+    event_faq as bs_event_faq,
+    manage_faq_item as bs_manage_faq_item,
+    event_trivia as bs_event_trivia,
+    submit_trivia as bs_submit_trivia,
+    trivia_leaderboard as bs_trivia_leaderboard,
+    event_name_suggestions as bs_event_name_suggestions,
+    delete_name_suggestion as bs_delete_name_suggestion,
+)
 from .wedding_views import (
     check_slug as wedding_check_slug,
     event_detail, event_setup,
@@ -100,7 +120,28 @@ urlpatterns = [
     path('wedding/<slug:slug>/faq/<int:item_id>/', manage_faq_item, name='wedding-faq-manage'),
     path('wedding/<slug:slug>/song-requests/', event_song_requests, name='wedding-song-requests'),
     path('wedding/<slug:slug>/song-requests/<int:req_id>/', manage_song_request, name='wedding-song-request-manage'),
+    # Baby shower app endpoints
+    path('stripe/create-baby-shower-checkout/', create_baby_shower_checkout, name='create-baby-shower-checkout'),
+    path('baby-shower/check-slug/', bs_check_slug, name='baby-shower-check-slug'),
+    path('baby-shower/setup/', bs_event_setup, name='baby-shower-setup'),
+    path('baby-shower/<slug:slug>/', bs_event_detail, name='baby-shower-detail'),
+    path('baby-shower/<slug:slug>/photos/', bs_event_photos, name='baby-shower-photos'),
+    path('baby-shower/<slug:slug>/guestbook/', bs_event_guestbook, name='baby-shower-guestbook'),
+    path('baby-shower/<slug:slug>/rsvp/', bs_event_rsvp, name='baby-shower-rsvp'),
+    path('baby-shower/<slug:slug>/story/', bs_event_story, name='baby-shower-story'),
+    path('baby-shower/<slug:slug>/story/<int:entry_id>/', bs_delete_story_entry, name='baby-shower-story-delete'),
+    path('baby-shower/<slug:slug>/gifts/', bs_event_gifts, name='baby-shower-gifts'),
+    path('baby-shower/<slug:slug>/gifts/<int:gift_id>/claim/', bs_claim_gift, name='baby-shower-gift-claim'),
+    path('baby-shower/<slug:slug>/gifts/<int:gift_id>/', bs_manage_gift, name='baby-shower-gift-manage'),
+    path('baby-shower/<slug:slug>/faq/', bs_event_faq, name='baby-shower-faq'),
+    path('baby-shower/<slug:slug>/faq/<int:item_id>/', bs_manage_faq_item, name='baby-shower-faq-manage'),
+    path('baby-shower/<slug:slug>/trivia/', bs_event_trivia, name='baby-shower-trivia'),
+    path('baby-shower/<slug:slug>/trivia/submit/', bs_submit_trivia, name='baby-shower-trivia-submit'),
+    path('baby-shower/<slug:slug>/trivia/leaderboard/', bs_trivia_leaderboard, name='baby-shower-trivia-leaderboard'),
+    path('baby-shower/<slug:slug>/names/', bs_event_name_suggestions, name='baby-shower-names'),
+    path('baby-shower/<slug:slug>/names/<int:suggestion_id>/', bs_delete_name_suggestion, name='baby-shower-names-delete'),
     path('admin/birthday-parties/', admin_birthday_parties, name='admin-birthday-parties'),
+    path('admin/event-pages/create/', admin_create_event_page, name='admin-create-event-page'),
     path('admin/event-pages/', admin_event_pages, name='admin-event-pages'),
     path('admin/event-pages/<str:event_type>/<int:page_id>/', admin_delete_event_page, name='admin-delete-event-page'),
     # Host auth

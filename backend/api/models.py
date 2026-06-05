@@ -47,6 +47,7 @@ class ThemePackage(models.Model):
     THEME_TYPES = [
         ('birthday', 'Birthday'),
         ('wedding', 'Wedding'),
+        ('baby_shower', 'Baby Shower'),
         ('event', 'Event'),
         ('business', 'Business'),
         ('boutique', 'Boutique'),
@@ -329,6 +330,7 @@ class HostAccessToken(models.Model):
     TOKEN_TYPES = [('magic_link', 'Magic Link'), ('session', 'Session')]
     party = models.ForeignKey(BirthdayParty, on_delete=models.SET_NULL, null=True, blank=True, related_name='access_tokens')
     wedding_event = models.ForeignKey('WeddingEvent', on_delete=models.SET_NULL, null=True, blank=True, related_name='access_tokens')
+    baby_shower_event = models.ForeignKey('BabyShowerEvent', on_delete=models.SET_NULL, null=True, blank=True, related_name='access_tokens')
     token = models.UUIDField(default=uuid.uuid4, unique=True)
     token_type = models.CharField(max_length=20, choices=TOKEN_TYPES)
     expires_at = models.DateTimeField()
@@ -343,6 +345,8 @@ class HostAccessToken(models.Model):
             label = self.party.slug
         elif self.wedding_event:
             label = self.wedding_event.slug
+        elif self.baby_shower_event:
+            label = self.baby_shower_event.slug
         else:
             label = 'no event'
         return f"{self.token_type} token for {label}"
@@ -557,3 +561,184 @@ class WeddingSongRequest(models.Model):
 
     def __str__(self):
         return f'"{self.song_title}" by {self.artist or "unknown"} — {self.event.slug}'
+
+
+# ─── Baby Shower models ────────────────────────────────────────────────────────
+
+class BabyShowerEvent(models.Model):
+    slug = models.SlugField(unique=True, max_length=100)
+    parent_names = models.CharField(max_length=200)
+    shower_date = models.DateField()
+    due_date = models.DateField(null=True, blank=True)
+    welcome_message = models.TextField(blank=True)
+    host_email = models.EmailField()
+    host_name = models.CharField(max_length=200, blank=True)
+    theme_color = models.CharField(max_length=7, default='#c17c5a')
+    secondary_color = models.CharField(max_length=7, default='#faf6f0', blank=True)
+    banner_image = models.ImageField(upload_to='babyshower/banners/', blank=True, null=True)
+    party_time = models.TimeField(null=True, blank=True)
+    location_name = models.CharField(max_length=200, blank=True)
+    location_address = models.TextField(blank=True)
+    gift_registry_url = models.URLField(blank=True)
+    venmo_handle = models.CharField(max_length=100, blank=True)
+    cashapp_handle = models.CharField(max_length=100, blank=True)
+    livestream_url = models.URLField(blank=True)
+    is_active = models.BooleanField(default=False)
+    stripe_session_id = models.CharField(max_length=255, unique=True, blank=True, null=True)
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    host_account = models.ForeignKey(
+        'HostAccount', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='baby_shower_events',
+    )
+
+    class Meta:
+        ordering = ['-created_at']
+
+    @property
+    def expires_at(self):
+        from datetime import timedelta
+        return self.shower_date + timedelta(days=180)
+
+    @property
+    def is_expired(self):
+        from datetime import date
+        return date.today() > self.expires_at
+
+    def __str__(self):
+        return f"{self.parent_names}'s Baby Shower ({self.slug})"
+
+
+class BabyShowerPhoto(models.Model):
+    event = models.ForeignKey(BabyShowerEvent, on_delete=models.CASCADE, related_name='photos')
+    image = models.ImageField(upload_to='babyshower/photos/')
+    caption = models.CharField(max_length=200, blank=True)
+    uploaded_by_name = models.CharField(max_length=100, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-uploaded_at']
+
+    def __str__(self):
+        return f"Photo for {self.event.slug}"
+
+
+class BabyShowerGuestBookEntry(models.Model):
+    event = models.ForeignKey(BabyShowerEvent, on_delete=models.CASCADE, related_name='guestbook_entries')
+    author_name = models.CharField(max_length=100)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.author_name} on {self.event.slug}"
+
+
+class BabyShowerRSVP(models.Model):
+    STATUS_CHOICES = [('yes', 'Yes'), ('no', 'No'), ('maybe', 'Maybe')]
+    event = models.ForeignKey(BabyShowerEvent, on_delete=models.CASCADE, related_name='rsvps')
+    name = models.CharField(max_length=100)
+    email = models.EmailField(blank=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
+    guest_count = models.IntegerField(default=1)
+    message = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} - {self.status} ({self.event.slug})"
+
+
+class BabyShowerStoryEntry(models.Model):
+    event = models.ForeignKey(BabyShowerEvent, on_delete=models.CASCADE, related_name='story_entries')
+    date_label = models.CharField(max_length=100)
+    title = models.CharField(max_length=300)
+    description = models.TextField(blank=True)
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', 'created_at']
+
+    def __str__(self):
+        return f"{self.date_label}: {self.title[:50]} ({self.event.slug})"
+
+
+class BabyShowerGiftItem(models.Model):
+    event = models.ForeignKey(BabyShowerEvent, on_delete=models.CASCADE, related_name='gift_items')
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    link_url = models.URLField(blank=True)
+    price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    claimed_by = models.CharField(max_length=100, blank=True)
+    claimed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'created_at']
+
+    def __str__(self):
+        return f"{self.title} ({self.event.slug})"
+
+
+class BabyShowerFAQItem(models.Model):
+    event = models.ForeignKey(BabyShowerEvent, on_delete=models.CASCADE, related_name='faq_items')
+    question = models.CharField(max_length=300)
+    answer = models.TextField()
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return f"FAQ: {self.question[:60]} — {self.event.slug}"
+
+
+class BabyShowerTriviaQuestion(models.Model):
+    ANSWER_CHOICES = [('a', 'A'), ('b', 'B'), ('c', 'C'), ('d', 'D')]
+    event = models.ForeignKey(BabyShowerEvent, on_delete=models.CASCADE, related_name='trivia_questions')
+    question = models.CharField(max_length=300)
+    option_a = models.CharField(max_length=200)
+    option_b = models.CharField(max_length=200)
+    option_c = models.CharField(max_length=200)
+    option_d = models.CharField(max_length=200)
+    correct_answer = models.CharField(max_length=1, choices=ANSWER_CHOICES)
+    points = models.IntegerField(default=10)
+
+    class Meta:
+        ordering = ['id']
+
+    def __str__(self):
+        return f"Q: {self.question[:50]} ({self.event.slug})"
+
+
+class BabyShowerTriviaScore(models.Model):
+    event = models.ForeignKey(BabyShowerEvent, on_delete=models.CASCADE, related_name='trivia_scores')
+    player_name = models.CharField(max_length=100)
+    score = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-score', '-created_at']
+
+    def __str__(self):
+        return f"{self.player_name} - {self.score} pts ({self.event.slug})"
+
+
+class BabyShowerNameSuggestion(models.Model):
+    event = models.ForeignKey(BabyShowerEvent, on_delete=models.CASCADE, related_name='name_suggestions')
+    suggested_name = models.CharField(max_length=100)
+    suggested_by = models.CharField(max_length=100, blank=True)
+    note = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'"{self.suggested_name}" suggested by {self.suggested_by or "guest"} — {self.event.slug}'

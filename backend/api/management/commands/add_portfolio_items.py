@@ -15,13 +15,6 @@ class Command(BaseCommand):
                 'featured': True,
             },
             {
-                'title': 'Clean and Sober Home',
-                'description': 'A professional website for Clean and Sober Home, providing resources and information for those on the path to recovery.',
-                'website_url': 'https://cleanandsoberhome.com',
-                'category': 'Healthcare',
-                'featured': True,
-            },
-            {
                 'title': 'Jubilea',
                 'description': 'An elegant and modern website for Jubilea, showcasing their services with a clean and professional design.',
                 'website_url': 'https://jubilea.net',

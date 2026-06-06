@@ -184,7 +184,7 @@ if USE_S3:
 
 if not USE_S3:
     # Local file storage (for development or when S3 is not configured)
-    MEDIA_URL = 'media/'
+    MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type

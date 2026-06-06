@@ -25,7 +25,7 @@ const ManageThemes = () => {
     try {
       const token = await getIdToken();
       const [themesRes, categoriesRes] = await Promise.all([
-        api.get('/admin/themes/', { headers: { Authorization: `Bearer ${token}` } }),
+        api.get('/admin/theme-files/', { headers: { Authorization: `Bearer ${token}` } }),
         api.get('/admin/theme-categories/', { headers: { Authorization: `Bearer ${token}` } })
       ]);
       setThemes(themesRes.data);
@@ -72,9 +72,9 @@ const ManageThemes = () => {
 
       const headers = { Authorization: `Bearer ${token}` };
       if (isEditing && currentItem) {
-        await api.put(`/admin/themes/${currentItem.id}/`, fd, { headers, transformRequest: [(data) => data] });
+        await api.put(`/admin/theme-files/${currentItem.id}/`, fd, { headers, transformRequest: [(data) => data] });
       } else {
-        await api.post('/admin/themes/', fd, { headers, transformRequest: [(data) => data] });
+        await api.post('/admin/theme-files/', fd, { headers, transformRequest: [(data) => data] });
       }
       handleCancel();
       loadThemes();
@@ -100,7 +100,7 @@ const ManageThemes = () => {
     if (!window.confirm('Are you sure you want to delete this theme?')) return;
     try {
       const token = await getIdToken();
-      await api.delete(`/admin/themes/${id}/`, { headers: { Authorization: `Bearer ${token}` } });
+      await api.delete(`/admin/theme-files/${id}/`, { headers: { Authorization: `Bearer ${token}` } });
       setThemes(themes.filter(item => item.id !== id));
     } catch (err) {
       console.error('Error deleting theme:', err);

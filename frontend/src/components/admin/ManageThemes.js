@@ -9,7 +9,7 @@ import api from '../../api/api';
 const headerBtnClass = "bg-[rgba(255,255,255,0.2)] text-white border border-[rgba(255,255,255,0.3)] py-2 px-4 rounded-[5px] cursor-pointer text-[0.9rem] transition-colors duration-300 inline-block hover:bg-[rgba(255,255,255,0.3)]";
 const inputClass = "w-full p-[10px] border-2 border-[#ddd] rounded-[5px] text-base font-[inherit] outline-none focus:border-brand";
 
-const emptyForm = { name: '', description: '', theme_type: 'birthday', category: '', price: '', demo_url: '', featured: false, preview_image: null, download_file: null, features: '' };
+const emptyForm = { name: '', description: '', theme_type: 'birthday', category: '', price: '', demo_url: '', featured: false, preview_image: null, features: '' };
 
 const ManageThemes = () => {
   const { currentUser, logout, getIdToken } = useAuth();
@@ -48,7 +48,7 @@ const ManageThemes = () => {
 
   const handleEdit = (item) => {
     setCurrentItem(item);
-    setFormData({ name: item.name || '', description: item.description || '', theme_type: item.theme_type || 'birthday', category: item.category || '', price: item.price || '', demo_url: item.demo_url || '', featured: item.featured || false, preview_image: null, download_file: null, features: Array.isArray(item.features) ? item.features.join('\n') : '' });
+    setFormData({ name: item.name || '', description: item.description || '', theme_type: item.theme_type || 'birthday', category: item.category || '', price: item.price || '', demo_url: item.demo_url || '', featured: item.featured || false, preview_image: null, features: Array.isArray(item.features) ? item.features.join('\n') : '' });
     setIsEditing(true);
   };
 
@@ -69,7 +69,6 @@ const ManageThemes = () => {
       const featuresArray = formData.features.split('\n').map(f => f.trim()).filter(f => f.length > 0);
       fd.append('features', JSON.stringify(featuresArray));
       if (formData.preview_image) fd.append('preview_image', formData.preview_image);
-      if (formData.download_file) fd.append('download_file', formData.download_file);
 
       const headers = { Authorization: `Bearer ${token}` };
       if (isEditing && currentItem) {
@@ -202,13 +201,7 @@ const ManageThemes = () => {
                   </div>
                 )}
               </div>
-              <div className="mb-5">
-                <label htmlFor="download_file" className="block mb-2 font-semibold text-[#333]">Download File</label>
-                <input type="file" id="download_file" name="download_file" onChange={handleInputChange} className="p-[5px]" />
-                {currentItem && currentItem.download_file && (
-                  <p className="mt-[5px] text-[0.9rem] text-[#666]">Current file: {currentItem.download_file.split('/').pop()}</p>
-                )}
-              </div>
+
               <div className="mb-5">
                 <label className="flex items-center gap-[10px] font-normal cursor-pointer">
                   <input type="checkbox" name="featured" checked={formData.featured} onChange={handleInputChange} className="w-5 h-5 cursor-pointer" />

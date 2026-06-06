@@ -166,7 +166,10 @@ class AdminTestimonialViewSet(viewsets.ModelViewSet):
                 data = request.data.copy()
             else:
                 data = dict(request.data)
-            
+            # In DRF multipart requests, files live in request.FILES, not request.data
+            for key, file in request.FILES.items():
+                data[key] = file
+
             # Convert string booleans to actual booleans (FormData sends strings)
             if 'featured' in data:
                 featured_value = data.get('featured')
@@ -262,7 +265,10 @@ class AdminThemeViewSet(viewsets.ModelViewSet):
                 data = request.data.copy()
             else:
                 data = dict(request.data)
-            
+            # In DRF multipart requests, files live in request.FILES, not request.data
+            for key, file in request.FILES.items():
+                data[key] = file
+
             # Convert string booleans to actual booleans (FormData sends strings)
             if 'featured' in data:
                 featured_value = data.get('featured')

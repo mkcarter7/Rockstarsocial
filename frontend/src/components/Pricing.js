@@ -147,12 +147,12 @@ const Pricing = () => {
                       </a>
                     </>
                   ) : (
-                    <button
-                      disabled
-                      className="w-full py-4 bg-gray-200 text-gray-400 rounded-lg font-semibold text-lg cursor-not-allowed"
+                    <a
+                      href="/contact"
+                      className="block w-full py-4 bg-brand text-white rounded-lg font-semibold text-lg text-center hover:bg-brand-dark hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200"
                     >
-                      🚧 Under Construction
-                    </button>
+                      Contact Us
+                    </a>
                   )}
                 </div>
               ))}

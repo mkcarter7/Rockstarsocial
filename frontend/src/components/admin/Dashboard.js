@@ -12,7 +12,6 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [portfolioCount, setPortfolioCount] = useState(0);
   const [testimonialCount, setTestimonialCount] = useState(0);
-  const [themeCount, setThemeCount] = useState(0);
   const [contactCount, setContactCount] = useState(0);
   const [unreadContactCount, setUnreadContactCount] = useState(0);
   const [birthdayCount, setBirthdayCount] = useState(0);
@@ -21,17 +20,15 @@ const Dashboard = () => {
     try {
       const token = await getIdToken();
 
-      const [portfolioRes, testimonialRes, themeRes, contactRes, birthdayRes] = await Promise.allSettled([
+      const [portfolioRes, testimonialRes, contactRes, birthdayRes] = await Promise.allSettled([
         api.get('/admin/portfolio/', { headers: { Authorization: `Bearer ${token}` } }),
         api.get('/admin/testimonials/', { headers: { Authorization: `Bearer ${token}` } }),
-        api.get('/admin/themes/', { headers: { Authorization: `Bearer ${token}` } }),
         api.get('/admin/contact-submissions/', { headers: { Authorization: `Bearer ${token}` } }),
         api.get('/admin/event-pages/', { headers: { Authorization: `Bearer ${token}` } }),
       ]);
 
       setPortfolioCount(portfolioRes.value?.data?.length ?? 0);
       setTestimonialCount(testimonialRes.value?.data?.length ?? 0);
-      setThemeCount(themeRes.value?.data?.length ?? 0);
       const contacts = contactRes.value?.data ?? [];
       setContactCount(contacts.length);
       setUnreadContactCount(contacts.filter(s => !s.read).length);
@@ -101,10 +98,6 @@ const Dashboard = () => {
             <p className="text-[2.5rem] font-bold text-brand m-0">{testimonialCount}</p>
           </div>
           <div className="bg-white p-[30px] rounded-[10px] shadow-[0_2px_4px_rgba(0,0,0,0.1)] text-center">
-            <h3 className="text-[#666] mb-[15px] text-base font-medium">Themes</h3>
-            <p className="text-[2.5rem] font-bold text-brand m-0">{themeCount}</p>
-          </div>
-          <div className="bg-white p-[30px] rounded-[10px] shadow-[0_2px_4px_rgba(0,0,0,0.1)] text-center">
             <h3 className="text-[#666] mb-[15px] text-base font-medium">Contact Submissions</h3>
             <p className="text-[2.5rem] font-bold text-brand m-0">{contactCount}</p>
             {unreadContactCount > 0 && (
@@ -125,9 +118,6 @@ const Dashboard = () => {
             </button>
             <button className="bg-brand text-white border-none py-3 px-6 rounded-[5px] text-base font-semibold cursor-pointer transition-colors duration-300 relative hover:bg-brand-dark" onClick={() => router.push('/admin/testimonials')}>
               Manage Testimonials
-            </button>
-            <button className="bg-brand text-white border-none py-3 px-6 rounded-[5px] text-base font-semibold cursor-pointer transition-colors duration-300 relative hover:bg-brand-dark" onClick={() => router.push('/admin/themes')}>
-              Manage Themes
             </button>
             <button className="bg-brand text-white border-none py-3 px-6 rounded-[5px] text-base font-semibold cursor-pointer transition-colors duration-300 relative hover:bg-brand-dark" onClick={() => router.push('/admin/contact-submissions')}>
               View Contact Submissions

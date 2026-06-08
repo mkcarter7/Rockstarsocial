@@ -128,7 +128,7 @@ const Pricing = () => {
                       >
                         Purchase
                       </button>
-                      <a href="/weddingdemo" target="_blank" rel="noopener noreferrer"
+                      <a href="/sarah-and-james" target="_blank" rel="noopener noreferrer"
                         className="block mt-2 text-sm text-brand underline text-center hover:opacity-75 transition-opacity">
                         View Demo
                       </a>
@@ -141,7 +141,7 @@ const Pricing = () => {
                       >
                         Purchase
                       </button>
-                      <a href="/babyshowerdemo" target="_blank" rel="noopener noreferrer"
+                      <a href="/demo-baby-shower" target="_blank" rel="noopener noreferrer"
                         className="block mt-2 text-sm text-brand underline text-center hover:opacity-75 transition-opacity">
                         View Demo
                       </a>

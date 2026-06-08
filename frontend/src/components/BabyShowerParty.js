@@ -13,16 +13,16 @@ const HERO_GRADIENT = 'linear-gradient(135deg, #f7ede4 0%, #f0e6d6 100%)';
 // ─── Baby size lookup (weeks 4–40) ──────────────────────────────────────────
 
 const BABY_SIZES = {
-  4: 'Poppy seed 🌱', 5: 'Sesame seed', 6: 'Sweet pea 🫛', 7: 'Blueberry 🫐',
-  8: 'Raspberry 🍒', 9: 'Grape 🍇', 10: 'Kumquat', 11: 'Fig', 12: 'Lime 🍋',
+  4: 'Poppy seed 🌱', 5: 'Sesame seed 🌾', 6: 'Sweet pea 🫛', 7: 'Blueberry 🫐',
+  8: 'Raspberry 🍒', 9: 'Grape 🍇', 10: 'Kumquat 🍊', 11: 'Fig 🍑', 12: 'Lime 🍋',
   13: 'Lemon 🍋', 14: 'Peach 🍑', 15: 'Apple 🍎', 16: 'Avocado 🥑',
   17: 'Pear 🍐', 18: 'Bell pepper 🫑', 19: 'Tomato 🍅', 20: 'Banana 🍌',
   21: 'Carrot 🥕', 22: 'Papaya 🍈', 23: 'Mango 🥭', 24: 'Ear of corn 🌽',
-  25: 'Cauliflower 🥦', 26: 'Scallions', 27: 'Head of lettuce 🥬',
-  28: 'Eggplant 🍆', 29: 'Butternut squash', 30: 'Cabbage 🥬',
-  31: 'Coconut 🥥', 32: 'Squash', 33: 'Pineapple 🍍', 34: 'Cantaloupe 🍈',
-  35: 'Honeydew melon 🍈', 36: 'Head of romaine', 37: 'Winter melon',
-  38: 'Leek', 39: 'Mini watermelon', 40: 'Watermelon 🍉',
+  25: 'Cauliflower 🥦', 26: 'Scallions 🧅', 27: 'Head of lettuce 🥬',
+  28: 'Eggplant 🍆', 29: 'Butternut squash 🎃', 30: 'Cabbage 🥬',
+  31: 'Coconut 🥥', 32: 'Squash 🥒', 33: 'Pineapple 🍍', 34: 'Cantaloupe 🍈',
+  35: 'Honeydew melon 🍈', 36: 'Head of romaine 🥬', 37: 'Winter melon 🍈',
+  38: 'Leek 🌿', 39: 'Mini watermelon 🍉', 40: 'Watermelon 🍉',
 };
 
 // ─── Divider ─────────────────────────────────────────────────────────────────

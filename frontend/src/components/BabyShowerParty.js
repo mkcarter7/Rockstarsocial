@@ -490,15 +490,15 @@ const BabyShowerParty = ({ slug }) => {
             <TerraDivider color={color} />
             <div className="overflow-hidden bg-white" style={{ border: `1px solid ${color}40`, borderRadius: '4px' }}>
               {[
-                { label: 'Date', value: formatDate(showerDate) },
-                { label: 'Time', value: formatTime(party.party_time) },
-                { label: 'Venue', value: party.location_name },
-                { label: 'Address', value: party.location_address, isAddress: true },
+                { label: 'Date', value: formatDate(showerDate), icon: '🎀' },
+                { label: 'Time', value: formatTime(party.party_time), icon: '🧸' },
+                { label: 'Venue', value: party.location_name, icon: '🌸' },
+                { label: 'Address', value: party.location_address, isAddress: true, icon: '🍼' },
               ]
                 .filter(row => row.value)
                 .map((row, i, arr) => (
                   <div key={row.label} className={`flex items-start gap-4 px-6 py-5 ${i < arr.length - 1 ? 'border-b' : ''}`} style={{ borderColor: `${color}20` }}>
-                    <div className="mt-1 w-4 text-center shrink-0" style={{ color }}>🍼</div>
+                    <div className="mt-1 w-4 text-center shrink-0" style={{ color }}>{row.icon}</div>
                     <div className="flex-1">
                       <p className="text-[0.65rem] uppercase tracking-[0.25em] font-semibold mb-1" style={{ color }}>{row.label}</p>
                       <p className="font-light text-[0.95rem] whitespace-pre-line" style={{ color: '#3d1f0e' }}>{row.value}</p>

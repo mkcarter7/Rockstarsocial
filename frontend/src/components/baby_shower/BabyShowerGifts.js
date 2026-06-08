@@ -6,6 +6,20 @@ import { getBabyShower, getBabyShowerGifts, claimBabyShowerGiftItem, unclaimBaby
 
 const inputClass = "py-[10px] px-[14px] border border-[#d9c8bc] rounded-[4px] text-[0.95rem] font-[inherit] w-full outline-none focus:border-[#c17c5a]";
 
+function getRegistryLabel(url) {
+  try {
+    const host = new URL(url).hostname.replace('www.', '');
+    if (host.includes('babylist.com'))       return 'Babylist';
+    if (host.includes('amazon.com'))         return 'Amazon Registry';
+    if (host.includes('target.com'))         return 'Target Registry';
+    if (host.includes('walmart.com'))        return 'Walmart Registry';
+    if (host.includes('buybuybaby.com'))     return 'buybuy BABY';
+    if (host.includes('crateandbarrel.com')) return 'Crate & Barrel';
+    if (host.includes('potterybarn.com'))    return 'Pottery Barn';
+  } catch {}
+  return 'Registry';
+}
+
 const ClaimModal = ({ gift, color, slug, onClose, onClaimed }) => {
   const [name, setName] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -149,7 +163,7 @@ const BabyShowerGifts = ({ slug }) => {
         const links = partyRes.data.registry_links && partyRes.data.registry_links.length > 0
           ? partyRes.data.registry_links
           : partyRes.data.gift_registry_url
-            ? [{ label: 'View Full Registry', url: partyRes.data.gift_registry_url }]
+            ? [{ label: getRegistryLabel(partyRes.data.gift_registry_url), url: partyRes.data.gift_registry_url }]
             : [];
         setRegistryLinks(links);
         setGifts(giftsRes.data);
@@ -227,7 +241,7 @@ const BabyShowerGifts = ({ slug }) => {
                 <a key={i} href={link.url} target="_blank" rel="noreferrer"
                   className="flex items-center gap-2 py-3 px-7 font-semibold text-[0.9rem] hover:opacity-90 transition-opacity no-underline"
                   style={{ background: color, color: '#fff', borderRadius: '4px' }}>
-                  {link.label || 'Registry'}
+                  {link.label || getRegistryLabel(link.url)}
                 </a>
               ))}
             </div>

@@ -434,7 +434,7 @@ const BabyShowerParty = ({ slug }) => {
         {hasBanner ? (
           <>
             <img src={party.banner_image} alt={party.parent_names || 'Baby shower'} className="w-full h-auto block" style={{ minHeight: 200 }} />
-            <div className="absolute inset-0 flex flex-col items-center justify-center px-5" style={{ background: 'rgba(0,0,0,0.35)' }}>
+            <div className="absolute inset-0 flex flex-col items-center justify-center px-5">
               {party.welcome_message && (
                 <p className="text-[1.8rem] md:text-[2.2rem] font-light max-w-[620px] mx-auto mb-2 leading-snug tracking-[0.03em]"
                   style={{ color: 'white', textShadow: '0 1px 6px rgba(0,0,0,0.6)' }}>{party.welcome_message}</p>

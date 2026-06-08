@@ -30,7 +30,7 @@ const SectionLabel = ({ children, color = DEFAULT_GOLD }) => (
 
 // ─── Countdown ────────────────────────────────────────────────────────────────
 
-const WeddingCountdown = ({ weddingDate, color, hasBanner }) => {
+const WeddingCountdown = ({ weddingDate, color, hasBanner, small }) => {
   const [timeLeft, setTimeLeft] = useState({});
 
   useEffect(() => {
@@ -70,11 +70,13 @@ const WeddingCountdown = ({ weddingDate, color, hasBanner }) => {
     : { color: '#8b6914' };
 
   return (
-    <div className="flex justify-center gap-4 flex-wrap mt-6">
+    <div className={`flex justify-center flex-wrap ${small ? 'gap-2 mt-2' : 'gap-4 mt-6'}`}>
       {['days', 'hours', 'minutes', 'seconds'].map(unit => (
-        <div key={unit} className="py-[14px] px-5 min-w-[76px] text-center" style={{ ...boxStyle, borderRadius: '30px 30px 4px 4px' }}>
-          <span className="block text-[2rem] font-light" style={numStyle}>{timeLeft[unit]}</span>
-          <span className="text-[0.65rem] uppercase tracking-[0.2em]" style={labelStyle}>{unit}</span>
+        <div key={unit}
+          className={`${small ? 'py-[6px] px-3 min-w-[48px]' : 'py-[14px] px-5 min-w-[76px]'} text-center`}
+          style={{ ...boxStyle, borderRadius: '30px 30px 4px 4px' }}>
+          <span className={`block ${small ? 'text-[1.1rem]' : 'text-[2rem]'} font-light`} style={numStyle}>{timeLeft[unit]}</span>
+          <span className={`${small ? 'text-[0.5rem]' : 'text-[0.65rem]'} uppercase tracking-[0.2em]`} style={labelStyle}>{unit}</span>
         </div>
       ))}
     </div>
@@ -489,6 +491,12 @@ const WeddingParty = ({ slug }) => {
                 </p>
               )}
             </div>
+            <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center pb-5 px-5">
+              <p className="text-[0.6rem] uppercase tracking-[0.3em] font-light mb-0" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                Until We Say I Do
+              </p>
+              <WeddingCountdown weddingDate={party.wedding_date || party.party_date} color={color} hasBanner={true} small={true} />
+            </div>
           </>
         ) : (
           <div className="py-[100px]" style={{ background: HERO_GRADIENT }}>
@@ -510,13 +518,15 @@ const WeddingParty = ({ slug }) => {
       </section>
 
       {/* ── Countdown ── */}
-      <section className="py-10" style={{ background: '#fff' }}>
-        <div className="container" style={{ maxWidth: 620 }}>
-          <SectionLabel color={color}>Until We Say I Do</SectionLabel>
-          <GoldDivider color={color} />
-          <WeddingCountdown weddingDate={party.wedding_date || party.party_date} color={color} hasBanner={false} />
-        </div>
-      </section>
+      {!hasBanner && (
+        <section className="py-10" style={{ background: '#fff' }}>
+          <div className="container" style={{ maxWidth: 620 }}>
+            <SectionLabel color={color}>Until We Say I Do</SectionLabel>
+            <GoldDivider color={color} />
+            <WeddingCountdown weddingDate={party.wedding_date || party.party_date} color={color} hasBanner={false} />
+          </div>
+        </section>
+      )}
 
       {/* ── Event Details ── */}
       {(party.party_date || party.wedding_date || party.party_time || party.location_name || party.location_address) && (

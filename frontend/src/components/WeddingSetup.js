@@ -123,7 +123,7 @@ const WeddingSetup = () => {
     formData.append('cashapp_handle', cashappHandle);
     try {
       await saveWeddingSetup(formData);
-      router.push(`/w/${wedding.slug}`);
+      router.push(`/${wedding.slug}`);
     } catch {
       setError('Failed to save. Please try again.');
       setSaving(false);
@@ -266,7 +266,7 @@ const WeddingSetup = () => {
 
               <div className="p-5 mb-8 text-center rounded-[4px]" style={{ background: '#fdf6ec', border: '1px solid #c9a96e' }}>
                 <p className="text-[0.65rem] uppercase tracking-[0.25em] font-light mb-1" style={{ color: '#c9a96e' }}>Your Page URL</p>
-                <a href={`/w/${wedding?.slug}`} target="_blank" rel="noreferrer"
+                <a href={`/${wedding?.slug}`} target="_blank" rel="noreferrer"
                   className="inline-block text-base font-light break-all mb-1" style={{ color: '#c9a96e' }}>
                   1rockstarsocial.com/{wedding?.slug}
                 </a>

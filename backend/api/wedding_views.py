@@ -84,7 +84,7 @@ def _send_welcome_email(event):
             message=(
                 f"Hi {event.host_name or 'there'},\n\n"
                 f"Your wedding page is now live!\n\n"
-                f"Wedding page: {frontend_url}/w/{event.slug}\n\n"
+                f"Wedding page: {frontend_url}/{event.slug}\n\n"
                 f"Share this link with your guests so they can RSVP, sign the guestbook, "
                 f"upload photos, and read your story.\n\n"
                 f"To manage your wedding page anytime (edit colors, welcome message, or add story moments), visit:\n"

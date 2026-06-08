@@ -118,7 +118,7 @@ const WeddingPurchase = () => {
                 <label htmlFor="slug" className="font-semibold text-black text-[0.95rem]">Your Page URL *</label>
                 <div className="flex items-center border border-[#ddd] rounded-[6px] overflow-hidden">
                   <span className="bg-[#f5f5f5] py-[10px] px-3 text-[0.85rem] text-[#666] whitespace-nowrap border-r border-[#ddd]">
-                    1rockstarsocial.com/w/
+                    1rockstarsocial.com/
                   </span>
                   <input
                     type="text"

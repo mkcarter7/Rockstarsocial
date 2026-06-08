@@ -5,6 +5,9 @@ import '@/App.css';
 export const metadata = {
   title: 'RockStar Social',
   description: 'Professional web design services and premium themes',
+  icons: {
+    icon: '/icon.png',
+  },
 };
 
 export default function RootLayout({ children }) {

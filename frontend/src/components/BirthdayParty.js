@@ -31,8 +31,8 @@ const Countdown = ({ partyDate, themeColor }) => {
     <div className="flex justify-center gap-5 flex-wrap mt-5">
       {['days', 'hours', 'minutes', 'seconds'].map(unit => (
         <div key={unit} className="border-2 rounded-[12px] py-[15px] px-5 min-w-[80px] text-center" style={{ borderColor: themeColor, background: 'rgba(0,0,0,0.15)', backdropFilter: 'blur(8px)' }}>
-          <span className="block text-[2rem] font-bold text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>{timeLeft[unit]}</span>
-          <span className="text-[0.75rem] uppercase tracking-[1px] text-[rgba(255,255,255,0.9)]">{unit}</span>
+          <span className="block text-[2rem] md:text-[2.8rem] font-bold text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>{timeLeft[unit]}</span>
+          <span className="text-[0.75rem] md:text-[0.95rem] uppercase tracking-[1px] text-[rgba(255,255,255,0.9)]">{unit}</span>
         </div>
       ))}
     </div>
@@ -213,7 +213,7 @@ const PhotoCarousel = ({ slug, themeColor, secondaryColor }) => {
             key={idx}
             src={photo.image}
             alt={photo.caption || 'Party photo'}
-            className="w-full rounded-[14px] object-cover shadow-[0_4px_20px_rgba(0,0,0,0.12)]"
+            className="w-full rounded-[14px] object-contain bg-black shadow-[0_4px_20px_rgba(0,0,0,0.12)]"
             style={{ maxHeight: 500 }}
           />
 
@@ -358,7 +358,7 @@ const BirthdayParty = ({ slug }) => {
       <section className="relative text-white py-[80px] text-center overflow-hidden" style={heroStyle}>
         <div className="container relative z-[1]">
           {party.welcome_message && (
-            <p className="text-[2rem] max-w-[600px] mx-auto mb-[30px] opacity-95">{party.welcome_message}</p>
+            <p className="text-[2rem] md:text-[2.8rem] lg:text-[3.4rem] max-w-[600px] mx-auto mb-[30px] opacity-95">{party.welcome_message}</p>
           )}
           <Countdown partyDate={party.party_date} themeColor={color} />
         </div>

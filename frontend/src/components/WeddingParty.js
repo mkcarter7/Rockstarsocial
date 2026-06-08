@@ -75,8 +75,8 @@ const WeddingCountdown = ({ weddingDate, color, hasBanner, small }) => {
         <div key={unit}
           className={`${small ? 'py-[6px] px-3 min-w-[48px]' : 'py-[14px] px-5 min-w-[76px]'} text-center`}
           style={{ ...boxStyle, borderRadius: '30px 30px 4px 4px' }}>
-          <span className={`block ${small ? 'text-[1.1rem] md:text-[1.6rem]' : 'text-[2rem]'} font-light`} style={numStyle}>{timeLeft[unit]}</span>
-          <span className={`${small ? 'text-[0.5rem] md:text-[0.65rem]' : 'text-[0.65rem]'} uppercase tracking-[0.2em]`} style={labelStyle}>{unit}</span>
+          <span className={`block ${small ? 'text-[1.1rem] md:text-[1.6rem] lg:text-[2.2rem]' : 'text-[2rem]'} font-light`} style={numStyle}>{timeLeft[unit]}</span>
+          <span className={`${small ? 'text-[0.5rem] md:text-[0.65rem] lg:text-[0.85rem]' : 'text-[0.65rem]'} uppercase tracking-[0.2em]`} style={labelStyle}>{unit}</span>
         </div>
       ))}
     </div>
@@ -226,17 +226,14 @@ const WeddingPhotoCarousel = ({ slug, color, secondaryColor }) => {
         <SectionLabel color={color}>Photo Memories</SectionLabel>
         <GoldDivider color={color} />
         <div className="relative max-w-[700px] mx-auto">
-          <img
-            key={idx}
-            src={photo.image}
-            alt={photo.caption || 'Wedding photo'}
-            className="w-full object-contain bg-black"
-            style={{
-              height: 420,
-              borderRadius: '120px 120px 8px 8px',
-              boxShadow: '0 4px 24px rgba(201,169,110,0.15)',
-            }}
-          />
+          <div style={{ borderRadius: '120px 120px 8px 8px', overflow: 'hidden', boxShadow: '0 4px 24px rgba(201,169,110,0.15)', maxHeight: 560 }}>
+            <img
+              key={idx}
+              src={photo.image}
+              alt={photo.caption || 'Wedding photo'}
+              className="w-full block"
+            />
+          </div>
           {(photo.caption || photo.uploaded_by_name) && (
             <div className="mt-3 text-center">
               {photo.caption && <p className="text-[0.95rem] italic font-light" style={{ color: '#5a3e2b' }}>"{photo.caption}"</p>}
@@ -480,19 +477,19 @@ const WeddingParty = ({ slug }) => {
             />
             <div className="absolute inset-0 flex flex-col items-center justify-center px-5">
               {party.welcome_message && (
-                <p className="text-[1.8rem] md:text-[2.6rem] lg:text-[3.2rem] font-light max-w-[620px] mx-auto mb-2 leading-snug tracking-[0.03em]"
+                <p className="text-[1.8rem] md:text-[3rem] lg:text-[4rem] font-light max-w-[620px] mx-auto mb-2 leading-snug tracking-[0.03em]"
                   style={{ color: 'white', textShadow: '0 1px 6px rgba(0,0,0,0.6)' }}>
                   {party.welcome_message}
                 </p>
               )}
               {party.couple_name && (
-                <p className="text-[0.75rem] md:text-[0.95rem] uppercase tracking-[0.3em] font-light mt-2" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                <p className="text-[0.75rem] md:text-[1.1rem] lg:text-[1.4rem] uppercase tracking-[0.3em] font-light mt-2" style={{ color: 'rgba(255,255,255,0.7)' }}>
                   {party.couple_name}
                 </p>
               )}
             </div>
             <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center pb-5 px-5">
-              <p className="text-[0.6rem] uppercase tracking-[0.3em] font-light mb-0" style={{ color: 'rgba(255,255,255,0.8)' }}>
+              <p className="text-[0.6rem] md:text-[0.8rem] lg:text-[0.95rem] uppercase tracking-[0.3em] font-light mb-0" style={{ color: 'rgba(255,255,255,0.8)' }}>
                 Until We Say I Do
               </p>
               <WeddingCountdown weddingDate={party.wedding_date || party.party_date} color={color} hasBanner={true} small={true} />

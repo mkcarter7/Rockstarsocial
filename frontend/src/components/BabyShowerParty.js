@@ -277,13 +277,14 @@ const PhotoCarousel = ({ slug, color, secondaryColor }) => {
         <SectionLabel color={color}>Photo Memories</SectionLabel>
         <TerraDivider color={color} />
         <div className="relative max-w-[700px] mx-auto">
-          <img
-            key={idx}
-            src={photo.image}
-            alt={photo.caption || 'Baby shower photo'}
-            className="w-full object-contain bg-black"
-            style={{ height: 420, borderRadius: '4px', boxShadow: `0 4px 24px ${color}25` }}
-          />
+          <div style={{ borderRadius: '4px', overflow: 'hidden', boxShadow: `0 4px 24px ${color}25`, maxHeight: 560 }}>
+            <img
+              key={idx}
+              src={photo.image}
+              alt={photo.caption || 'Baby shower photo'}
+              className="w-full block"
+            />
+          </div>
           {(photo.caption || photo.uploaded_by_name) && (
             <div className="mt-3 text-center">
               {photo.caption && <p className="text-[0.95rem] italic font-light" style={{ color: '#5a3a2a' }}>"{photo.caption}"</p>}
@@ -436,11 +437,11 @@ const BabyShowerParty = ({ slug }) => {
             <img src={party.banner_image} alt={party.parent_names || 'Baby shower'} className="w-full h-auto block" style={{ minHeight: 200 }} />
             <div className="absolute inset-0 flex flex-col items-center justify-center px-5">
               {party.welcome_message && (
-                <p className="text-[1.8rem] md:text-[2.6rem] lg:text-[3.2rem] font-light max-w-[620px] mx-auto mb-2 leading-snug tracking-[0.03em]"
+                <p className="text-[1.8rem] md:text-[3rem] lg:text-[4rem] font-light max-w-[620px] mx-auto mb-2 leading-snug tracking-[0.03em]"
                   style={{ color: 'white', textShadow: '0 1px 6px rgba(0,0,0,0.6)' }}>{party.welcome_message}</p>
               )}
               {party.parent_names && (
-                <p className="text-[0.75rem] md:text-[0.95rem] uppercase tracking-[0.3em] font-light mt-2" style={{ color: 'rgba(255,255,255,0.7)' }}>{party.parent_names}</p>
+                <p className="text-[0.75rem] md:text-[1.1rem] lg:text-[1.4rem] uppercase tracking-[0.3em] font-light mt-2" style={{ color: 'rgba(255,255,255,0.7)' }}>{party.parent_names}</p>
               )}
             </div>
           </>

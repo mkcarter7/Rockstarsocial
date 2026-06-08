@@ -20,6 +20,7 @@ from .birthday_views import (
     admin_host_accounts, admin_reset_host_password, admin_delete_host_account, admin_send_magic_link,
     admin_send_magic_link_by_email,
     party_gifts, claim_gift, manage_gift,
+    update_birthday_slug, check_slug_redirect,
 )
 from .host_auth_views import request_magic_link, verify_magic_link, host_party_stats, host_login, switch_party, change_password
 from .baby_shower_views import (
@@ -41,6 +42,7 @@ from .baby_shower_views import (
     trivia_leaderboard as bs_trivia_leaderboard,
     event_name_suggestions as bs_event_name_suggestions,
     delete_name_suggestion as bs_delete_name_suggestion,
+    update_baby_shower_slug,
 )
 from .wedding_views import (
     check_slug as wedding_check_slug,
@@ -52,6 +54,7 @@ from .wedding_views import (
     event_schedule, manage_schedule_item,
     event_faq, manage_faq_item,
     event_song_requests, manage_song_request,
+    update_wedding_slug,
 )
 
 router = DefaultRouter()
@@ -101,6 +104,7 @@ urlpatterns = [
     path('birthday/<slug:slug>/gifts/', party_gifts, name='birthday-gifts'),
     path('birthday/<slug:slug>/gifts/<int:gift_id>/claim/', claim_gift, name='birthday-gift-claim'),
     path('birthday/<slug:slug>/gifts/<int:gift_id>/', manage_gift, name='birthday-gift-manage'),
+    path('birthday/<slug:slug>/update-slug/', update_birthday_slug, name='birthday-update-slug'),
     # Wedding app endpoints
     path('wedding/check-slug/', wedding_check_slug, name='wedding-check-slug'),
     path('wedding/setup/', event_setup, name='wedding-setup'),
@@ -121,6 +125,7 @@ urlpatterns = [
     path('wedding/<slug:slug>/faq/<int:item_id>/', manage_faq_item, name='wedding-faq-manage'),
     path('wedding/<slug:slug>/song-requests/', event_song_requests, name='wedding-song-requests'),
     path('wedding/<slug:slug>/song-requests/<int:req_id>/', manage_song_request, name='wedding-song-request-manage'),
+    path('wedding/<slug:slug>/update-slug/', update_wedding_slug, name='wedding-update-slug'),
     # Baby shower app endpoints
     path('stripe/create-baby-shower-checkout/', create_baby_shower_checkout, name='create-baby-shower-checkout'),
     path('baby-shower/check-slug/', bs_check_slug, name='baby-shower-check-slug'),
@@ -141,6 +146,8 @@ urlpatterns = [
     path('baby-shower/<slug:slug>/trivia/leaderboard/', bs_trivia_leaderboard, name='baby-shower-trivia-leaderboard'),
     path('baby-shower/<slug:slug>/names/', bs_event_name_suggestions, name='baby-shower-names'),
     path('baby-shower/<slug:slug>/names/<int:suggestion_id>/', bs_delete_name_suggestion, name='baby-shower-names-delete'),
+    path('baby-shower/<slug:slug>/update-slug/', update_baby_shower_slug, name='baby-shower-update-slug'),
+    path('slug-redirect/', check_slug_redirect, name='slug-redirect'),
     path('admin/birthday-parties/', admin_birthday_parties, name='admin-birthday-parties'),
     path('admin/event-pages/create/', admin_create_event_page, name='admin-create-event-page'),
     path('admin/event-pages/', admin_event_pages, name='admin-event-pages'),

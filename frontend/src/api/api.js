@@ -196,4 +196,13 @@ export const adminSendMagicLink = (accountId, token) =>
 export const adminSendMagicLinkByEmail = (email, token) =>
   api.post('/admin/host-accounts/send-magic-link-by-email/', { email }, { headers: { Authorization: `Bearer ${token}` } });
 
+// Slug change
+export const updateBirthdaySlug = (slug, newSlug, hostToken) =>
+  api.patch(`/birthday/${slug}/update-slug/`, { new_slug: newSlug }, { headers: { 'X-Host-Token': hostToken } });
+export const updateWeddingSlug = (slug, newSlug, hostToken) =>
+  api.patch(`/wedding/${slug}/update-slug/`, { new_slug: newSlug }, { headers: { 'X-Host-Token': hostToken } });
+export const updateBabyShowerSlug = (slug, newSlug, hostToken) =>
+  api.patch(`/baby-shower/${slug}/update-slug/`, { new_slug: newSlug }, { headers: { 'X-Host-Token': hostToken } });
+export const checkSlugRedirect = (slug) => api.get(`/slug-redirect/?slug=${slug}`);
+
 export default api;

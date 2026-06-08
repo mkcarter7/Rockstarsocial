@@ -3,7 +3,11 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getHostPartyStats, changeHostPassword, switchHostParty } from '../api/api';
+import {
+  getHostPartyStats, changeHostPassword, switchHostParty,
+  checkBirthdaySlug, checkWeddingSlug, checkBabyShowerSlug,
+  updateBirthdaySlug, updateWeddingSlug, updateBabyShowerSlug,
+} from '../api/api';
 
 const StatCard = ({ icon, label, value, color }) => (
   <div className="bg-white rounded-[12px] border-2 p-6 text-center" style={{ borderColor: color }}>
@@ -24,6 +28,10 @@ const HostDashboard = () => {
   const [showChangePw, setShowChangePw] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [pwStatus, setPwStatus] = useState({ type: '', message: '' });
+  const [showChangeUrl, setShowChangeUrl] = useState(false);
+  const [newUrlSlug, setNewUrlSlug] = useState('');
+  const [urlStatus, setUrlStatus] = useState({ type: '', message: '' });
+  const [urlCheckTimer, setUrlCheckTimer] = useState(null);
 
   const loadParty = (slug, token) => {
     setLoading(true);
@@ -117,6 +125,71 @@ const HostDashboard = () => {
     localStorage.removeItem('hostAllParties');
     localStorage.removeItem('hostEmail');
     router.push('/host/login');
+  };
+
+  const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+  const handleUrlInput = (val) => {
+    setNewUrlSlug(val);
+    setUrlStatus({ type: '', message: '' });
+    if (urlCheckTimer) clearTimeout(urlCheckTimer);
+    const slug = val.trim().toLowerCase();
+    if (!slug || slug === hostSlug) return;
+    if (!SLUG_REGEX.test(slug)) {
+      setUrlStatus({ type: 'error', message: 'Only lowercase letters, numbers, and hyphens.' });
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const isWeddingLocal = stats?.party_type === 'wedding';
+        const isBabyShowerLocal = stats?.party_type === 'baby_shower';
+        const checkFn = isWeddingLocal ? checkWeddingSlug : isBabyShowerLocal ? checkBabyShowerSlug : checkBirthdaySlug;
+        const res = await checkFn(slug);
+        if (res.data.available) {
+          setUrlStatus({ type: 'success', message: 'Available!' });
+        } else {
+          setUrlStatus({ type: 'error', message: 'Already taken. Please choose another.' });
+        }
+      } catch {
+        // ignore check errors
+      }
+    }, 400);
+    setUrlCheckTimer(timer);
+  };
+
+  const handleChangeUrl = async (e) => {
+    e.preventDefault();
+    setUrlStatus({ type: '', message: '' });
+    const slug = newUrlSlug.trim().toLowerCase();
+    if (!slug) {
+      setUrlStatus({ type: 'error', message: 'Please enter a new URL.' });
+      return;
+    }
+    if (slug === hostSlug) {
+      setUrlStatus({ type: 'error', message: 'That is already your current URL.' });
+      return;
+    }
+    if (!SLUG_REGEX.test(slug)) {
+      setUrlStatus({ type: 'error', message: 'Only lowercase letters, numbers, and hyphens.' });
+      return;
+    }
+    try {
+      const isWeddingLocal = stats?.party_type === 'wedding';
+      const isBabyShowerLocal = stats?.party_type === 'baby_shower';
+      const updateFn = isWeddingLocal ? updateWeddingSlug : isBabyShowerLocal ? updateBabyShowerSlug : updateBirthdaySlug;
+      await updateFn(hostSlug, slug, hostToken);
+      localStorage.setItem('hostPartySlug', slug);
+      const allParties = JSON.parse(localStorage.getItem('hostAllParties') || '[]');
+      const updated = allParties.map(p => p.slug === hostSlug ? { ...p, slug } : p);
+      localStorage.setItem('hostAllParties', JSON.stringify(updated));
+      setHostSlug(slug);
+      setShowChangeUrl(false);
+      setNewUrlSlug('');
+      setUrlStatus({ type: '', message: '' });
+      router.replace(`/${slug}`);
+    } catch (err) {
+      setUrlStatus({ type: 'error', message: err?.response?.data?.error || 'Could not update URL. Please try again.' });
+    }
   };
 
   if (allParties) {
@@ -372,6 +445,50 @@ const HostDashboard = () => {
                     style={{ background: color }}
                   >
                     Save new password
+                  </button>
+                </form>
+              )}
+            </div>
+
+            <div className="mt-2">
+              <button
+                onClick={() => { setShowChangeUrl(!showChangeUrl); setNewUrlSlug(hostSlug); setUrlStatus({ type: '', message: '' }); }}
+                className="text-[#999] text-[0.9rem] underline hover:text-[#666] transition-colors"
+              >
+                {showChangeUrl ? 'Cancel' : 'Change event URL'}
+              </button>
+
+              {showChangeUrl && (
+                <form onSubmit={handleChangeUrl} className="mt-3 flex flex-col gap-2">
+                  <p className="text-[0.8rem] text-[#888]">
+                    Current: <span className="font-mono">rockstarsocial.com/{hostSlug}</span>
+                  </p>
+                  <p className="text-[0.75rem] text-[#aaa]">
+                    Guests with the old URL will be redirected automatically.
+                  </p>
+                  <div className="flex items-center gap-1 border border-[#ddd] rounded-[8px] px-3 py-2 text-[0.95rem] bg-white">
+                    <span className="text-[#bbb] select-none">rockstarsocial.com/</span>
+                    <input
+                      type="text"
+                      value={newUrlSlug}
+                      onChange={e => handleUrlInput(e.target.value)}
+                      placeholder="new-event-url"
+                      className="flex-1 outline-none bg-transparent"
+                      autoComplete="off"
+                      spellCheck={false}
+                    />
+                  </div>
+                  {urlStatus.message && (
+                    <p className={`text-[0.85rem] ${urlStatus.type === 'error' ? 'text-[#c53030]' : 'text-[#276749]'}`}>
+                      {urlStatus.message}
+                    </p>
+                  )}
+                  <button
+                    type="submit"
+                    className="text-white rounded-[8px] py-2 px-5 font-semibold text-[0.9rem] hover:opacity-90 transition-opacity"
+                    style={{ background: color }}
+                  >
+                    Save new URL
                   </button>
                 </form>
               )}

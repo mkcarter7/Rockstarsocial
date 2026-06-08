@@ -1,12 +1,14 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { getBirthdayParty, getWeddingParty, getBabyShower } from '@/api/api';
+import { useRouter } from 'next/navigation';
+import { getBirthdayParty, getWeddingParty, getBabyShower, checkSlugRedirect } from '@/api/api';
 import BirthdayParty from '@/components/BirthdayParty';
 import WeddingParty from '@/components/WeddingParty';
 import BabyShowerParty from '@/components/BabyShowerParty';
 
 export default function PartyPage({ params }) {
   const [type, setType] = useState('loading');
+  const router = useRouter();
 
   useEffect(() => {
     getBirthdayParty(params.slug)
@@ -17,7 +19,11 @@ export default function PartyPage({ params }) {
           .catch(() =>
             getBabyShower(params.slug)
               .then(() => setType('baby_shower'))
-              .catch(() => setType('birthday'))
+              .catch(() =>
+                checkSlugRedirect(params.slug)
+                  .then(res => router.replace(`/${res.data.redirect_to}`))
+                  .catch(() => setType('birthday'))
+              )
           )
       );
   }, [params.slug]);

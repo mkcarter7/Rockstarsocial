@@ -13,9 +13,10 @@ from rest_framework import status
 from django.contrib.auth.hashers import make_password
 from .models import (
     BirthdayParty, WeddingEvent, BabyShowerEvent, HostAccount, PartyPhoto, GuestBookEntry,
-    PartyRSVP, TriviaQuestion, TriviaScore, GiftItem
+    PartyRSVP, TriviaQuestion, TriviaScore, GiftItem, SlugRedirect
 )
 from .host_auth_views import verify_host_session_by_token_str
+from .theme_setup_views import SLUG_PATTERN
 
 logger = logging.getLogger(__name__)
 
@@ -1112,3 +1113,39 @@ def manage_gift(request, slug, gift_id):
     gift.claimed_at = None
     gift.save(update_fields=['claimed_by', 'claimed_at'])
     return Response(_serialize_gift(gift, is_host=True))
+
+
+@api_view(['PATCH'])
+@permission_classes([AllowAny])
+def update_birthday_slug(request, slug):
+    token_str = request.headers.get('X-Host-Token', '').strip()
+    party, err = verify_host_session_by_token_str(token_str, slug=slug)
+    if err:
+        return Response(err, status=status.HTTP_401_UNAUTHORIZED)
+
+    new_slug = request.data.get('new_slug', '').strip().lower()
+    if not new_slug:
+        return Response({'error': 'new_slug is required'}, status=status.HTTP_400_BAD_REQUEST)
+    if not SLUG_PATTERN.match(new_slug):
+        return Response({'error': 'Slug must contain only lowercase letters, numbers, and hyphens.'}, status=status.HTTP_400_BAD_REQUEST)
+    if BirthdayParty.objects.filter(slug=new_slug).exclude(pk=party.pk).exists():
+        return Response({'error': 'That URL is already taken. Please choose a different one.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    old_slug = party.slug
+    SlugRedirect.objects.filter(new_slug=old_slug).update(new_slug=new_slug)
+    SlugRedirect.objects.update_or_create(old_slug=old_slug, defaults={'new_slug': new_slug})
+    party.slug = new_slug
+    party.save(update_fields=['slug'])
+    return Response({'slug': new_slug})
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def check_slug_redirect(request):
+    slug = request.query_params.get('slug', '').strip()
+    if not slug:
+        return Response({'error': 'slug is required'}, status=status.HTTP_400_BAD_REQUEST)
+    redirect = SlugRedirect.objects.filter(old_slug=slug).first()
+    if redirect:
+        return Response({'redirect_to': redirect.new_slug})
+    return Response({'error': 'No redirect found'}, status=status.HTTP_404_NOT_FOUND)

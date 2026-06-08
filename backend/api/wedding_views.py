@@ -12,8 +12,10 @@ from .models import (
     WeddingEvent, WeddingPhoto, WeddingGuestBookEntry,
     WeddingRSVP, WeddingStoryEntry, WeddingGiftItem,
     WeddingPartyMember, WeddingScheduleItem, WeddingFAQItem, WeddingSongRequest,
+    SlugRedirect,
 )
 from .host_auth_views import verify_host_session_by_token_str
+from .theme_setup_views import SLUG_PATTERN
 
 logger = logging.getLogger(__name__)
 
@@ -743,6 +745,30 @@ def manage_song_request(request, slug, req_id):
 
 
 # ─── Cleanup helper ───────────────────────────────────────────────────────────
+
+@api_view(['PATCH'])
+@permission_classes([AllowAny])
+def update_wedding_slug(request, slug):
+    token_str = request.headers.get('X-Host-Token', '').strip()
+    event, err = verify_host_session_by_token_str(token_str, slug=slug)
+    if err:
+        return Response(err, status=status.HTTP_401_UNAUTHORIZED)
+
+    new_slug = request.data.get('new_slug', '').strip().lower()
+    if not new_slug:
+        return Response({'error': 'new_slug is required'}, status=status.HTTP_400_BAD_REQUEST)
+    if not SLUG_PATTERN.match(new_slug):
+        return Response({'error': 'Slug must contain only lowercase letters, numbers, and hyphens.'}, status=status.HTTP_400_BAD_REQUEST)
+    if WeddingEvent.objects.filter(slug=new_slug).exclude(pk=event.pk).exists():
+        return Response({'error': 'That URL is already taken. Please choose a different one.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    old_slug = event.slug
+    SlugRedirect.objects.filter(new_slug=old_slug).update(new_slug=new_slug)
+    SlugRedirect.objects.update_or_create(old_slug=old_slug, defaults={'new_slug': new_slug})
+    event.slug = new_slug
+    event.save(update_fields=['slug'])
+    return Response({'slug': new_slug})
+
 
 def cleanup_expired_weddings():
     deleted = 0

@@ -743,3 +743,12 @@ class BabyShowerNameSuggestion(models.Model):
 
     def __str__(self):
         return f'"{self.suggested_name}" suggested by {self.suggested_by or "guest"} — {self.event.slug}'
+
+
+class SlugRedirect(models.Model):
+    old_slug = models.SlugField(unique=True, max_length=100)
+    new_slug = models.SlugField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.old_slug} → {self.new_slug}'

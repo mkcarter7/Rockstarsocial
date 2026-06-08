@@ -2,10 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getPortfolioItems, getFeaturedPortfolio, getFeaturedTestimonials } from '../api/api';
+import { getPortfolioItems, getFeaturedTestimonials } from '../api/api';
 
 const Home = () => {
-  const [portfolio, setPortfolio] = useState([]);
   const [carouselItems, setCarouselItems] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,12 +13,10 @@ const Home = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [portfolioRes, allPortfolioRes, testimonialsRes] = await Promise.all([
-          getFeaturedPortfolio(),
+        const [allPortfolioRes, testimonialsRes] = await Promise.all([
           getPortfolioItems(),
           getFeaturedTestimonials(),
         ]);
-        setPortfolio(portfolioRes.data.slice(0, 3));
 
         const portfolioItems = allPortfolioRes.data
           .filter(item => item.image)
@@ -48,8 +45,8 @@ const Home = () => {
     <div>
       <section className="hero">
         <div className="container">
-          <h1>Transform Your Online Presence</h1>
-          <p>Professional web design services and premium designs to elevate your business</p>
+          <h1>Templates, Events & Custom Websites — All in One Place</h1>
+          <p>From $29 event pages to fully custom websites — beautifully built for you</p>
 
           {carouselItems.length > 0 && (
             /* hero-carousel class kept for ::before arc pseudo-element defined in App.css */
@@ -83,37 +80,35 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Featured Portfolio */}
+      {/* Pricing */}
       <section className="section">
         <div className="container">
-          <h2 className="section-title">Featured Portfolio</h2>
-          <p className="section-subtitle">Check out some of our recent work</p>
-          {loading ? (
-            <div className="loading">Loading...</div>
-          ) : portfolio.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[30px]">
-              {portfolio.map((item) => (
-                <div key={item.id} className="card text-center">
-                  <div className="w-full h-[200px] overflow-hidden rounded-[8px] mb-5 bg-[#e2e8f0] relative">
-                    {item.image ? (
-                      <img src={item.image} alt={item.title} className="w-full h-full object-contain" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[#666] text-[1.1rem]">No Image</div>
-                    )}
-                  </div>
-                  <h3 className="text-[1.3rem] mb-[10px] text-black">{item.title}</h3>
-                  <p className="text-[#333] mb-5 leading-relaxed">{item.description}</p>
-                  {item.website_url && (
-                    <a href={item.website_url} target="_blank" rel="noopener noreferrer" className="btn btn-primary">View Site</a>
-                  )}
-                </div>
-              ))}
+          <h2 className="section-title">Simple, Transparent Pricing</h2>
+          <p className="section-subtitle">No surprises — just beautiful work at fair prices</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[30px]">
+            <div className="card text-center">
+              <h3 className="text-[1.3rem] mb-[10px] text-black">Event Templates</h3>
+              <div className="text-[2.2rem] font-bold text-brand mb-[10px]">from $29</div>
+              <p className="text-[#333] mb-5 leading-relaxed">Ready-made pages for birthdays, baby showers, and weddings — customized for your event.</p>
+              <ul className="text-[#555] text-sm mb-5 space-y-1 list-none">
+                <li>Birthday Page — $29</li>
+                <li>Baby Shower Page — $39</li>
+                <li>Wedding Page — $49</li>
+              </ul>
+              <Link href="/portfolio" className="btn btn-secondary">Browse Templates</Link>
             </div>
-          ) : (
-            <div className="loading">No portfolio items available</div>
-          )}
-          <div className="text-center mt-[30px]">
-            <Link href="/portfolio" className="btn btn-secondary">View All Projects</Link>
+            <div className="card text-center">
+              <h3 className="text-[1.3rem] mb-[10px] text-black">Custom Shopify Store</h3>
+              <div className="text-[2.2rem] font-bold text-brand mb-[10px]">$299</div>
+              <p className="text-[#333] mb-5 leading-relaxed">A professionally designed Shopify theme built around your brand and products.</p>
+              <Link href="/contact" className="btn btn-primary">Get Started</Link>
+            </div>
+            <div className="card text-center">
+              <h3 className="text-[1.3rem] mb-[10px] text-black">Custom Website</h3>
+              <div className="text-[2.2rem] font-bold text-brand mb-[10px]">$3,500</div>
+              <p className="text-[#333] mb-5 leading-relaxed">A fully custom, one-of-a-kind website built from scratch to match your vision.</p>
+              <Link href="/contact" className="btn btn-primary">Get a Quote</Link>
+            </div>
           </div>
         </div>
       </section>

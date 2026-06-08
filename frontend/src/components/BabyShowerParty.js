@@ -180,8 +180,26 @@ const WeatherWidget = ({ eventDate, locationAddress, color }) => {
     (async () => {
       try {
         const normalized = locationAddress.replace(/\s*\n\s*/g, ', ');
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(normalized)}&format=json&limit=1`, { headers: { 'Accept-Language': 'en' } });
-        const geoData = await res.json();
+
+        const tryGeocode = async (q) => {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`,
+            { headers: { 'Accept-Language': 'en' } }
+          );
+          return res.json();
+        };
+
+        let geoData = await tryGeocode(normalized);
+
+        // Rural addresses often aren't in OSM by street number — fall back to
+        // city/state (last two comma-separated parts) for a useful approximation.
+        if (!geoData.length) {
+          const parts = normalized.split(',').map(s => s.trim()).filter(Boolean);
+          if (parts.length >= 2) {
+            geoData = await tryGeocode(parts.slice(-2).join(', '));
+          }
+        }
+
         if (!geoData.length) { setWStatus('error'); return; }
         const { lat, lon } = geoData[0];
         const wxRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto&start_date=${eventDate}&end_date=${eventDate}`);

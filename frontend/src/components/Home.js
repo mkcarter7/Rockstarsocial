@@ -68,7 +68,7 @@ const Home = () => {
                       onClick={() => { if (item.url) window.open(item.url, '_blank', 'noopener,noreferrer'); }}
                       style={{ cursor: item.url ? 'pointer' : 'default' }}
                     >
-                      <img src={item.image} alt={item.title} className="w-full h-full object-cover block" />
+                      <img src={item.image} alt={item.title} className="w-full h-full object-contain block" />
                     </div>
                   );
                 })}
@@ -96,7 +96,7 @@ const Home = () => {
                 <div key={item.id} className="card text-center">
                   <div className="w-full h-[200px] overflow-hidden rounded-[8px] mb-5 bg-[#e2e8f0] relative">
                     {item.image ? (
-                      <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                      <img src={item.image} alt={item.title} className="w-full h-full object-contain" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-[#666] text-[1.1rem]">No Image</div>
                     )}

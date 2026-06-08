@@ -62,7 +62,12 @@ const HostDashboard = () => {
 
     setHostToken(token);
     setHostSlug(slug);
-    if (parties && parties.length > 1) setAllParties(parties);
+
+    if (parties && parties.length > 1) {
+      setAllParties(parties);
+      setLoading(false);
+      return;
+    }
 
     loadParty(slug, token);
   }, [router]);
@@ -100,6 +105,12 @@ const HostDashboard = () => {
     }
   };
 
+  const handleSwitchEvent = () => {
+    const parties = JSON.parse(localStorage.getItem('hostAllParties') || '[]');
+    setStats(null);
+    setAllParties(parties);
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('hostToken');
     localStorage.removeItem('hostPartySlug');
@@ -108,7 +119,7 @@ const HostDashboard = () => {
     router.push('/host/login');
   };
 
-  if (allParties && allParties.length > 1 && !stats) {
+  if (allParties) {
     const formatDate = (d) => {
       const [y, m, day] = d.split('-').map(Number);
       return new Date(y, m - 1, day).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
@@ -365,6 +376,15 @@ const HostDashboard = () => {
                 </form>
               )}
             </div>
+
+            {JSON.parse(localStorage.getItem('hostAllParties') || '[]').length > 1 && (
+              <button
+                onClick={handleSwitchEvent}
+                className="text-[#999] text-[0.9rem] underline hover:text-[#666] transition-colors"
+              >
+                ← My Events
+              </button>
+            )}
 
             <button
               onClick={handleLogout}

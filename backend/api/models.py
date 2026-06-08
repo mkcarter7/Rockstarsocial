@@ -580,6 +580,7 @@ class BabyShowerEvent(models.Model):
     location_name = models.CharField(max_length=200, blank=True)
     location_address = models.TextField(blank=True)
     gift_registry_url = models.URLField(blank=True)
+    registry_links = models.JSONField(default=list, blank=True)
     venmo_handle = models.CharField(max_length=100, blank=True)
     cashapp_handle = models.CharField(max_length=100, blank=True)
     livestream_url = models.URLField(blank=True)

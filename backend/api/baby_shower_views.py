@@ -68,6 +68,7 @@ def _serialize_event(event, request=None):
         'expires_at': event.expires_at.isoformat(),
         'rsvp_count': event.rsvps.filter(status='yes').count(),
         'gift_registry_url': event.gift_registry_url,
+        'registry_links': event.registry_links,
         'venmo_handle': event.venmo_handle,
         'cashapp_handle': event.cashapp_handle,
         'livestream_url': event.livestream_url,
@@ -208,6 +209,17 @@ def event_setup(request):
         event.location_address = request.data['location_address']
     if 'gift_registry_url' in request.data:
         event.gift_registry_url = request.data['gift_registry_url'].strip()
+    if 'registry_links' in request.data:
+        import json
+        try:
+            links = json.loads(request.data['registry_links'])
+            if isinstance(links, list):
+                event.registry_links = [
+                    {'label': str(l.get('label', '')).strip(), 'url': str(l.get('url', '')).strip()}
+                    for l in links if isinstance(l, dict) and str(l.get('url', '')).strip()
+                ]
+        except (json.JSONDecodeError, Exception):
+            pass
     if 'venmo_handle' in request.data:
         event.venmo_handle = request.data['venmo_handle'].strip().lstrip('@')
     if 'cashapp_handle' in request.data:

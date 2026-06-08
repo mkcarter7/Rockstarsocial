@@ -35,7 +35,7 @@ const BabyShowerSetup = () => {
   const [showerTime, setShowerTime] = useState('');
   const [locationName, setLocationName] = useState('');
   const [locationAddress, setLocationAddress] = useState('');
-  const [giftRegistryUrl, setGiftRegistryUrl] = useState('');
+  const [registryLinks, setRegistryLinks] = useState([]);
   const [venmoHandle, setVenmoHandle] = useState('');
   const [cashappHandle, setCashappHandle] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -75,7 +75,11 @@ const BabyShowerSetup = () => {
         setShowerTime(res.data.party_time || '');
         setLocationName(res.data.location_name || '');
         setLocationAddress(res.data.location_address || '');
-        setGiftRegistryUrl(res.data.gift_registry_url || '');
+        if (res.data.registry_links && res.data.registry_links.length > 0) {
+          setRegistryLinks(res.data.registry_links);
+        } else if (res.data.gift_registry_url) {
+          setRegistryLinks([{ label: '', url: res.data.gift_registry_url }]);
+        }
         setVenmoHandle(res.data.venmo_handle || '');
         setCashappHandle(res.data.cashapp_handle || '');
         setDueDate(res.data.due_date || '');
@@ -114,7 +118,8 @@ const BabyShowerSetup = () => {
     formData.append('party_time', showerTime);
     formData.append('location_name', locationName);
     formData.append('location_address', locationAddress);
-    formData.append('gift_registry_url', giftRegistryUrl);
+    formData.append('registry_links', JSON.stringify(registryLinks.filter(l => l.url.trim())));
+    formData.append('gift_registry_url', '');
     formData.append('venmo_handle', venmoHandle);
     formData.append('cashapp_handle', cashappHandle);
     formData.append('due_date', dueDate);
@@ -348,11 +353,43 @@ const BabyShowerSetup = () => {
               </div>
 
               <div className="flex flex-col gap-2 mb-5">
-                <label htmlFor="gift_registry_url" className="font-semibold text-[0.85rem] uppercase tracking-[0.1em]" style={{ color: '#3d1f0e' }}>
-                  Registry Link <span className="font-normal normal-case tracking-normal" style={{ color: '#b0906e' }}>(optional)</span>
+                <label className="font-semibold text-[0.85rem] uppercase tracking-[0.1em]" style={{ color: '#3d1f0e' }}>
+                  Registry Links <span className="font-normal normal-case tracking-normal" style={{ color: '#b0906e' }}>(optional)</span>
                 </label>
-                <p className="text-[0.8rem] font-light -mt-1" style={{ color: '#9a7060' }}>Paste a link to your Babylist, Amazon Baby Registry, or any other registry.</p>
-                <input type="url" id="gift_registry_url" value={giftRegistryUrl} onChange={e => setGiftRegistryUrl(e.target.value)} placeholder="https://www.babylist.com/..." className={inputClass} />
+                <p className="text-[0.8rem] font-light -mt-1" style={{ color: '#9a7060' }}>Add links to your registries — guests will see a button for each one on your gifts page.</p>
+                {registryLinks.map((link, i) => (
+                  <div key={i} className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      placeholder="Label (e.g. Babylist)"
+                      value={link.label}
+                      onChange={e => setRegistryLinks(prev => prev.map((l, j) => j === i ? { ...l, label: e.target.value } : l))}
+                      className={inputClass}
+                      style={{ flex: '0 0 38%' }}
+                    />
+                    <input
+                      type="url"
+                      placeholder="https://..."
+                      value={link.url}
+                      onChange={e => setRegistryLinks(prev => prev.map((l, j) => j === i ? { ...l, url: e.target.value } : l))}
+                      className={inputClass}
+                      style={{ flex: 1 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setRegistryLinks(prev => prev.filter((_, j) => j !== i))}
+                      className="text-[1.1rem] font-light hover:opacity-70 transition-opacity shrink-0 px-1"
+                      style={{ color: '#b0906e' }}
+                      aria-label="Remove"
+                    >×</button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setRegistryLinks(prev => [...prev, { label: '', url: '' }])}
+                  className="text-[0.8rem] font-light uppercase tracking-[0.1em] self-start hover:opacity-70 transition-opacity"
+                  style={{ color: '#c17c5a' }}
+                >+ Add Registry Link</button>
 
                 <label className="font-semibold text-[0.85rem] uppercase tracking-[0.1em] mt-2" style={{ color: '#3d1f0e' }}>
                   Venmo Handle <span className="font-normal normal-case tracking-normal" style={{ color: '#b0906e' }}>(optional)</span>

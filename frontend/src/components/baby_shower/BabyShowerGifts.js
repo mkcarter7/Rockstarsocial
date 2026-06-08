@@ -130,7 +130,7 @@ const GiftCard = ({ gift, color, isHost, sessionToken, slug, onClaim, onUnclaim,
 const BabyShowerGifts = ({ slug }) => {
   const [party, setParty] = useState(null);
   const [gifts, setGifts] = useState([]);
-  const [registryUrl, setRegistryUrl] = useState('');
+  const [registryLinks, setRegistryLinks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isHost, setIsHost] = useState(false);
   const [sessionToken, setSessionToken] = useState('');
@@ -146,7 +146,12 @@ const BabyShowerGifts = ({ slug }) => {
     Promise.all([getBabyShower(slug), getBabyShowerGifts(slug, hostIsOwner ? token : null)])
       .then(([partyRes, giftsRes]) => {
         setParty(partyRes.data);
-        setRegistryUrl(partyRes.data.gift_registry_url || '');
+        const links = partyRes.data.registry_links && partyRes.data.registry_links.length > 0
+          ? partyRes.data.registry_links
+          : partyRes.data.gift_registry_url
+            ? [{ label: 'View Full Registry', url: partyRes.data.gift_registry_url }]
+            : [];
+        setRegistryLinks(links);
         setGifts(giftsRes.data);
         setLoading(false);
       })
@@ -213,12 +218,20 @@ const BabyShowerGifts = ({ slug }) => {
           </div>
         )}
 
-        {registryUrl && (
-          <a href={registryUrl} target="_blank" rel="noreferrer"
-            className="flex items-center justify-center gap-2 font-semibold py-4 px-6 mb-8 no-underline text-[0.9rem] uppercase tracking-[0.12em] hover:opacity-90 transition-opacity"
-            style={{ background: color, color: '#fff', borderRadius: '4px' }}>
-            🎁 View Full Registry →
-          </a>
+        {registryLinks.length > 0 && (
+          <div className="p-8 mb-8 text-center" style={{ border: `1px solid ${color}30`, background: '#fff', boxShadow: '0 2px 16px rgba(100,60,20,0.07)', borderRadius: '4px' }}>
+            <p className="text-[0.65rem] uppercase tracking-[0.25em] font-light mb-1" style={{ color }}>Gift Registries 🎁</p>
+            <h3 className="text-[1.1rem] font-light mb-6" style={{ color: '#3d1f0e' }}>Shop the Registry</h3>
+            <div className="flex flex-wrap justify-center gap-4">
+              {registryLinks.map((link, i) => (
+                <a key={i} href={link.url} target="_blank" rel="noreferrer"
+                  className="flex items-center gap-2 py-3 px-7 font-semibold text-[0.9rem] hover:opacity-90 transition-opacity no-underline"
+                  style={{ background: color, color: '#fff', borderRadius: '4px' }}>
+                  {link.label || 'Registry'}
+                </a>
+              ))}
+            </div>
+          </div>
         )}
 
         {gifts.length === 0 ? (

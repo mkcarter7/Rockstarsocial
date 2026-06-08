@@ -149,14 +149,14 @@ const HostDashboard = () => {
                   <button
                     key={p.slug}
                     onClick={() => pickParty(p.slug)}
-                    className="bg-white rounded-[4px] p-6 text-left hover:-translate-y-[2px] hover:shadow-md transition-[transform,box-shadow] cursor-pointer"
+                    className="bg-white rounded-[4px] p-3 text-left hover:-translate-y-[2px] hover:shadow-md transition-[transform,box-shadow] cursor-pointer"
                     style={{ border: `2px solid ${accentColor}` }}
                   >
-                    <div className="font-bold text-[1.1rem] text-[#333]">
+                    <div className="font-bold text-[0.85rem] text-[#333]">
                       {icon} {eventName}
                     </div>
-                    {eventDate && <div className="text-[#888] text-[0.9rem] mt-1">{formatDate(eventDate)}</div>}
-                    <div className="text-[0.85rem] mt-1" style={{ color: accentColor }}>{urlPrefix}</div>
+                    {eventDate && <div className="text-[#888] text-[0.75rem] mt-0.5">{formatDate(eventDate)}</div>}
+                    <div className="text-[0.7rem] mt-0.5" style={{ color: accentColor }}>{urlPrefix}</div>
                   </button>
                 );
               })}

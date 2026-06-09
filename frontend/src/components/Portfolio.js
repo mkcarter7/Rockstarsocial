@@ -67,9 +67,9 @@ const Portfolio = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[30px] mt-[30px]">
               {filteredPortfolio.map((item) => (
                 <div key={item.id} className="card overflow-hidden p-0 group">
-                  <div className="w-full h-[250px] md:h-[200px] overflow-hidden relative bg-gradient-to-b from-[#e8e8e8] to-[#d8d8d8]">
+                  <div className="w-full overflow-hidden relative bg-gradient-to-b from-[#e8e8e8] to-[#d8d8d8]">
                     {item.image ? (
-                      <img src={item.image} alt={item.title} className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" />
+                      <img src={item.image} alt={item.title} className="w-full h-auto transition-transform duration-300 group-hover:scale-105" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-[#666] text-[1.1rem]">No Image</div>
                     )}

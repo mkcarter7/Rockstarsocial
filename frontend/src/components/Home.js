@@ -50,7 +50,7 @@ const Home = () => {
 
           {carouselItems.length > 0 && (
             /* hero-carousel class kept for ::before arc pseudo-element defined in App.css */
-            <div className="hero-carousel mt-8 mb-6 h-[110px] relative overflow-hidden flex justify-center items-center py-3 px-4 md:h-[180px] md:mt-10 md:mb-8 md:py-5 md:px-5 lg:h-[460px] lg:mt-[60px] lg:mb-10 lg:overflow-visible lg:py-10 lg:px-5 xl:h-[540px]">
+            <div className="hero-carousel mt-8 mb-6 h-[220px] relative overflow-hidden flex justify-center items-center py-5 px-4 sm:h-[260px] md:h-[180px] md:mt-10 md:mb-8 md:py-5 md:px-5 lg:h-[460px] lg:mt-[60px] lg:mb-10 lg:overflow-visible lg:py-10 lg:px-5 xl:h-[540px]">
               <div className="carousel-track relative w-full h-full flex justify-center items-center gap-3 z-[1] md:gap-4 lg:gap-[30px]">
                 {Array.from({ length: 3 }, (_, position) => {
                   const totalItems = carouselItems.length;
@@ -61,7 +61,7 @@ const Home = () => {
                     /* carousel-item class kept for nth-child media rules in App.css */
                     <div
                       key={`${item.id}-${position}-${carouselIndex}`}
-                      className="carousel-item relative w-[90px] h-[90px] rounded-[12px] overflow-hidden shadow-[0_5px_15px_rgba(0,0,0,0.2)] transition-all duration-[800ms] bg-white flex-shrink-0 hover:z-10 md:w-[130px] md:h-[130px] lg:w-[360px] lg:h-[380px] lg:shadow-[0_10px_30px_rgba(0,0,0,0.3)] lg:hover:-translate-y-[10px] lg:hover:scale-105 lg:hover:shadow-[0_20px_50px_rgba(0,0,0,0.4)] xl:w-[420px] xl:h-[450px]"
+                      className="carousel-item relative w-[180px] h-[180px] rounded-[12px] overflow-hidden shadow-[0_5px_15px_rgba(0,0,0,0.2)] transition-all duration-[800ms] bg-white flex-shrink-0 hover:z-10 sm:w-[210px] sm:h-[210px] md:w-[130px] md:h-[130px] lg:w-[360px] lg:h-[380px] lg:shadow-[0_10px_30px_rgba(0,0,0,0.3)] lg:hover:-translate-y-[10px] lg:hover:scale-105 lg:hover:shadow-[0_20px_50px_rgba(0,0,0,0.4)] xl:w-[420px] xl:h-[450px]"
                       onClick={() => { if (item.url) window.open(item.url, '_blank', 'noopener,noreferrer'); }}
                       style={{ cursor: item.url ? 'pointer' : 'default' }}
                     >

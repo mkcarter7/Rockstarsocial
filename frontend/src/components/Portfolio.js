@@ -69,7 +69,7 @@ const Portfolio = () => {
                 <div key={item.id} className="card overflow-hidden p-0 group">
                   <div className="w-full h-[250px] md:h-[200px] overflow-hidden relative bg-gradient-to-b from-[#e8e8e8] to-[#d8d8d8]">
                     {item.image ? (
-                      <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                      <img src={item.image} alt={item.title} className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-[#666] text-[1.1rem]">No Image</div>
                     )}

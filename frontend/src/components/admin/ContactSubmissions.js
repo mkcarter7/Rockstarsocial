@@ -100,7 +100,7 @@ const ContactSubmissions = () => {
           </button>
           <h1 className="m-0 text-[1.8rem]">Contact Submissions</h1>
         </div>
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-5 md:flex-wrap md:justify-center md:w-full">
           <Link href="/" className={adminBtnClass}>Home</Link>
           <span>Welcome, {currentUser?.email}</span>
           <button onClick={handleLogout} className={adminBtnClass}>Logout</button>

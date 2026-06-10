@@ -73,7 +73,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-[#f5f5f5]">
       <header className="bg-brand-gradient text-white py-5 px-10 flex justify-between items-center shadow-[0_2px_4px_rgba(0,0,0,0.1)] md:flex-col md:gap-[15px] md:text-center">
         <h1 className="m-0 text-[1.8rem]">Admin Dashboard</h1>
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-5 md:flex-wrap md:justify-center md:w-full">
           <Link href="/" className="bg-[rgba(255,255,255,0.2)] text-white border border-[rgba(255,255,255,0.3)] py-2 px-4 rounded-[5px] text-[0.9rem] transition-colors duration-300 inline-block hover:bg-[rgba(255,255,255,0.3)]">
             Home
           </Link>

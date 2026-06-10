@@ -111,7 +111,7 @@ const ManageTestimonials = () => {
           <button className={headerBtnClass} onClick={() => router.push('/admin/dashboard')}>← Back to Dashboard</button>
           <h1 className="m-0 text-[1.8rem]">Manage Testimonials</h1>
         </div>
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-5 md:flex-wrap md:justify-center md:w-full">
           <span>Welcome, {currentUser?.email}</span>
           <button onClick={handleLogout} className={headerBtnClass}>Logout</button>
         </div>

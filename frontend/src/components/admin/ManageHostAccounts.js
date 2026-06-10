@@ -98,22 +98,23 @@ const ManageHostAccounts = () => {
 
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
-      <header className="bg-brand-gradient text-white py-5 px-10 flex justify-between items-center shadow-[0_2px_4px_rgba(0,0,0,0.1)]">
-        <div className="flex items-center gap-5">
+      <header className="bg-brand-gradient text-white py-5 px-10 flex justify-between items-center shadow-[0_2px_4px_rgba(0,0,0,0.1)] md:flex-col md:gap-[15px] md:text-center">
+        <div className="flex items-center gap-5 md:flex-col md:w-full">
           <button className={headerBtnClass} onClick={() => router.push('/admin/dashboard')}>← Back to Dashboard</button>
           <h1 className="m-0 text-[1.8rem]">Host Accounts</h1>
         </div>
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-5 md:flex-wrap md:justify-center md:w-full">
           <Link href="/" className={headerBtnClass}>Home</Link>
           <span>{currentUser?.email}</span>
           <button onClick={handleLogout} className={headerBtnClass}>Logout</button>
         </div>
       </header>
 
-      <div className="py-[30px] px-10">
+      <div className="py-[30px] px-10 md:px-5">
         {accounts.length === 0 ? (
           <p className="text-center text-[#888] text-[1.1rem] mt-[60px]">No host accounts yet.</p>
         ) : (
+          <div className="overflow-x-auto">
           <table className="w-full border-collapse bg-white rounded-[8px] overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.08)] text-[0.9rem]">
             <thead>
               <tr>
@@ -269,6 +270,7 @@ const ManageHostAccounts = () => {
             })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

@@ -127,7 +127,7 @@ const ManageThemes = () => {
           <button className={headerBtnClass} onClick={() => router.push('/admin/dashboard')}>← Back to Dashboard</button>
           <h1 className="m-0 text-[1.8rem]">Manage Themes</h1>
         </div>
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-5 md:flex-wrap md:justify-center md:w-full">
           <Link href="/" className={headerBtnClass}>Home</Link>
           <span>Welcome, {currentUser?.email}</span>
           <button onClick={handleLogout} className={headerBtnClass}>Logout</button>

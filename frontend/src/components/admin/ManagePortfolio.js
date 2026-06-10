@@ -125,7 +125,7 @@ const ManagePortfolio = () => {
         </div>
       </header>
 
-      <div className="p-10 md:p-5 max-w-[1400px] mx-auto">
+      <div className="p-6 md:p-5 max-w-[1400px] mx-auto">
         <div className="mb-[30px]">
           <button
             onClick={() => { setCurrentItem(null); setFormData({ title: '', description: '', website_url: '', category: '', featured: false, image: null }); setIsEditing(true); }}
@@ -190,15 +190,15 @@ const ManagePortfolio = () => {
               <p>No portfolio items yet. Click "Add New Portfolio Item" to get started.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(350px,1fr))] md:grid-cols-1 gap-[25px]">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] md:grid-cols-1 gap-4">
               {portfolioItems.map(item => (
                 <div key={item.id} className="border-2 border-[#eee] rounded-[10px] overflow-hidden transition-shadow duration-300 hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
                   {item.image && (
-                    <div className="w-full h-[200px] overflow-hidden bg-[#f0f0f0]">
+                    <div className="w-full h-[160px] overflow-hidden bg-[#f0f0f0]">
                       <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
                     </div>
                   )}
-                  <div className="p-5">
+                  <div className="p-4">
                     <div className="flex justify-between items-start mb-[10px]">
                       <h3 className="m-0 text-[#333] flex-1">{item.title}</h3>
                       {item.featured && <span className="bg-brand text-white py-1 px-3 rounded-xl text-[0.75rem] font-semibold whitespace-nowrap">Featured</span>}

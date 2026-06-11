@@ -587,6 +587,7 @@ class BabyShowerEvent(models.Model):
     is_active = models.BooleanField(default=False)
     stripe_session_id = models.CharField(max_length=255, unique=True, blank=True, null=True)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    overall_budget = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     host_account = models.ForeignKey(
         'HostAccount', null=True, blank=True,

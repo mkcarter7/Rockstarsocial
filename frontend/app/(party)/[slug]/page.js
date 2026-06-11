@@ -1,35 +1,60 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { getBirthdayParty, getWeddingParty, getBabyShower, checkSlugRedirect } from '@/api/api';
-import BirthdayParty from '@/components/BirthdayParty';
-import WeddingParty from '@/components/WeddingParty';
-import BabyShowerParty from '@/components/BabyShowerParty';
+import PartyPageClient from './PartyPageClient';
+
+const API   = process.env.NEXT_PUBLIC_API_URL   || 'http://localhost:8000/api';
+const MEDIA = process.env.NEXT_PUBLIC_MEDIA_URL || 'http://localhost:8000';
+const SITE  = process.env.NEXT_PUBLIC_SITE_URL  || 'https://1rockstarsocial.com';
+
+async function fetchPartyData(slug) {
+  for (const path of [`/birthday/${slug}/`, `/wedding/${slug}/`, `/baby-shower/${slug}/`]) {
+    try {
+      const res = await fetch(`${API}${path}`, { next: { revalidate: 60 } });
+      if (res.ok) return await res.json();
+    } catch {}
+  }
+  return null;
+}
+
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+  const data = await fetchPartyData(slug);
+  if (!data) return { title: 'RockStar Social' };
+
+  const name = data.birthday_person_name || data.couple_name || data.parent_names || 'Party';
+  const date = data.party_date || data.wedding_date || data.shower_date || '';
+  const type = data.birthday_person_name ? 'Birthday Party'
+             : data.couple_name          ? 'Wedding'
+             :                             'Baby Shower';
+
+  const title       = `${name}'s ${type}`;
+  const description = date
+    ? `Join ${name}'s ${type} celebration on ${date}!`
+    : `You're invited to ${name}'s ${type}!`;
+
+  const rawImage = data.banner_image || '';
+  const image    = rawImage.startsWith('http')
+    ? rawImage
+    : `${MEDIA}${rawImage.startsWith('/') ? '' : '/media/'}${rawImage}`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `${SITE}/${slug}`,
+      siteName: 'RockStar Social',
+      images: rawImage ? [{ url: image, width: 1200, height: 630, alt: title }] : [],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: rawImage ? [image] : [],
+    },
+  };
+}
 
 export default function PartyPage({ params }) {
-  const [type, setType] = useState('loading');
-  const router = useRouter();
-
-  useEffect(() => {
-    getBirthdayParty(params.slug)
-      .then(() => setType('birthday'))
-      .catch(() =>
-        getWeddingParty(params.slug)
-          .then(() => setType('wedding'))
-          .catch(() =>
-            getBabyShower(params.slug)
-              .then(() => setType('baby_shower'))
-              .catch(() =>
-                checkSlugRedirect(params.slug)
-                  .then(res => router.replace(`/${res.data.redirect_to}`))
-                  .catch(() => setType('birthday'))
-              )
-          )
-      );
-  }, [params.slug]);
-
-  if (type === 'loading') return null;
-  if (type === 'wedding') return <WeddingParty slug={params.slug} />;
-  if (type === 'baby_shower') return <BabyShowerParty slug={params.slug} />;
-  return <BirthdayParty slug={params.slug} />;
+  return <PartyPageClient params={params} />;
 }

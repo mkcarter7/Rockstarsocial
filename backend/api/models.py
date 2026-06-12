@@ -701,6 +701,50 @@ class BabyShowerFAQItem(models.Model):
         return f"FAQ: {self.question[:60]} — {self.event.slug}"
 
 
+class BabyShowerBudgetItem(models.Model):
+    event = models.ForeignKey(BabyShowerEvent, on_delete=models.CASCADE, related_name='budget_items')
+    category = models.CharField(max_length=200)
+    estimated_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    actual_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    notes = models.TextField(blank=True)
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return f"Budget: {self.category} — {self.event.slug}"
+
+
+class BabyShowerScheduleItem(models.Model):
+    event = models.ForeignKey(BabyShowerEvent, on_delete=models.CASCADE, related_name='schedule_items')
+    time_label = models.CharField(max_length=50, blank=True)
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return f"Schedule: {self.title} — {self.event.slug}"
+
+
+class BabyShowerChecklistItem(models.Model):
+    event = models.ForeignKey(BabyShowerEvent, on_delete=models.CASCADE, related_name='checklist_items')
+    timeframe = models.CharField(max_length=100)
+    text = models.CharField(max_length=300)
+    is_completed = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return f"Checklist: {self.text[:60]} — {self.event.slug}"
+
+
 class BabyShowerTriviaQuestion(models.Model):
     ANSWER_CHOICES = [('a', 'A'), ('b', 'B'), ('c', 'C'), ('d', 'D')]
     event = models.ForeignKey(BabyShowerEvent, on_delete=models.CASCADE, related_name='trivia_questions')

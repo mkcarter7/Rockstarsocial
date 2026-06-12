@@ -13,6 +13,7 @@ from .models import (
     BabyShowerRSVP, BabyShowerStoryEntry, BabyShowerGiftItem,
     BabyShowerFAQItem, BabyShowerTriviaQuestion, BabyShowerTriviaScore,
     BabyShowerNameSuggestion, SlugRedirect,
+    BabyShowerBudgetItem, BabyShowerScheduleItem, BabyShowerChecklistItem,
 )
 from .host_auth_views import verify_host_session_by_token_str
 from .theme_setup_views import SLUG_PATTERN
@@ -742,6 +743,265 @@ def delete_name_suggestion(request, slug, suggestion_id):
         return Response({'message': 'Name suggestion deleted'})
     except (BabyShowerEvent.DoesNotExist, BabyShowerNameSuggestion.DoesNotExist):
         return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+# ─── Budget Tracker ───────────────────────────────────────────────────────────
+
+@api_view(['GET', 'POST', 'PATCH'])
+@permission_classes([AllowAny])
+def event_budget(request, slug):
+    session_token = (
+        request.query_params.get('session_token', '')
+        if request.method == 'GET'
+        else request.data.get('session_token', '')
+    )
+    _, token_err = verify_host_session_by_token_str(session_token, slug)
+    if token_err:
+        return Response({'error': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
+
+    try:
+        event = BabyShowerEvent.objects.get(slug=slug)
+    except BabyShowerEvent.DoesNotExist:
+        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        return Response({
+            'overall_budget': str(event.overall_budget) if event.overall_budget is not None else None,
+            'items': [{
+                'id': b.id, 'category': b.category,
+                'estimated_amount': str(b.estimated_amount),
+                'actual_amount': str(b.actual_amount) if b.actual_amount is not None else None,
+                'notes': b.notes, 'order': b.order,
+            } for b in event.budget_items.all()],
+        })
+
+    if request.method == 'PATCH':
+        overall = request.data.get('overall_budget')
+        if overall is not None:
+            event.overall_budget = overall if overall != '' else None
+            event.save(update_fields=['overall_budget'])
+        return Response({'overall_budget': str(event.overall_budget) if event.overall_budget is not None else None})
+
+    # POST — add a budget item
+    category = request.data.get('category', '').strip()
+    if not category:
+        return Response({'error': 'category is required'}, status=status.HTTP_400_BAD_REQUEST)
+    item = BabyShowerBudgetItem.objects.create(
+        event=event,
+        category=category,
+        estimated_amount=request.data.get('estimated_amount', 0),
+        actual_amount=request.data.get('actual_amount') or None,
+        notes=request.data.get('notes', '').strip(),
+        order=event.budget_items.count(),
+    )
+    return Response({
+        'id': item.id, 'category': item.category,
+        'estimated_amount': str(item.estimated_amount),
+        'actual_amount': str(item.actual_amount) if item.actual_amount is not None else None,
+        'notes': item.notes, 'order': item.order,
+    }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['PATCH', 'DELETE'])
+@permission_classes([AllowAny])
+def manage_budget_item(request, slug, item_id):
+    session_token = (
+        request.query_params.get('session_token', '')
+        if request.method == 'DELETE'
+        else request.data.get('session_token', '')
+    )
+    _, token_err = verify_host_session_by_token_str(session_token, slug)
+    if token_err:
+        return Response({'error': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
+    try:
+        event = BabyShowerEvent.objects.get(slug=slug)
+        item = BabyShowerBudgetItem.objects.get(id=item_id, event=event)
+    except (BabyShowerEvent.DoesNotExist, BabyShowerBudgetItem.DoesNotExist):
+        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'DELETE':
+        item.delete()
+        return Response({'message': 'Budget item deleted'})
+
+    # PATCH — update fields
+    for field in ('estimated_amount', 'actual_amount', 'notes', 'category'):
+        if field in request.data:
+            val = request.data[field]
+            if field == 'actual_amount':
+                val = val if val not in ('', None) else None
+            setattr(item, field, val)
+    item.save()
+    return Response({
+        'id': item.id, 'category': item.category,
+        'estimated_amount': str(item.estimated_amount),
+        'actual_amount': str(item.actual_amount) if item.actual_amount is not None else None,
+        'notes': item.notes, 'order': item.order,
+    })
+
+
+# ─── Day-of Schedule ──────────────────────────────────────────────────────────
+
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+def event_schedule(request, slug):
+    event, err = _get_event_or_404(slug)
+    if err:
+        return Response(err, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        return Response([{
+            'id': s.id, 'time_label': s.time_label,
+            'title': s.title, 'description': s.description, 'order': s.order,
+        } for s in event.schedule_items.all()])
+
+    session_token = request.data.get('session_token', '')
+    _, token_err = verify_host_session_by_token_str(session_token, slug)
+    if token_err:
+        return Response({'error': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
+
+    title = request.data.get('title', '').strip()
+    if not title:
+        return Response({'error': 'title is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    item = BabyShowerScheduleItem.objects.create(
+        event=event,
+        time_label=request.data.get('time_label', '').strip(),
+        title=title,
+        description=request.data.get('description', '').strip(),
+        order=event.schedule_items.count(),
+    )
+    return Response({
+        'id': item.id, 'time_label': item.time_label,
+        'title': item.title, 'description': item.description, 'order': item.order,
+    }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['DELETE'])
+@permission_classes([AllowAny])
+def manage_schedule_item(request, slug, item_id):
+    session_token = request.query_params.get('session_token', '')
+    _, token_err = verify_host_session_by_token_str(session_token, slug)
+    if token_err:
+        return Response({'error': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
+    try:
+        event = BabyShowerEvent.objects.get(slug=slug)
+        item = BabyShowerScheduleItem.objects.get(id=item_id, event=event)
+        item.delete()
+        return Response({'message': 'Schedule item deleted'})
+    except (BabyShowerEvent.DoesNotExist, BabyShowerScheduleItem.DoesNotExist):
+        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+# ─── Planning Checklist ───────────────────────────────────────────────────────
+
+_DEFAULT_CHECKLIST = [
+    ("8 weeks before", "Set your budget"),
+    ("8 weeks before", "Create the guest list"),
+    ("8 weeks before", "Book the venue"),
+    ("8 weeks before", "Choose a theme or color scheme"),
+    ("6 weeks before", "Send invitations"),
+    ("6 weeks before", "Plan the menu"),
+    ("6 weeks before", "Order or plan the cake"),
+    ("6 weeks before", "Choose baby shower games and activities"),
+    ("4 weeks before", "Order decorations"),
+    ("4 weeks before", "Plan party favors"),
+    ("2 weeks before", "Confirm RSVPs and get final headcount"),
+    ("2 weeks before", "Buy prizes for games"),
+    ("2 weeks before", "Confirm any vendors"),
+    ("1 week before", "Buy party favors"),
+    ("1 week before", "Prep any DIY decorations"),
+    ("Day before", "Set up decorations"),
+    ("Day before", "Prepare food in advance"),
+    ("Day before", "Set out games and activities"),
+    ("Day of", "Arrive early to finish setup"),
+    ("Day of", "Greet guests as they arrive"),
+    ("After", "Send thank you notes"),
+    ("After", "Help parents-to-be transport gifts"),
+]
+
+
+def _seed_checklist(event):
+    items = [
+        BabyShowerChecklistItem(
+            event=event, timeframe=tf, text=text, order=i,
+        )
+        for i, (tf, text) in enumerate(_DEFAULT_CHECKLIST)
+    ]
+    BabyShowerChecklistItem.objects.bulk_create(items)
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+def event_checklist(request, slug):
+    session_token = (
+        request.query_params.get('session_token', '')
+        if request.method == 'GET'
+        else request.data.get('session_token', '')
+    )
+    _, token_err = verify_host_session_by_token_str(session_token, slug)
+    if token_err:
+        return Response({'error': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
+
+    try:
+        event = BabyShowerEvent.objects.get(slug=slug)
+    except BabyShowerEvent.DoesNotExist:
+        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        if not event.checklist_items.exists():
+            _seed_checklist(event)
+        return Response([{
+            'id': c.id, 'timeframe': c.timeframe, 'text': c.text,
+            'is_completed': c.is_completed, 'order': c.order,
+        } for c in event.checklist_items.all()])
+
+    # POST — add a custom item
+    text = request.data.get('text', '').strip()
+    if not text:
+        return Response({'error': 'text is required'}, status=status.HTTP_400_BAD_REQUEST)
+    item = BabyShowerChecklistItem.objects.create(
+        event=event,
+        timeframe=request.data.get('timeframe', '').strip(),
+        text=text,
+        order=event.checklist_items.count(),
+    )
+    return Response({
+        'id': item.id, 'timeframe': item.timeframe, 'text': item.text,
+        'is_completed': item.is_completed, 'order': item.order,
+    }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['PATCH', 'DELETE'])
+@permission_classes([AllowAny])
+def manage_checklist_item(request, slug, item_id):
+    session_token = (
+        request.query_params.get('session_token', '')
+        if request.method == 'DELETE'
+        else request.data.get('session_token', '')
+    )
+    _, token_err = verify_host_session_by_token_str(session_token, slug)
+    if token_err:
+        return Response({'error': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
+    try:
+        event = BabyShowerEvent.objects.get(slug=slug)
+        item = BabyShowerChecklistItem.objects.get(id=item_id, event=event)
+    except (BabyShowerEvent.DoesNotExist, BabyShowerChecklistItem.DoesNotExist):
+        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'DELETE':
+        item.delete()
+        return Response({'message': 'Checklist item deleted'})
+
+    # PATCH — toggle completion or update text
+    if 'is_completed' in request.data:
+        item.is_completed = bool(request.data['is_completed'])
+    if 'text' in request.data:
+        item.text = request.data['text'].strip()
+    item.save()
+    return Response({
+        'id': item.id, 'timeframe': item.timeframe, 'text': item.text,
+        'is_completed': item.is_completed, 'order': item.order,
+    })
 
 
 # ─── Cleanup helper ───────────────────────────────────────────────────────────

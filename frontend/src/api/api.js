@@ -162,6 +162,18 @@ export const getBabyShowerTriviaLeaderboard = (slug) => api.get(`/baby-shower/${
 export const getBabyShowerNames = (slug) => api.get(`/baby-shower/${slug}/names/`);
 export const addBabyShowerName = (slug, data) => api.post(`/baby-shower/${slug}/names/`, data);
 export const deleteBabyShowerName = (slug, id, token) => api.delete(`/baby-shower/${slug}/names/${id}/?session_token=${token}`);
+export const getBabyShowerBudget = (slug, sessionToken) => api.get(`/baby-shower/${slug}/budget/?session_token=${sessionToken}`);
+export const addBabyShowerBudgetItem = (slug, data) => api.post(`/baby-shower/${slug}/budget/`, data);
+export const updateBabyShowerBudgetItem = (slug, id, data) => api.patch(`/baby-shower/${slug}/budget/${id}/`, data);
+export const deleteBabyShowerBudgetItem = (slug, id, token) => api.delete(`/baby-shower/${slug}/budget/${id}/?session_token=${token}`);
+export const updateBabyShowerOverallBudget = (slug, overallBudget, token) => api.patch(`/baby-shower/${slug}/budget/`, { overall_budget: overallBudget, session_token: token });
+export const getBabyShowerSchedule = (slug) => api.get(`/baby-shower/${slug}/schedule/`);
+export const addBabyShowerScheduleItem = (slug, data) => api.post(`/baby-shower/${slug}/schedule/`, data);
+export const deleteBabyShowerScheduleItem = (slug, id, token) => api.delete(`/baby-shower/${slug}/schedule/${id}/?session_token=${token}`);
+export const getBabyShowerChecklist = (slug, sessionToken) => api.get(`/baby-shower/${slug}/checklist/?session_token=${sessionToken}`);
+export const addBabyShowerChecklistItem = (slug, data) => api.post(`/baby-shower/${slug}/checklist/`, data);
+export const updateBabyShowerChecklistItem = (slug, id, data) => api.patch(`/baby-shower/${slug}/checklist/${id}/`, data);
+export const deleteBabyShowerChecklistItem = (slug, id, token) => api.delete(`/baby-shower/${slug}/checklist/${id}/?session_token=${token}`);
 
 // Admin — Event pages (all types: birthday, wedding, etc.)
 export const getAdminEventPages = (token) => api.get('/admin/event-pages/', { headers: { Authorization: `Bearer ${token}` } });

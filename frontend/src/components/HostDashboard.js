@@ -1,13 +1,17 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   getHostPartyStats, changeHostPassword, switchHostParty,
   checkBirthdaySlug, checkWeddingSlug, checkBabyShowerSlug,
   updateBirthdaySlug, updateWeddingSlug, updateBabyShowerSlug,
+  getBabyShowerRSVP,
+  getBabyShowerSchedule, addBabyShowerScheduleItem, deleteBabyShowerScheduleItem,
+  getBabyShowerChecklist, addBabyShowerChecklistItem, updateBabyShowerChecklistItem, deleteBabyShowerChecklistItem,
 } from '../api/api';
+import BabyShowerBudgetTracker from './BabyShowerBudgetTracker';
 
 const StatCard = ({ icon, label, value, color }) => (
   <div className="bg-white rounded-[12px] border-2 p-6 text-center" style={{ borderColor: color }}>
@@ -32,6 +36,15 @@ const HostDashboard = () => {
   const [newUrlSlug, setNewUrlSlug] = useState('');
   const [urlStatus, setUrlStatus] = useState({ type: '', message: '' });
   const [urlCheckTimer, setUrlCheckTimer] = useState(null);
+
+  // Baby shower planning state
+  const [rsvps, setRsvps] = useState([]);
+  const [schedule, setSchedule] = useState([]);
+  const [newScheduleTitle, setNewScheduleTitle] = useState('');
+  const [newScheduleTime, setNewScheduleTime] = useState('');
+  const [checklist, setChecklist] = useState([]);
+  const [newChecklistText, setNewChecklistText] = useState('');
+  const [newChecklistTimeframe, setNewChecklistTimeframe] = useState('');
 
   const loadParty = (slug, token) => {
     setLoading(true);
@@ -79,6 +92,13 @@ const HostDashboard = () => {
 
     loadParty(slug, token);
   }, [router]);
+
+  useEffect(() => {
+    if (!stats || !hostToken || !hostSlug || stats.party_type !== 'baby_shower') return;
+    getBabyShowerRSVP(hostSlug).then(res => setRsvps(res.data.entries || [])).catch(() => {});
+    getBabyShowerSchedule(hostSlug).then(res => setSchedule(res.data || [])).catch(() => {});
+    getBabyShowerChecklist(hostSlug, hostToken).then(res => setChecklist(res.data || [])).catch(() => {});
+  }, [stats, hostToken, hostSlug]);
 
   const pickParty = async (slug) => {
     try {
@@ -386,6 +406,198 @@ const HostDashboard = () => {
               {stats.story_count != null && <StatCard icon="🍼" label="Journey Moments" value={stats.story_count} color={color} />}
               {stats.name_suggestion_count != null && <StatCard icon="💝" label="Name Ideas" value={stats.name_suggestion_count} color={color} />}
             </div>
+          )}
+
+          {isBabyShower && (
+            <>
+              {/* ── RSVP List ── */}
+              <div className="mb-10">
+                <h3 className="text-[1.2rem] font-semibold text-[#333] mb-4">Guest RSVPs</h3>
+                {rsvps.length === 0 ? (
+                  <p className="text-[#999] text-sm">No RSVPs yet.</p>
+                ) : (
+                  <div className="overflow-x-auto rounded-lg border border-gray-200">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b" style={{ background: `${color}15` }}>
+                          <th className="text-left px-3 py-2 font-semibold text-[#555]">Name</th>
+                          <th className="text-left px-3 py-2 font-semibold text-[#555]">Status</th>
+                          <th className="text-left px-3 py-2 font-semibold text-[#555]">Guests</th>
+                          <th className="text-left px-3 py-2 font-semibold text-[#555]">Message</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rsvps.map(r => (
+                          <tr key={r.id} className="border-b last:border-0">
+                            <td className="px-3 py-2 font-medium">{r.name}</td>
+                            <td className="px-3 py-2">
+                              <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                r.status === 'yes' ? 'bg-green-100 text-green-700' :
+                                r.status === 'no' ? 'bg-red-100 text-red-600' :
+                                'bg-yellow-100 text-yellow-700'
+                              }`}>
+                                {r.status === 'yes' ? 'Yes' : r.status === 'no' ? 'No' : 'Maybe'}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 text-center">{r.guest_count}</td>
+                            <td className="px-3 py-2 text-[#666]">{r.message || '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Planning Checklist ── */}
+              <div className="mb-10">
+                <h3 className="text-[1.2rem] font-semibold text-[#333] mb-4">Planning Checklist</h3>
+                {checklist.length === 0 ? (
+                  <p className="text-[#999] text-sm">Loading checklist…</p>
+                ) : (
+                  <div className="flex flex-col gap-5">
+                    {[...new Set(checklist.map(c => c.timeframe))].map(tf => (
+                      <div key={tf}>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-[#aaa] mb-2">{tf}</p>
+                        <div className="flex flex-col gap-1">
+                          {checklist.filter(c => c.timeframe === tf).map(item => (
+                            <label key={item.id} className="flex items-start gap-3 cursor-pointer group">
+                              <input
+                                type="checkbox"
+                                className="mt-0.5 h-4 w-4 rounded accent-[var(--theme)] flex-shrink-0"
+                                style={{ accentColor: color }}
+                                checked={item.is_completed}
+                                onChange={async () => {
+                                  const updated = { ...item, is_completed: !item.is_completed };
+                                  setChecklist(prev => prev.map(c => c.id === item.id ? updated : c));
+                                  try {
+                                    await updateBabyShowerChecklistItem(hostSlug, item.id, { session_token: hostToken, is_completed: !item.is_completed });
+                                  } catch { setChecklist(prev => prev.map(c => c.id === item.id ? item : c)); }
+                                }}
+                              />
+                              <span className={`text-sm ${item.is_completed ? 'line-through text-[#aaa]' : 'text-[#444]'}`}>{item.text}</span>
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await deleteBabyShowerChecklistItem(hostSlug, item.id, hostToken);
+                                    setChecklist(prev => prev.filter(c => c.id !== item.id));
+                                  } catch { /* ignore */ }
+                                }}
+                                className="ml-auto opacity-0 group-hover:opacity-100 text-[#ccc] hover:text-red-400 text-lg leading-none flex-shrink-0"
+                              >×</button>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <form
+                  className="mt-4 flex gap-2 flex-wrap"
+                  onSubmit={async e => {
+                    e.preventDefault();
+                    if (!newChecklistText.trim()) return;
+                    try {
+                      const res = await addBabyShowerChecklistItem(hostSlug, {
+                        session_token: hostToken,
+                        timeframe: newChecklistTimeframe.trim() || 'Custom',
+                        text: newChecklistText.trim(),
+                      });
+                      setChecklist(prev => [...prev, res.data]);
+                      setNewChecklistText('');
+                      setNewChecklistTimeframe('');
+                    } catch { /* ignore */ }
+                  }}
+                >
+                  <input
+                    type="text"
+                    placeholder="Task"
+                    className="border rounded px-3 py-2 text-sm flex-1 min-w-0"
+                    value={newChecklistText}
+                    onChange={e => setNewChecklistText(e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Timeframe (optional)"
+                    className="border rounded px-3 py-2 text-sm w-44"
+                    value={newChecklistTimeframe}
+                    onChange={e => setNewChecklistTimeframe(e.target.value)}
+                  />
+                  <button type="submit" className="text-white px-4 py-2 rounded text-sm font-medium" style={{ background: color }}>
+                    + Add
+                  </button>
+                </form>
+              </div>
+
+              {/* ── Day-of Schedule ── */}
+              <div className="mb-10">
+                <h3 className="text-[1.2rem] font-semibold text-[#333] mb-4">Day-of Schedule</h3>
+                {schedule.length === 0 ? (
+                  <p className="text-[#999] text-sm mb-4">No schedule items yet — build your run-of-show below.</p>
+                ) : (
+                  <div className="flex flex-col gap-2 mb-4">
+                    {schedule.map(item => (
+                      <div key={item.id} className="flex items-start gap-3 group rounded-lg p-3 border border-gray-100 bg-white">
+                        {item.time_label && (
+                          <span className="text-xs font-mono font-semibold pt-0.5 whitespace-nowrap" style={{ color }}>{item.time_label}</span>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-[#333]">{item.title}</p>
+                          {item.description && <p className="text-xs text-[#888] mt-0.5">{item.description}</p>}
+                        </div>
+                        <button
+                          onClick={async () => {
+                            try {
+                              await deleteBabyShowerScheduleItem(hostSlug, item.id, hostToken);
+                              setSchedule(prev => prev.filter(s => s.id !== item.id));
+                            } catch { /* ignore */ }
+                          }}
+                          className="opacity-0 group-hover:opacity-100 text-[#ccc] hover:text-red-400 text-lg leading-none flex-shrink-0"
+                        >×</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <form
+                  className="flex gap-2 flex-wrap"
+                  onSubmit={async e => {
+                    e.preventDefault();
+                    if (!newScheduleTitle.trim()) return;
+                    try {
+                      const res = await addBabyShowerScheduleItem(hostSlug, {
+                        session_token: hostToken,
+                        time_label: newScheduleTime.trim(),
+                        title: newScheduleTitle.trim(),
+                      });
+                      setSchedule(prev => [...prev, res.data]);
+                      setNewScheduleTitle('');
+                      setNewScheduleTime('');
+                    } catch { /* ignore */ }
+                  }}
+                >
+                  <input
+                    type="text"
+                    placeholder="Time (e.g. 10:00 AM)"
+                    className="border rounded px-3 py-2 text-sm w-36"
+                    value={newScheduleTime}
+                    onChange={e => setNewScheduleTime(e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Activity (e.g. Guests Arrive)"
+                    className="border rounded px-3 py-2 text-sm flex-1 min-w-0"
+                    value={newScheduleTitle}
+                    onChange={e => setNewScheduleTitle(e.target.value)}
+                  />
+                  <button type="submit" className="text-white px-4 py-2 rounded text-sm font-medium" style={{ background: color }}>
+                    + Add
+                  </button>
+                </form>
+              </div>
+
+              {/* ── Budget Tracker ── */}
+              <BabyShowerBudgetTracker slug={hostSlug} sessionToken={hostToken} themeColor={color} />
+            </>
           )}
 
           <div className="flex flex-col gap-4">

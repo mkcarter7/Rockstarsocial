@@ -537,6 +537,8 @@ def host_party_stats(request, slug):
             'photo_count': party.photos.count(),
             'story_count': party.story_entries.count(),
             'name_suggestion_count': party.name_suggestions.count(),
+            'pinterest_board_url': party.pinterest_board_url,
+            'host_notes': party.host_notes,
         })
     return Response({
         'slug': party.slug,

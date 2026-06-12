@@ -174,6 +174,19 @@ export const getBabyShowerChecklist = (slug, sessionToken) => api.get(`/baby-sho
 export const addBabyShowerChecklistItem = (slug, data) => api.post(`/baby-shower/${slug}/checklist/`, data);
 export const updateBabyShowerChecklistItem = (slug, id, data) => api.patch(`/baby-shower/${slug}/checklist/${id}/`, data);
 export const deleteBabyShowerChecklistItem = (slug, id, token) => api.delete(`/baby-shower/${slug}/checklist/${id}/?session_token=${token}`);
+export const updateBabyShowerEventField = (slug, data, token) => api.patch(`/baby-shower/${slug}/update/`, { session_token: token, ...data });
+export const getBabyShowerDelegations = (slug, token) => api.get(`/baby-shower/${slug}/delegations/?session_token=${token}`);
+export const addBabyShowerDelegation = (slug, data) => api.post(`/baby-shower/${slug}/delegations/`, data);
+export const updateBabyShowerDelegation = (slug, id, data) => api.patch(`/baby-shower/${slug}/delegations/${id}/`, data);
+export const deleteBabyShowerDelegation = (slug, id, token) => api.delete(`/baby-shower/${slug}/delegations/${id}/?session_token=${token}`);
+export const getBabyShowerVendors = (slug, token) => api.get(`/baby-shower/${slug}/vendors/?session_token=${token}`);
+export const addBabyShowerVendor = (slug, data) => api.post(`/baby-shower/${slug}/vendors/`, data);
+export const updateBabyShowerVendor = (slug, id, data) => api.patch(`/baby-shower/${slug}/vendors/${id}/`, data);
+export const deleteBabyShowerVendor = (slug, id, token) => api.delete(`/baby-shower/${slug}/vendors/${id}/?session_token=${token}`);
+export const getBabyShowerThankYous = (slug, token) => api.get(`/baby-shower/${slug}/thank-yous/?session_token=${token}`);
+export const addBabyShowerThankYou = (slug, data) => api.post(`/baby-shower/${slug}/thank-yous/`, data);
+export const updateBabyShowerThankYou = (slug, id, data) => api.patch(`/baby-shower/${slug}/thank-yous/${id}/`, data);
+export const deleteBabyShowerThankYou = (slug, id, token) => api.delete(`/baby-shower/${slug}/thank-yous/${id}/?session_token=${token}`);
 
 // Admin — Event pages (all types: birthday, wedding, etc.)
 export const getAdminEventPages = (token) => api.get('/admin/event-pages/', { headers: { Authorization: `Bearer ${token}` } });

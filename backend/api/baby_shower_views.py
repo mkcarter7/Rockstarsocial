@@ -14,6 +14,7 @@ from .models import (
     BabyShowerFAQItem, BabyShowerTriviaQuestion, BabyShowerTriviaScore,
     BabyShowerNameSuggestion, SlugRedirect,
     BabyShowerBudgetItem, BabyShowerScheduleItem, BabyShowerChecklistItem,
+    BabyShowerDelegation, BabyShowerVendor, BabyShowerThankYou,
 )
 from .host_auth_views import verify_host_session_by_token_str
 from .theme_setup_views import SLUG_PATTERN
@@ -75,6 +76,7 @@ def _serialize_event(event, request=None):
         'cashapp_handle': event.cashapp_handle,
         'livestream_url': event.livestream_url,
         'party_type': 'baby_shower',
+        'pinterest_board_url': event.pinterest_board_url,
     }
 
 
@@ -1028,6 +1030,239 @@ def update_baby_shower_slug(request, slug):
     event.slug = new_slug
     event.save(update_fields=['slug'])
     return Response({'slug': new_slug})
+
+
+# ─── Event field update (Pinterest, host notes) ───────────────────────────────
+
+@api_view(['PATCH'])
+@permission_classes([AllowAny])
+def update_event_fields(request, slug):
+    token_str = request.data.get('session_token', '').strip()
+    event, err = verify_host_session_by_token_str(token_str, slug=slug)
+    if err:
+        return Response(err, status=status.HTTP_401_UNAUTHORIZED)
+
+    allowed = {'pinterest_board_url', 'host_notes'}
+    for field in allowed:
+        if field in request.data:
+            setattr(event, field, request.data[field].strip())
+    event.save()
+    return Response({
+        'pinterest_board_url': event.pinterest_board_url,
+        'host_notes': event.host_notes,
+    })
+
+
+# ─── Delegation views ─────────────────────────────────────────────────────────
+
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+def event_delegations(request, slug):
+    token_str = (
+        request.query_params.get('session_token', '')
+        if request.method == 'GET'
+        else request.data.get('session_token', '')
+    )
+    event, err = verify_host_session_by_token_str(token_str, slug=slug)
+    if err:
+        return Response(err, status=status.HTTP_401_UNAUTHORIZED)
+
+    if request.method == 'GET':
+        items = event.delegations.all()
+        return Response([{
+            'id': d.id, 'person_name': d.person_name, 'task': d.task,
+            'notes': d.notes, 'is_confirmed': d.is_confirmed, 'order': d.order,
+        } for d in items])
+
+    person_name = request.data.get('person_name', '').strip()
+    task = request.data.get('task', '').strip()
+    if not person_name or not task:
+        return Response({'error': 'person_name and task are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    order = event.delegations.count()
+    d = BabyShowerDelegation.objects.create(
+        event=event, person_name=person_name, task=task,
+        notes=request.data.get('notes', '').strip(), order=order,
+    )
+    return Response({
+        'id': d.id, 'person_name': d.person_name, 'task': d.task,
+        'notes': d.notes, 'is_confirmed': d.is_confirmed, 'order': d.order,
+    }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['PATCH', 'DELETE'])
+@permission_classes([AllowAny])
+def manage_delegation_item(request, slug, item_id):
+    token_str = (
+        request.query_params.get('session_token', '')
+        if request.method == 'DELETE'
+        else request.data.get('session_token', '')
+    )
+    event, err = verify_host_session_by_token_str(token_str, slug=slug)
+    if err:
+        return Response(err, status=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        item = event.delegations.get(pk=item_id)
+    except BabyShowerDelegation.DoesNotExist:
+        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'DELETE':
+        item.delete()
+        return Response({'message': 'Deleted'})
+
+    for field in ('person_name', 'task', 'notes'):
+        if field in request.data:
+            setattr(item, field, request.data[field].strip())
+    if 'is_confirmed' in request.data:
+        item.is_confirmed = bool(request.data['is_confirmed'])
+    item.save()
+    return Response({
+        'id': item.id, 'person_name': item.person_name, 'task': item.task,
+        'notes': item.notes, 'is_confirmed': item.is_confirmed, 'order': item.order,
+    })
+
+
+# ─── Vendor views ─────────────────────────────────────────────────────────────
+
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+def event_vendors(request, slug):
+    token_str = (
+        request.query_params.get('session_token', '')
+        if request.method == 'GET'
+        else request.data.get('session_token', '')
+    )
+    event, err = verify_host_session_by_token_str(token_str, slug=slug)
+    if err:
+        return Response(err, status=status.HTTP_401_UNAUTHORIZED)
+
+    if request.method == 'GET':
+        items = event.vendors.all()
+        return Response([{
+            'id': v.id, 'role': v.role, 'name': v.name,
+            'phone': v.phone, 'email': v.email, 'notes': v.notes, 'order': v.order,
+        } for v in items])
+
+    role = request.data.get('role', '').strip()
+    name = request.data.get('name', '').strip()
+    if not role or not name:
+        return Response({'error': 'role and name are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    order = event.vendors.count()
+    v = BabyShowerVendor.objects.create(
+        event=event, role=role, name=name,
+        phone=request.data.get('phone', '').strip(),
+        email=request.data.get('email', '').strip(),
+        notes=request.data.get('notes', '').strip(),
+        order=order,
+    )
+    return Response({
+        'id': v.id, 'role': v.role, 'name': v.name,
+        'phone': v.phone, 'email': v.email, 'notes': v.notes, 'order': v.order,
+    }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['PATCH', 'DELETE'])
+@permission_classes([AllowAny])
+def manage_vendor_item(request, slug, item_id):
+    token_str = (
+        request.query_params.get('session_token', '')
+        if request.method == 'DELETE'
+        else request.data.get('session_token', '')
+    )
+    event, err = verify_host_session_by_token_str(token_str, slug=slug)
+    if err:
+        return Response(err, status=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        item = event.vendors.get(pk=item_id)
+    except BabyShowerVendor.DoesNotExist:
+        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'DELETE':
+        item.delete()
+        return Response({'message': 'Deleted'})
+
+    for field in ('role', 'name', 'phone', 'email', 'notes'):
+        if field in request.data:
+            setattr(item, field, request.data[field].strip())
+    item.save()
+    return Response({
+        'id': item.id, 'role': item.role, 'name': item.name,
+        'phone': item.phone, 'email': item.email, 'notes': item.notes, 'order': item.order,
+    })
+
+
+# ─── Thank-you tracker views ──────────────────────────────────────────────────
+
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+def event_thank_yous(request, slug):
+    token_str = (
+        request.query_params.get('session_token', '')
+        if request.method == 'GET'
+        else request.data.get('session_token', '')
+    )
+    event, err = verify_host_session_by_token_str(token_str, slug=slug)
+    if err:
+        return Response(err, status=status.HTTP_401_UNAUTHORIZED)
+
+    if request.method == 'GET':
+        items = event.thank_yous.all()
+        return Response([{
+            'id': t.id, 'giver_name': t.giver_name, 'gift_description': t.gift_description,
+            'thank_you_sent': t.thank_you_sent, 'notes': t.notes, 'order': t.order,
+        } for t in items])
+
+    giver_name = request.data.get('giver_name', '').strip()
+    if not giver_name:
+        return Response({'error': 'giver_name is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    order = event.thank_yous.count()
+    t = BabyShowerThankYou.objects.create(
+        event=event, giver_name=giver_name,
+        gift_description=request.data.get('gift_description', '').strip(),
+        notes=request.data.get('notes', '').strip(),
+        order=order,
+    )
+    return Response({
+        'id': t.id, 'giver_name': t.giver_name, 'gift_description': t.gift_description,
+        'thank_you_sent': t.thank_you_sent, 'notes': t.notes, 'order': t.order,
+    }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['PATCH', 'DELETE'])
+@permission_classes([AllowAny])
+def manage_thank_you_item(request, slug, item_id):
+    token_str = (
+        request.query_params.get('session_token', '')
+        if request.method == 'DELETE'
+        else request.data.get('session_token', '')
+    )
+    event, err = verify_host_session_by_token_str(token_str, slug=slug)
+    if err:
+        return Response(err, status=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        item = event.thank_yous.get(pk=item_id)
+    except BabyShowerThankYou.DoesNotExist:
+        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'DELETE':
+        item.delete()
+        return Response({'message': 'Deleted'})
+
+    for field in ('giver_name', 'gift_description', 'notes'):
+        if field in request.data:
+            setattr(item, field, request.data[field].strip())
+    if 'thank_you_sent' in request.data:
+        item.thank_you_sent = bool(request.data['thank_you_sent'])
+    item.save()
+    return Response({
+        'id': item.id, 'giver_name': item.giver_name, 'gift_description': item.gift_description,
+        'thank_you_sent': item.thank_you_sent, 'notes': item.notes, 'order': item.order,
+    })
 
 
 def cleanup_expired_baby_showers():

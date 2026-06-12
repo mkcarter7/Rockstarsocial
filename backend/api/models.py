@@ -584,6 +584,8 @@ class BabyShowerEvent(models.Model):
     venmo_handle = models.CharField(max_length=100, blank=True)
     cashapp_handle = models.CharField(max_length=100, blank=True)
     livestream_url = models.URLField(blank=True)
+    pinterest_board_url = models.URLField(blank=True)
+    host_notes = models.TextField(blank=True)
     is_active = models.BooleanField(default=False)
     stripe_session_id = models.CharField(max_length=255, unique=True, blank=True, null=True)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -788,6 +790,52 @@ class BabyShowerNameSuggestion(models.Model):
 
     def __str__(self):
         return f'"{self.suggested_name}" suggested by {self.suggested_by or "guest"} — {self.event.slug}'
+
+
+class BabyShowerDelegation(models.Model):
+    event = models.ForeignKey(BabyShowerEvent, on_delete=models.CASCADE, related_name='delegations')
+    person_name = models.CharField(max_length=200)
+    task = models.CharField(max_length=300)
+    notes = models.TextField(blank=True)
+    is_confirmed = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return f"{self.person_name} — {self.task} ({self.event.slug})"
+
+
+class BabyShowerVendor(models.Model):
+    event = models.ForeignKey(BabyShowerEvent, on_delete=models.CASCADE, related_name='vendors')
+    role = models.CharField(max_length=100)
+    name = models.CharField(max_length=200)
+    phone = models.CharField(max_length=50, blank=True)
+    email = models.EmailField(blank=True)
+    notes = models.TextField(blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return f"{self.role}: {self.name} ({self.event.slug})"
+
+
+class BabyShowerThankYou(models.Model):
+    event = models.ForeignKey(BabyShowerEvent, on_delete=models.CASCADE, related_name='thank_yous')
+    giver_name = models.CharField(max_length=200)
+    gift_description = models.CharField(max_length=300, blank=True)
+    thank_you_sent = models.BooleanField(default=False)
+    notes = models.TextField(blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return f"Thank you to {self.giver_name} ({self.event.slug})"
 
 
 class SlugRedirect(models.Model):

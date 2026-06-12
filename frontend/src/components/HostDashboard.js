@@ -10,6 +10,10 @@ import {
   getBabyShowerRSVP,
   getBabyShowerSchedule, addBabyShowerScheduleItem, deleteBabyShowerScheduleItem,
   getBabyShowerChecklist, addBabyShowerChecklistItem, updateBabyShowerChecklistItem, deleteBabyShowerChecklistItem,
+  updateBabyShowerEventField,
+  getBabyShowerDelegations, addBabyShowerDelegation, updateBabyShowerDelegation, deleteBabyShowerDelegation,
+  getBabyShowerVendors, addBabyShowerVendor, deleteBabyShowerVendor,
+  getBabyShowerThankYous, addBabyShowerThankYou, updateBabyShowerThankYou, deleteBabyShowerThankYou,
 } from '../api/api';
 import BabyShowerBudgetTracker from './BabyShowerBudgetTracker';
 
@@ -45,6 +49,33 @@ const HostDashboard = () => {
   const [checklist, setChecklist] = useState([]);
   const [newChecklistText, setNewChecklistText] = useState('');
   const [newChecklistTimeframe, setNewChecklistTimeframe] = useState('');
+
+  // Pinterest board
+  const [editingPinterest, setEditingPinterest] = useState(false);
+  const [pinterestInput, setPinterestInput] = useState('');
+
+  // Host notes
+  const [notesInput, setNotesInput] = useState('');
+  const [notesSaving, setNotesSaving] = useState(false);
+
+  // Delegation
+  const [delegations, setDelegations] = useState([]);
+  const [newDelegationPerson, setNewDelegationPerson] = useState('');
+  const [newDelegationTask, setNewDelegationTask] = useState('');
+  const [newDelegationNotes, setNewDelegationNotes] = useState('');
+
+  // Vendor contacts
+  const [vendors, setVendors] = useState([]);
+  const [newVendorRole, setNewVendorRole] = useState('');
+  const [newVendorName, setNewVendorName] = useState('');
+  const [newVendorPhone, setNewVendorPhone] = useState('');
+  const [newVendorEmail, setNewVendorEmail] = useState('');
+  const [newVendorNotes, setNewVendorNotes] = useState('');
+
+  // Thank-you tracker
+  const [thankYous, setThankYous] = useState([]);
+  const [newThankYouGiver, setNewThankYouGiver] = useState('');
+  const [newThankYouGift, setNewThankYouGift] = useState('');
 
   const loadParty = (slug, token) => {
     setLoading(true);
@@ -98,6 +129,11 @@ const HostDashboard = () => {
     getBabyShowerRSVP(hostSlug).then(res => setRsvps(res.data.entries || [])).catch(() => {});
     getBabyShowerSchedule(hostSlug).then(res => setSchedule(res.data || [])).catch(() => {});
     getBabyShowerChecklist(hostSlug, hostToken).then(res => setChecklist(res.data || [])).catch(() => {});
+    getBabyShowerDelegations(hostSlug, hostToken).then(res => setDelegations(res.data || [])).catch(() => {});
+    getBabyShowerVendors(hostSlug, hostToken).then(res => setVendors(res.data || [])).catch(() => {});
+    getBabyShowerThankYous(hostSlug, hostToken).then(res => setThankYous(res.data || [])).catch(() => {});
+    if (stats.pinterest_board_url) setPinterestInput(stats.pinterest_board_url);
+    if (stats.host_notes) setNotesInput(stats.host_notes);
   }, [stats, hostToken, hostSlug]);
 
   const pickParty = async (slug) => {
@@ -597,6 +633,283 @@ const HostDashboard = () => {
 
               {/* ── Budget Tracker ── */}
               <BabyShowerBudgetTracker slug={hostSlug} sessionToken={hostToken} themeColor={color} />
+
+              {/* ── Pinterest Board ── */}
+              <div className="bg-white rounded-[12px] border border-[#e8e0d8] p-6">
+                <h3 className="text-[1rem] font-bold uppercase tracking-widest mb-4" style={{ color }}>Pinterest Board</h3>
+                {!editingPinterest ? (
+                  <div className="flex items-center gap-3">
+                    {stats.pinterest_board_url ? (
+                      <>
+                        <a href={stats.pinterest_board_url} target="_blank" rel="noopener noreferrer"
+                          className="text-[0.9rem] underline truncate flex-1" style={{ color }}>
+                          {stats.pinterest_board_url}
+                        </a>
+                        <button onClick={() => { setPinterestInput(stats.pinterest_board_url); setEditingPinterest(true); }}
+                          className="text-[0.8rem] px-3 py-1 border rounded" style={{ borderColor: color, color }}>
+                          Edit
+                        </button>
+                      </>
+                    ) : (
+                      <button onClick={() => { setPinterestInput(''); setEditingPinterest(true); }}
+                        className="text-[0.85rem] px-4 py-2 rounded text-white" style={{ background: color }}>
+                        + Add Pinterest board link
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <form onSubmit={async e => {
+                    e.preventDefault();
+                    try {
+                      await updateBabyShowerEventField(hostSlug, { pinterest_board_url: pinterestInput }, hostToken);
+                      setStats(prev => ({ ...prev, pinterest_board_url: pinterestInput }));
+                      setEditingPinterest(false);
+                    } catch {}
+                  }} className="flex gap-2 items-center">
+                    <input value={pinterestInput} onChange={e => setPinterestInput(e.target.value)}
+                      placeholder="https://pinterest.com/yourboard"
+                      className="flex-1 border border-[#ddd] rounded px-3 py-2 text-[0.9rem]" />
+                    <button type="submit" className="px-4 py-2 rounded text-white text-[0.85rem]" style={{ background: color }}>Save</button>
+                    <button type="button" onClick={() => setEditingPinterest(false)}
+                      className="px-3 py-2 rounded border border-[#ddd] text-[0.85rem] text-[#666]">Cancel</button>
+                  </form>
+                )}
+              </div>
+
+              {/* ── Host Notes ── */}
+              <div className="bg-white rounded-[12px] border border-[#e8e0d8] p-6">
+                <h3 className="text-[1rem] font-bold uppercase tracking-widest mb-4" style={{ color }}>Host Notes</h3>
+                <p className="text-[0.8rem] text-[#999] mb-3">Private reminders, venue codes, pickup times — only you can see this.</p>
+                <textarea value={notesInput} onChange={e => setNotesInput(e.target.value)}
+                  placeholder="e.g. Arrive by 9am · Venue door code: 4821 · Put ice in cooler 1 hour before"
+                  rows={4}
+                  className="w-full border border-[#ddd] rounded px-3 py-2 text-[0.9rem] resize-y" />
+                <button onClick={async () => {
+                  setNotesSaving(true);
+                  try {
+                    await updateBabyShowerEventField(hostSlug, { host_notes: notesInput }, hostToken);
+                    setStats(prev => ({ ...prev, host_notes: notesInput }));
+                  } catch {}
+                  setNotesSaving(false);
+                }} className="mt-2 px-4 py-2 rounded text-white text-[0.85rem]" style={{ background: color }}>
+                  {notesSaving ? 'Saving…' : 'Save Notes'}
+                </button>
+              </div>
+
+              {/* ── Who's Handling What (Delegation) ── */}
+              <div className="bg-white rounded-[12px] border border-[#e8e0d8] p-6">
+                <h3 className="text-[1rem] font-bold uppercase tracking-widest mb-4" style={{ color }}>Who's Handling What</h3>
+                {delegations.length > 0 && (
+                  <div className="overflow-x-auto mb-4">
+                    <table className="w-full text-[0.85rem]">
+                      <thead>
+                        <tr className="text-left text-[#888] text-[0.75rem] uppercase border-b border-[#f0e8e0]">
+                          <th className="py-2 pr-4">Who</th>
+                          <th className="py-2 pr-4">Task</th>
+                          <th className="py-2 pr-4">Notes</th>
+                          <th className="py-2 pr-4 text-center">Confirmed</th>
+                          <th className="py-2"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {delegations.map(d => (
+                          <tr key={d.id} className="border-b border-[#f8f4f0]">
+                            <td className="py-2 pr-4 font-medium">{d.person_name}</td>
+                            <td className="py-2 pr-4">{d.task}</td>
+                            <td className="py-2 pr-4 text-[#888]">{d.notes}</td>
+                            <td className="py-2 pr-4 text-center">
+                              <input type="checkbox" checked={d.is_confirmed} onChange={async () => {
+                                const updated = !d.is_confirmed;
+                                setDelegations(prev => prev.map(x => x.id === d.id ? { ...x, is_confirmed: updated } : x));
+                                try {
+                                  await updateBabyShowerDelegation(hostSlug, d.id, { session_token: hostToken, is_confirmed: updated });
+                                } catch {
+                                  setDelegations(prev => prev.map(x => x.id === d.id ? { ...x, is_confirmed: d.is_confirmed } : x));
+                                }
+                              }} />
+                            </td>
+                            <td className="py-2">
+                              <button onClick={async () => {
+                                try {
+                                  await deleteBabyShowerDelegation(hostSlug, d.id, hostToken);
+                                  setDelegations(prev => prev.filter(x => x.id !== d.id));
+                                } catch {}
+                              }} className="text-[#bbb] hover:text-red-400 text-[1rem] leading-none">×</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                <form onSubmit={async e => {
+                  e.preventDefault();
+                  if (!newDelegationPerson.trim() || !newDelegationTask.trim()) return;
+                  try {
+                    const res = await addBabyShowerDelegation(hostSlug, {
+                      session_token: hostToken,
+                      person_name: newDelegationPerson.trim(),
+                      task: newDelegationTask.trim(),
+                      notes: newDelegationNotes.trim(),
+                    });
+                    setDelegations(prev => [...prev, res.data]);
+                    setNewDelegationPerson(''); setNewDelegationTask(''); setNewDelegationNotes('');
+                  } catch {}
+                }} className="flex flex-wrap gap-2 items-end">
+                  <input value={newDelegationPerson} onChange={e => setNewDelegationPerson(e.target.value)}
+                    placeholder="Who (e.g. Sarah)" className="border border-[#ddd] rounded px-3 py-2 text-[0.85rem] w-36" />
+                  <input value={newDelegationTask} onChange={e => setNewDelegationTask(e.target.value)}
+                    placeholder="Task (e.g. Punch)" className="flex-1 border border-[#ddd] rounded px-3 py-2 text-[0.85rem] min-w-[140px]" />
+                  <input value={newDelegationNotes} onChange={e => setNewDelegationNotes(e.target.value)}
+                    placeholder="Notes (optional)" className="flex-1 border border-[#ddd] rounded px-3 py-2 text-[0.85rem] min-w-[140px]" />
+                  <button type="submit" className="px-4 py-2 rounded text-white text-[0.85rem] whitespace-nowrap" style={{ background: color }}>
+                    + Add
+                  </button>
+                </form>
+              </div>
+
+              {/* ── Vendor Contacts ── */}
+              <div className="bg-white rounded-[12px] border border-[#e8e0d8] p-6">
+                <h3 className="text-[1rem] font-bold uppercase tracking-widest mb-4" style={{ color }}>Vendor Contacts</h3>
+                {vendors.length > 0 && (
+                  <div className="overflow-x-auto mb-4">
+                    <table className="w-full text-[0.85rem]">
+                      <thead>
+                        <tr className="text-left text-[#888] text-[0.75rem] uppercase border-b border-[#f0e8e0]">
+                          <th className="py-2 pr-4">Role</th>
+                          <th className="py-2 pr-4">Name</th>
+                          <th className="py-2 pr-4">Phone</th>
+                          <th className="py-2 pr-4">Email</th>
+                          <th className="py-2 pr-4">Notes</th>
+                          <th className="py-2"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {vendors.map(v => (
+                          <tr key={v.id} className="border-b border-[#f8f4f0]">
+                            <td className="py-2 pr-4 font-medium">{v.role}</td>
+                            <td className="py-2 pr-4">{v.name}</td>
+                            <td className="py-2 pr-4">
+                              {v.phone ? <a href={`tel:${v.phone}`} className="underline" style={{ color }}>{v.phone}</a> : '—'}
+                            </td>
+                            <td className="py-2 pr-4">
+                              {v.email ? <a href={`mailto:${v.email}`} className="underline" style={{ color }}>{v.email}</a> : '—'}
+                            </td>
+                            <td className="py-2 pr-4 text-[#888]">{v.notes || '—'}</td>
+                            <td className="py-2">
+                              <button onClick={async () => {
+                                try {
+                                  await deleteBabyShowerVendor(hostSlug, v.id, hostToken);
+                                  setVendors(prev => prev.filter(x => x.id !== v.id));
+                                } catch {}
+                              }} className="text-[#bbb] hover:text-red-400 text-[1rem] leading-none">×</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                <form onSubmit={async e => {
+                  e.preventDefault();
+                  if (!newVendorRole.trim() || !newVendorName.trim()) return;
+                  try {
+                    const res = await addBabyShowerVendor(hostSlug, {
+                      session_token: hostToken,
+                      role: newVendorRole.trim(),
+                      name: newVendorName.trim(),
+                      phone: newVendorPhone.trim(),
+                      email: newVendorEmail.trim(),
+                      notes: newVendorNotes.trim(),
+                    });
+                    setVendors(prev => [...prev, res.data]);
+                    setNewVendorRole(''); setNewVendorName(''); setNewVendorPhone('');
+                    setNewVendorEmail(''); setNewVendorNotes('');
+                  } catch {}
+                }} className="flex flex-wrap gap-2 items-end">
+                  <input value={newVendorRole} onChange={e => setNewVendorRole(e.target.value)}
+                    placeholder="Role (e.g. Baker)" className="border border-[#ddd] rounded px-3 py-2 text-[0.85rem] w-32" />
+                  <input value={newVendorName} onChange={e => setNewVendorName(e.target.value)}
+                    placeholder="Name / Business" className="border border-[#ddd] rounded px-3 py-2 text-[0.85rem] w-40" />
+                  <input value={newVendorPhone} onChange={e => setNewVendorPhone(e.target.value)}
+                    placeholder="Phone" className="border border-[#ddd] rounded px-3 py-2 text-[0.85rem] w-32" />
+                  <input value={newVendorEmail} onChange={e => setNewVendorEmail(e.target.value)}
+                    placeholder="Email (optional)" className="border border-[#ddd] rounded px-3 py-2 text-[0.85rem] w-44" />
+                  <input value={newVendorNotes} onChange={e => setNewVendorNotes(e.target.value)}
+                    placeholder="Notes (optional)" className="flex-1 border border-[#ddd] rounded px-3 py-2 text-[0.85rem] min-w-[120px]" />
+                  <button type="submit" className="px-4 py-2 rounded text-white text-[0.85rem] whitespace-nowrap" style={{ background: color }}>
+                    + Add
+                  </button>
+                </form>
+              </div>
+
+              {/* ── Thank-You Tracker ── */}
+              <div className="bg-white rounded-[12px] border border-[#e8e0d8] p-6">
+                <h3 className="text-[1rem] font-bold uppercase tracking-widest mb-4" style={{ color }}>Thank-You Tracker</h3>
+                <p className="text-[0.8rem] text-[#999] mb-3">Track who gave gifts and whether you've sent a thank-you card.</p>
+                {thankYous.length > 0 && (
+                  <div className="overflow-x-auto mb-4">
+                    <table className="w-full text-[0.85rem]">
+                      <thead>
+                        <tr className="text-left text-[#888] text-[0.75rem] uppercase border-b border-[#f0e8e0]">
+                          <th className="py-2 pr-4">Name</th>
+                          <th className="py-2 pr-4">Gift</th>
+                          <th className="py-2 pr-4 text-center">Thank You Sent</th>
+                          <th className="py-2"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {thankYous.map(t => (
+                          <tr key={t.id} className="border-b border-[#f8f4f0]">
+                            <td className="py-2 pr-4 font-medium">{t.giver_name}</td>
+                            <td className="py-2 pr-4 text-[#888]">{t.gift_description || '—'}</td>
+                            <td className="py-2 pr-4 text-center">
+                              <input type="checkbox" checked={t.thank_you_sent} onChange={async () => {
+                                const updated = !t.thank_you_sent;
+                                setThankYous(prev => prev.map(x => x.id === t.id ? { ...x, thank_you_sent: updated } : x));
+                                try {
+                                  await updateBabyShowerThankYou(hostSlug, t.id, { session_token: hostToken, thank_you_sent: updated });
+                                } catch {
+                                  setThankYous(prev => prev.map(x => x.id === t.id ? { ...x, thank_you_sent: t.thank_you_sent } : x));
+                                }
+                              }} />
+                            </td>
+                            <td className="py-2">
+                              <button onClick={async () => {
+                                try {
+                                  await deleteBabyShowerThankYou(hostSlug, t.id, hostToken);
+                                  setThankYous(prev => prev.filter(x => x.id !== t.id));
+                                } catch {}
+                              }} className="text-[#bbb] hover:text-red-400 text-[1rem] leading-none">×</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                <form onSubmit={async e => {
+                  e.preventDefault();
+                  if (!newThankYouGiver.trim()) return;
+                  try {
+                    const res = await addBabyShowerThankYou(hostSlug, {
+                      session_token: hostToken,
+                      giver_name: newThankYouGiver.trim(),
+                      gift_description: newThankYouGift.trim(),
+                    });
+                    setThankYous(prev => [...prev, res.data]);
+                    setNewThankYouGiver(''); setNewThankYouGift('');
+                  } catch {}
+                }} className="flex gap-2 items-end">
+                  <input value={newThankYouGiver} onChange={e => setNewThankYouGiver(e.target.value)}
+                    placeholder="Name" className="border border-[#ddd] rounded px-3 py-2 text-[0.85rem] w-40" />
+                  <input value={newThankYouGift} onChange={e => setNewThankYouGift(e.target.value)}
+                    placeholder="Gift (optional)" className="flex-1 border border-[#ddd] rounded px-3 py-2 text-[0.85rem]" />
+                  <button type="submit" className="px-4 py-2 rounded text-white text-[0.85rem] whitespace-nowrap" style={{ background: color }}>
+                    + Add
+                  </button>
+                </form>
+              </div>
             </>
           )}
 

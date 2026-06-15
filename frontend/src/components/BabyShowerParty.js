@@ -277,12 +277,12 @@ const PhotoCarousel = ({ slug, color, secondaryColor }) => {
         <SectionLabel color={color}>Photo Memories</SectionLabel>
         <TerraDivider color={color} />
         <div className="relative max-w-[700px] mx-auto">
-          <div style={{ borderRadius: '4px', overflow: 'hidden', boxShadow: `0 4px 24px ${color}25`, maxHeight: 560 }}>
+          <div style={{ borderRadius: '4px', overflow: 'hidden', boxShadow: `0 4px 24px ${color}25`, background: '#f5f5f5' }}>
             <img
               key={idx}
               src={photo.image}
               alt={photo.caption || 'Baby shower photo'}
-              className="w-full block"
+              className="w-full block object-contain max-h-[560px]"
             />
           </div>
           {(photo.caption || photo.uploaded_by_name) && (

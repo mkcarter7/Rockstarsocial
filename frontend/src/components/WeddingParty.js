@@ -226,12 +226,12 @@ const WeddingPhotoCarousel = ({ slug, color, secondaryColor }) => {
         <SectionLabel color={color}>Photo Memories</SectionLabel>
         <GoldDivider color={color} />
         <div className="relative max-w-[700px] mx-auto">
-          <div style={{ borderRadius: '120px 120px 8px 8px', overflow: 'hidden', boxShadow: '0 4px 24px rgba(201,169,110,0.15)', maxHeight: 560 }}>
+          <div style={{ borderRadius: '120px 120px 8px 8px', overflow: 'hidden', boxShadow: '0 4px 24px rgba(201,169,110,0.15)', background: '#f5f5f5' }}>
             <img
               key={idx}
               src={photo.image}
               alt={photo.caption || 'Wedding photo'}
-              className="w-full block"
+              className="w-full block object-contain max-h-[560px]"
             />
           </div>
           {(photo.caption || photo.uploaded_by_name) && (

@@ -209,12 +209,12 @@ const PhotoCarousel = ({ slug, themeColor, secondaryColor }) => {
       <div className="container">
         <h2 className="text-center text-[1.4rem] font-bold mb-6 text-[#333]">📸 Party Memories</h2>
         <div className="relative max-w-[700px] mx-auto">
-          <div className="rounded-[14px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.12)]" style={{ maxHeight: 560 }}>
+          <div className="rounded-[14px] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.12)]" style={{ background: '#f5f5f5' }}>
             <img
               key={idx}
               src={photo.image}
               alt={photo.caption || 'Party photo'}
-              className="w-full block"
+              className="w-full block object-contain max-h-[560px]"
             />
           </div>
 

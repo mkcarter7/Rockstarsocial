@@ -146,7 +146,7 @@ const BabyShowerPhotos = ({ slug }) => {
                       {deletingId === photo.id ? '…' : '×'}
                     </button>
                   )}
-                  <img src={photo.image} alt={photo.caption || 'Baby shower photo'} className="w-full h-[180px] object-cover" />
+                  <img src={photo.image} alt={photo.caption || 'Baby shower photo'} className="w-full aspect-[4/3] object-contain bg-[#f5f5f5]" />
                   {photo.caption && <p className="px-3 pt-2 pb-1 text-[0.9rem] font-light italic" style={{ color: '#5a3a2a' }}>{photo.caption}</p>}
                   <p className="px-3 pb-[10px] text-[0.8rem] font-light" style={{ color: '#b0906e' }}>✦ {photo.uploaded_by_name}</p>
                 </div>

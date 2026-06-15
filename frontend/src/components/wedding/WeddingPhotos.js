@@ -2,15 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getWeddingParty, getWeddingPhotos, uploadWeddingPhoto } from '../../api/api';
+import { getWeddingParty, getWeddingPhotos, uploadWeddingPhoto, deleteWeddingPhoto } from '../../api/api';
+import { useAuth } from '../../context/AuthContext';
 
 const inputClass = "py-[10px] px-[14px] border border-[#e0d5c8] rounded-[4px] text-[0.95rem] font-[inherit] w-full outline-none focus:border-[#c9a96e]";
 
 const WeddingPhotos = ({ slug }) => {
+  const { currentUser } = useAuth();
   const [party, setParty] = useState(null);
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const [uploaderName, setUploaderName] = useState('');
   const [caption, setCaption] = useState('');
   const [file, setFile] = useState(null);
@@ -31,6 +34,9 @@ const WeddingPhotos = ({ slug }) => {
     formData.append('caption', caption);
     try {
       const res = await uploadWeddingPhoto(slug, formData);
+      if (res.data.delete_token) {
+        localStorage.setItem(`wedding_photo_token_${res.data.id}`, res.data.delete_token);
+      }
       setPhotos(prev => [res.data, ...prev]);
       setFile(null);
       setCaption('');
@@ -42,6 +48,34 @@ const WeddingPhotos = ({ slug }) => {
     setUploading(false);
   };
 
+  const handleDelete = async (photo) => {
+    if (!window.confirm('Delete this photo?')) return;
+    setDeletingId(photo.id);
+    try {
+      const hostToken = localStorage.getItem('hostToken');
+      const hostSlug = localStorage.getItem('hostPartySlug');
+      const uploaderToken = localStorage.getItem(`wedding_photo_token_${photo.id}`);
+
+      if (uploaderToken) {
+        await deleteWeddingPhoto(slug, photo.id, { deleteToken: uploaderToken });
+        localStorage.removeItem(`wedding_photo_token_${photo.id}`);
+      } else if (hostToken && hostSlug === slug) {
+        await deleteWeddingPhoto(slug, photo.id, { sessionToken: hostToken });
+      } else if (currentUser) {
+        const firebaseToken = await currentUser.getIdToken();
+        await deleteWeddingPhoto(slug, photo.id, { firebaseToken });
+      } else {
+        alert('Not authorized to delete this photo.');
+        setDeletingId(null);
+        return;
+      }
+      setPhotos(prev => prev.filter(p => p.id !== photo.id));
+    } catch {
+      alert('Delete failed. Please try again.');
+    }
+    setDeletingId(null);
+  };
+
   const color = party?.theme_color || '#c9a96e';
   const secondaryColor = party?.secondary_color || '#fdfaf7';
   const heroStyle = party?.banner_image
@@ -50,6 +84,11 @@ const WeddingPhotos = ({ slug }) => {
   const hasBanner = !!party?.banner_image;
 
   if (loading) return <div className="text-center py-[60px] px-5 font-light" style={{ color: '#7a6050' }}>Loading...</div>;
+
+  const hostToken = typeof window !== 'undefined' ? localStorage.getItem('hostToken') : null;
+  const hostSlug = typeof window !== 'undefined' ? localStorage.getItem('hostPartySlug') : null;
+  const isHost = hostToken && hostSlug === slug;
+  const isAdmin = !!currentUser;
 
   return (
     <div className="min-h-screen" style={{ background: secondaryColor }}>
@@ -93,13 +132,28 @@ const WeddingPhotos = ({ slug }) => {
           </div>
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-5">
-            {photos.map(photo => (
-              <div key={photo.id} className="rounded-[4px] overflow-hidden bg-white" style={{ border: '1px solid rgba(201,169,110,0.15)', boxShadow: '0 2px 10px rgba(201,169,110,0.08)' }}>
-                <img src={photo.image} alt={photo.caption || 'Wedding photo'} className="w-full h-[180px] object-cover" />
-                {photo.caption && <p className="px-3 pt-2 pb-1 text-[0.9rem] font-light italic" style={{ color: '#5a3e2b' }}>{photo.caption}</p>}
-                <p className="px-3 pb-[10px] text-[0.8rem] font-light" style={{ color: '#b0a090' }}>✦ {photo.uploaded_by_name}</p>
-              </div>
-            ))}
+            {photos.map(photo => {
+              const uploaderToken = typeof window !== 'undefined' ? localStorage.getItem(`wedding_photo_token_${photo.id}`) : null;
+              const canDelete = isHost || isAdmin || !!uploaderToken;
+              return (
+                <div key={photo.id} className="rounded-[4px] overflow-hidden bg-white relative" style={{ border: '1px solid rgba(201,169,110,0.15)', boxShadow: '0 2px 10px rgba(201,169,110,0.08)' }}>
+                  {canDelete && (
+                    <button
+                      onClick={() => handleDelete(photo)}
+                      disabled={deletingId === photo.id}
+                      className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full flex items-center justify-center text-white text-[0.8rem] leading-none disabled:opacity-50"
+                      style={{ background: 'rgba(0,0,0,0.55)' }}
+                      title="Delete photo"
+                    >
+                      {deletingId === photo.id ? '…' : '×'}
+                    </button>
+                  )}
+                  <img src={photo.image} alt={photo.caption || 'Wedding photo'} className="w-full h-[180px] object-cover" />
+                  {photo.caption && <p className="px-3 pt-2 pb-1 text-[0.9rem] font-light italic" style={{ color: '#5a3e2b' }}>{photo.caption}</p>}
+                  <p className="px-3 pb-[10px] text-[0.8rem] font-light" style={{ color: '#b0a090' }}>✦ {photo.uploaded_by_name}</p>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

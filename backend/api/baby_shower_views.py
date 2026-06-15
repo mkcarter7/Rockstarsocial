@@ -283,7 +283,46 @@ def event_photos(request, slug):
         'caption': photo.caption,
         'uploaded_by_name': photo.uploaded_by_name,
         'uploaded_at': photo.uploaded_at.isoformat(),
+        'delete_token': str(photo.delete_token),
     }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['DELETE'])
+@permission_classes([AllowAny])
+def delete_photo(request, slug, photo_id):
+    # Method 1: uploader delete_token
+    delete_token = request.query_params.get('delete_token')
+    if delete_token:
+        try:
+            photo = BabyShowerPhoto.objects.get(id=photo_id, event__slug=slug, delete_token=delete_token)
+            photo.delete()
+            return Response({'message': 'Photo deleted'})
+        except BabyShowerPhoto.DoesNotExist:
+            return Response({'error': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
+
+    # Method 2: host session_token
+    session_token = request.query_params.get('session_token')
+    if session_token:
+        event, err = verify_host_session_by_token_str(session_token, slug)
+        if not err:
+            try:
+                photo = BabyShowerPhoto.objects.get(id=photo_id, event=event)
+                photo.delete()
+                return Response({'message': 'Photo deleted'})
+            except BabyShowerPhoto.DoesNotExist:
+                return Response({'error': 'Photo not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Method 3: Firebase admin
+    from .firebase_auth import get_firebase_user
+    if get_firebase_user(request):
+        try:
+            photo = BabyShowerPhoto.objects.get(id=photo_id, event__slug=slug)
+            photo.delete()
+            return Response({'message': 'Photo deleted'})
+        except BabyShowerPhoto.DoesNotExist:
+            return Response({'error': 'Photo not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    return Response({'error': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
 
 
 # ─── Guest book ───────────────────────────────────────────────────────────────

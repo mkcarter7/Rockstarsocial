@@ -235,6 +235,7 @@ class PartyPhoto(models.Model):
     caption = models.CharField(max_length=200, blank=True)
     uploaded_by_name = models.CharField(max_length=100, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    delete_token = models.UUIDField(default=uuid.uuid4, editable=False)
 
     class Meta:
         ordering = ['-uploaded_at']
@@ -434,6 +435,7 @@ class WeddingPhoto(models.Model):
     caption = models.CharField(max_length=200, blank=True)
     uploaded_by_name = models.CharField(max_length=100, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    delete_token = models.UUIDField(default=uuid.uuid4, editable=False)
 
     class Meta:
         ordering = ['-uploaded_at']
@@ -619,6 +621,7 @@ class BabyShowerPhoto(models.Model):
     caption = models.CharField(max_length=200, blank=True)
     uploaded_by_name = models.CharField(max_length=100, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    delete_token = models.UUIDField(default=uuid.uuid4, editable=False)
 
     class Meta:
         ordering = ['-uploaded_at']

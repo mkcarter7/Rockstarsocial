@@ -2,15 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getBabyShower, getBabyShowerPhotos, uploadBabyShowerPhoto } from '../../api/api';
+import { getBabyShower, getBabyShowerPhotos, uploadBabyShowerPhoto, deleteBabyShowerPhoto } from '../../api/api';
+import { useAuth } from '../../context/AuthContext';
 
 const inputClass = "py-[10px] px-[14px] border border-[#d9c8bc] rounded-[4px] text-[0.95rem] font-[inherit] w-full outline-none focus:border-[#c17c5a]";
 
 const BabyShowerPhotos = ({ slug }) => {
+  const { currentUser } = useAuth();
   const [party, setParty] = useState(null);
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const [uploaderName, setUploaderName] = useState('');
   const [caption, setCaption] = useState('');
   const [file, setFile] = useState(null);
@@ -31,6 +34,9 @@ const BabyShowerPhotos = ({ slug }) => {
     formData.append('caption', caption);
     try {
       const res = await uploadBabyShowerPhoto(slug, formData);
+      if (res.data.delete_token) {
+        localStorage.setItem(`baby_shower_photo_token_${res.data.id}`, res.data.delete_token);
+      }
       setPhotos(prev => [res.data, ...prev]);
       setFile(null); setCaption(''); setUploaderName('');
       e.target.reset();
@@ -38,6 +44,34 @@ const BabyShowerPhotos = ({ slug }) => {
       alert('Upload failed. Please try again.');
     }
     setUploading(false);
+  };
+
+  const handleDelete = async (photo) => {
+    if (!window.confirm('Delete this photo?')) return;
+    setDeletingId(photo.id);
+    try {
+      const hostToken = localStorage.getItem('hostToken');
+      const hostSlug = localStorage.getItem('hostPartySlug');
+      const uploaderToken = localStorage.getItem(`baby_shower_photo_token_${photo.id}`);
+
+      if (uploaderToken) {
+        await deleteBabyShowerPhoto(slug, photo.id, { deleteToken: uploaderToken });
+        localStorage.removeItem(`baby_shower_photo_token_${photo.id}`);
+      } else if (hostToken && hostSlug === slug) {
+        await deleteBabyShowerPhoto(slug, photo.id, { sessionToken: hostToken });
+      } else if (currentUser) {
+        const firebaseToken = await currentUser.getIdToken();
+        await deleteBabyShowerPhoto(slug, photo.id, { firebaseToken });
+      } else {
+        alert('Not authorized to delete this photo.');
+        setDeletingId(null);
+        return;
+      }
+      setPhotos(prev => prev.filter(p => p.id !== photo.id));
+    } catch {
+      alert('Delete failed. Please try again.');
+    }
+    setDeletingId(null);
   };
 
   const color = party?.theme_color || '#c17c5a';
@@ -48,6 +82,11 @@ const BabyShowerPhotos = ({ slug }) => {
   const hasBanner = !!party?.banner_image;
 
   if (loading) return <div className="text-center py-[60px] px-5 font-light" style={{ color: '#7a5a46' }}>Loading...</div>;
+
+  const hostToken = typeof window !== 'undefined' ? localStorage.getItem('hostToken') : null;
+  const hostSlug = typeof window !== 'undefined' ? localStorage.getItem('hostPartySlug') : null;
+  const isHost = hostToken && hostSlug === slug;
+  const isAdmin = !!currentUser;
 
   return (
     <div className="min-h-screen" style={{ background: secondaryColor }}>
@@ -91,13 +130,28 @@ const BabyShowerPhotos = ({ slug }) => {
           </div>
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-5">
-            {photos.map(photo => (
-              <div key={photo.id} className="overflow-hidden bg-white" style={{ border: '1px solid rgba(193,124,90,0.15)', boxShadow: '0 2px 10px rgba(100,60,20,0.08)', borderRadius: '4px' }}>
-                <img src={photo.image} alt={photo.caption || 'Baby shower photo'} className="w-full h-[180px] object-cover" />
-                {photo.caption && <p className="px-3 pt-2 pb-1 text-[0.9rem] font-light italic" style={{ color: '#5a3a2a' }}>{photo.caption}</p>}
-                <p className="px-3 pb-[10px] text-[0.8rem] font-light" style={{ color: '#b0906e' }}>✦ {photo.uploaded_by_name}</p>
-              </div>
-            ))}
+            {photos.map(photo => {
+              const uploaderToken = typeof window !== 'undefined' ? localStorage.getItem(`baby_shower_photo_token_${photo.id}`) : null;
+              const canDelete = isHost || isAdmin || !!uploaderToken;
+              return (
+                <div key={photo.id} className="overflow-hidden bg-white relative" style={{ border: '1px solid rgba(193,124,90,0.15)', boxShadow: '0 2px 10px rgba(100,60,20,0.08)', borderRadius: '4px' }}>
+                  {canDelete && (
+                    <button
+                      onClick={() => handleDelete(photo)}
+                      disabled={deletingId === photo.id}
+                      className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full flex items-center justify-center text-white text-[0.8rem] leading-none disabled:opacity-50"
+                      style={{ background: 'rgba(0,0,0,0.55)' }}
+                      title="Delete photo"
+                    >
+                      {deletingId === photo.id ? '…' : '×'}
+                    </button>
+                  )}
+                  <img src={photo.image} alt={photo.caption || 'Baby shower photo'} className="w-full h-[180px] object-cover" />
+                  {photo.caption && <p className="px-3 pt-2 pb-1 text-[0.9rem] font-light italic" style={{ color: '#5a3a2a' }}>{photo.caption}</p>}
+                  <p className="px-3 pb-[10px] text-[0.8rem] font-light" style={{ color: '#b0906e' }}>✦ {photo.uploaded_by_name}</p>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

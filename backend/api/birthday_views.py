@@ -264,25 +264,47 @@ def party_photos(request, slug):
         'caption': photo.caption,
         'uploaded_by_name': photo.uploaded_by_name,
         'uploaded_at': photo.uploaded_at.isoformat(),
+        'delete_token': str(photo.delete_token),
     }, status=status.HTTP_201_CREATED)
 
 
 @api_view(['DELETE'])
 @permission_classes([AllowAny])
 def delete_photo(request, slug, photo_id):
-    """Host-only delete. Verified via session_id query param."""
-    session_id = request.query_params.get('session_id')
-    try:
-        party = BirthdayParty.objects.get(slug=slug, stripe_session_id=session_id)
-    except BirthdayParty.DoesNotExist:
-        return Response({'error': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
+    # Method 1: uploader delete_token (stored in their browser at upload time)
+    delete_token = request.query_params.get('delete_token')
+    if delete_token:
+        try:
+            photo = PartyPhoto.objects.get(id=photo_id, party__slug=slug, delete_token=delete_token)
+            photo.delete()
+            return Response({'message': 'Photo deleted'})
+        except PartyPhoto.DoesNotExist:
+            return Response({'error': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
 
-    try:
-        photo = PartyPhoto.objects.get(id=photo_id, party=party)
-        photo.delete()
-        return Response({'message': 'Photo deleted'})
-    except PartyPhoto.DoesNotExist:
-        return Response({'error': 'Photo not found'}, status=status.HTTP_404_NOT_FOUND)
+    # Method 2: host session_token
+    session_token = request.query_params.get('session_token')
+    if session_token:
+        from .host_auth_views import verify_host_session_by_token_str
+        event, err = verify_host_session_by_token_str(session_token, slug)
+        if not err:
+            try:
+                photo = PartyPhoto.objects.get(id=photo_id, party=event)
+                photo.delete()
+                return Response({'message': 'Photo deleted'})
+            except PartyPhoto.DoesNotExist:
+                return Response({'error': 'Photo not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Method 3: Firebase admin
+    from .firebase_auth import get_firebase_user
+    if get_firebase_user(request):
+        try:
+            photo = PartyPhoto.objects.get(id=photo_id, party__slug=slug)
+            photo.delete()
+            return Response({'message': 'Photo deleted'})
+        except PartyPhoto.DoesNotExist:
+            return Response({'error': 'Photo not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    return Response({'error': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
 
 
 # ─── Guest book ───────────────────────────────────────────────────────────────

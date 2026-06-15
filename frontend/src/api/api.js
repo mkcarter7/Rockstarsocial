@@ -56,7 +56,11 @@ export const getBirthdaySetup = (sessionId, sessionToken = null) =>
 export const saveBirthdaySetup = (data) => api.post('/birthday/setup/', data, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const getBirthdayPhotos = (slug) => api.get(`/birthday/${slug}/photos/`);
 export const uploadBirthdayPhoto = (slug, formData) => api.post(`/birthday/${slug}/photos/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-export const deleteBirthdayPhoto = (slug, photoId, sessionId) => api.delete(`/birthday/${slug}/photos/${photoId}/?session_id=${sessionId}`);
+export const deleteBirthdayPhoto = (slug, photoId, { deleteToken, sessionToken, firebaseToken } = {}) =>
+  api.delete(`/birthday/${slug}/photos/${photoId}/`, {
+    params: { ...(deleteToken && { delete_token: deleteToken }), ...(sessionToken && { session_token: sessionToken }) },
+    headers: { ...(firebaseToken && { Authorization: `Bearer ${firebaseToken}` }) },
+  });
 export const getBirthdayGuestbook = (slug) => api.get(`/birthday/${slug}/guestbook/`);
 export const addGuestbookEntry = (slug, data) => api.post(`/birthday/${slug}/guestbook/`, data);
 export const getBirthdayRSVP = (slug) => api.get(`/birthday/${slug}/rsvp/`);
@@ -89,6 +93,11 @@ export const getWeddingSetup = (sessionId, sessionToken = null) =>
 export const saveWeddingSetup = (data) => api.post('/wedding/setup/', data, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const getWeddingPhotos = (slug) => api.get(`/wedding/${slug}/photos/`);
 export const uploadWeddingPhoto = (slug, formData) => api.post(`/wedding/${slug}/photos/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const deleteWeddingPhoto = (slug, photoId, { deleteToken, sessionToken, firebaseToken } = {}) =>
+  api.delete(`/wedding/${slug}/photos/${photoId}/`, {
+    params: { ...(deleteToken && { delete_token: deleteToken }), ...(sessionToken && { session_token: sessionToken }) },
+    headers: { ...(firebaseToken && { Authorization: `Bearer ${firebaseToken}` }) },
+  });
 export const getWeddingGuestbook = (slug) => api.get(`/wedding/${slug}/guestbook/`);
 export const addWeddingGuestbookEntry = (slug, data) => api.post(`/wedding/${slug}/guestbook/`, data);
 export const getWeddingRSVP = (slug) => api.get(`/wedding/${slug}/rsvp/`);
@@ -133,6 +142,11 @@ export const saveBabyShowerSetup = (data) => api.post('/baby-shower/setup/', dat
 export const createBabyShowerCheckout = (data) => api.post('/stripe/create-baby-shower-checkout/', data);
 export const getBabyShowerPhotos = (slug) => api.get(`/baby-shower/${slug}/photos/`);
 export const uploadBabyShowerPhoto = (slug, formData) => api.post(`/baby-shower/${slug}/photos/`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+export const deleteBabyShowerPhoto = (slug, photoId, { deleteToken, sessionToken, firebaseToken } = {}) =>
+  api.delete(`/baby-shower/${slug}/photos/${photoId}/`, {
+    params: { ...(deleteToken && { delete_token: deleteToken }), ...(sessionToken && { session_token: sessionToken }) },
+    headers: { ...(firebaseToken && { Authorization: `Bearer ${firebaseToken}` }) },
+  });
 export const getBabyShowerGuestbook = (slug) => api.get(`/baby-shower/${slug}/guestbook/`);
 export const addBabyShowerGuestbookEntry = (slug, data) => api.post(`/baby-shower/${slug}/guestbook/`, data);
 export const getBabyShowerRSVP = (slug) => api.get(`/baby-shower/${slug}/rsvp/`);
